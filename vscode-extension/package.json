@@ -9,15 +9,58 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:app.json",
+    "onLanguage:*/app.json",
+    "onLanguage:wxml",
+    "onLanguage:wxss"
+  ],
   "contributes": {
+    "languages": [
+      {
+        "id": "wxml",
+        "extensions": [
+            ".wxml"
+        ],
+        "aliases": [
+            "WXML"
+        ]
+      },
+      {
+        "id": "wxss",
+        "extensions": [
+            ".wxss"
+        ],
+        "aliases": [
+            "WXSS"
+        ]
+      }
+    ],
     "commands": [
       {
-        "command": "glass-easel-analyzer.helloWorld",
-        "title": "Hello World"
+        "command": "glass-easel-analyzer.restart",
+        "title": "Restart glass-easel Language Server"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "glass-easel-analyzer",
+      "properties": {
+        "glass-easel-analyzer.serverPath": {
+          "scope": "application",
+          "type": "string",
+          "default": "",
+          "description": "The path to the language server binary."
+        },
+        "glass-easel-analyzer.backendConfigurationPath": {
+          "scope": "resource",
+          "type": "string",
+          "default": "",
+          "description": "The path to the backend configuration file. Use common DOM backend configuration by default."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run package",
@@ -40,8 +83,10 @@
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "eslint": "^9.13.0",
+    "glass-easel-miniprogram-template": "^0.10.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",
+    "vscode-languageclient": "^9.0.1",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4"
   }

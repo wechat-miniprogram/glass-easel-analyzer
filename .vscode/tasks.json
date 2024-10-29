@@ -4,6 +4,24 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "cargo-build-debug",
+			"type": "shell",
+			"command": "cargo",
+			"args": [
+				"build",
+				"--bin",
+				"glass-easel-analyzer"
+			],
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never",
+				"group": "cargo"
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
 			"type": "npm",
 			"script": "watch",
 			"problemMatcher": "$ts-webpack-watch",
@@ -40,10 +58,15 @@
 				"npm: watch",
 				"npm: watch-tests"
 			],
-			"problemMatcher": [],
-			"options": {
-				"cwd": "${workspaceFolder}/vscode-extension"
-			}
+			"problemMatcher": []
+		},
+		{
+			"label": "tasks: debug-launch",
+			"dependsOn": [
+				"cargo-build-debug",
+				"npm: watch"
+			],
+			"problemMatcher": []
 		}
 	]
 }

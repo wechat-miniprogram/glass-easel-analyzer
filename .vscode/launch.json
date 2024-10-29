@@ -10,12 +10,13 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/vscode-extension"
+				"--extensionDevelopmentPath=${workspaceFolder}/vscode-extension",
+				"${workspaceFolder}/vscode-extension/node_modules/glass-easel-miniprogram-template"
 			],
 			"outFiles": [
 				"${workspaceFolder}/vscode-extension/dist/**/*.js"
 			],
-			"preLaunchTask": "${defaultBuildTask}"
+			"preLaunchTask": "tasks: debug-launch"
 		}
 	]
 }
