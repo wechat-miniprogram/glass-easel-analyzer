@@ -7,6 +7,13 @@ struct Args {}
 fn main() -> anyhow::Result<()> {
     env_logger::init();
     let _args = Args::parse();
-    glass_easel_analyzer::run()?;
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let local = tokio::task::LocalSet::new();
+    local.block_on(&runtime, async {
+        glass_easel_analyzer::run().await
+    })?;
     Ok(())
 }

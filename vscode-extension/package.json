@@ -12,7 +12,9 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "workspaceContains:app.json",
-    "onLanguage:*/app.json",
+    "workspaceContains:*/app.json",
+    "workspaceContains:app.wxss",
+    "workspaceContains:*/app.wxss",
     "onLanguage:wxml",
     "onLanguage:wxss"
   ],

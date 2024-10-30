@@ -1,6 +1,8 @@
 use lsp_types::{FoldingRange, FoldingRangeKind, FoldingRangeParams};
 
-pub(crate) async fn folding_range(params: FoldingRangeParams) -> anyhow::Result<Vec<FoldingRange>> {
+use crate::ServerContext;
+
+pub(crate) async fn folding_range(ctx: &ServerContext, params: FoldingRangeParams) -> anyhow::Result<Vec<FoldingRange>> {
     let ret = vec![
         // TODO
         FoldingRange {
