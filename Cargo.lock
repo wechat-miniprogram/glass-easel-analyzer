@@ -329,16 +329,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5320ae4c3782150d900b79807611a59a99fc9a1d61d686faafc24b93fc8d7ca"
 
 [[package]]
-name = "env_filter"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f2c92ceda6ceec50f43169f9ee8424fe2db276791afde7b2cd8bc084cb376ab"
-dependencies = [
- "log",
- "regex",
-]
-
-[[package]]
 name = "env_logger"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -349,19 +339,6 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "env_logger"
-version = "0.11.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13fa619b91fb2381732789fc5de83b45675e882f66623b7d8cb4f643017018d"
-dependencies = [
- "anstream",
- "anstyle",
- "env_filter",
- "humantime",
- "log",
 ]
 
 [[package]]
@@ -499,7 +476,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap 4.5.20",
- "env_logger 0.11.5",
  "futures",
  "glass-easel-template-compiler",
  "log",
@@ -521,7 +497,7 @@ dependencies = [
  "compact_str",
  "console_log",
  "entities",
- "env_logger 0.9.3",
+ "env_logger",
  "js-sys",
  "lazy_static",
  "log",

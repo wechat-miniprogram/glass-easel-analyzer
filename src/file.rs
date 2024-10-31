@@ -17,9 +17,8 @@ fn apply_content_changes_to_content(content: &str, changes: Vec<TextDocumentCont
     ret
 }
 
-pub(crate) async fn did_open(ctx: &ServerContext, params: DidOpenTextDocumentParams) -> anyhow::Result<()> {
+pub(crate) async fn did_open(ctx: ServerContext, params: DidOpenTextDocumentParams) -> anyhow::Result<()> {
     log::debug!("File opened: {}", params.text_document.uri.as_str());
-    let ctx = ctx.clone();
     let uri = params.text_document.uri.clone();
     log_if_err(ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| {
         match abs_path.extension().and_then(|x| x.to_str()) {
@@ -43,9 +42,8 @@ pub(crate) async fn did_open(ctx: &ServerContext, params: DidOpenTextDocumentPar
     Ok(())
 }
 
-pub(crate) async fn did_change(ctx: &ServerContext, params: DidChangeTextDocumentParams) -> anyhow::Result<()> {
+pub(crate) async fn did_change(ctx: ServerContext, params: DidChangeTextDocumentParams) -> anyhow::Result<()> {
     log::debug!("File changed: {}", params.text_document.uri.as_str());
-    let ctx = ctx.clone();
     let uri = params.text_document.uri.clone();
     log_if_err(ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| {
         match abs_path.extension().and_then(|x| x.to_str()) {
@@ -74,14 +72,13 @@ pub(crate) async fn did_change(ctx: &ServerContext, params: DidChangeTextDocumen
     Ok(())
 }
 
-pub(crate) async fn did_save(_ctx: &ServerContext, params: DidSaveTextDocumentParams) -> anyhow::Result<()> {
+pub(crate) async fn did_save(_ctx: ServerContext, params: DidSaveTextDocumentParams) -> anyhow::Result<()> {
     log::debug!("File saved: {}", params.text_document.uri.as_str());
     Ok(())
 }
 
-pub(crate) async fn did_close(ctx: &ServerContext, params: DidCloseTextDocumentParams) -> anyhow::Result<()> {
+pub(crate) async fn did_close(ctx: ServerContext, params: DidCloseTextDocumentParams) -> anyhow::Result<()> {
     log::debug!("File saved: {}", params.text_document.uri.as_str());
-    let ctx = ctx.clone();
     log_if_err(ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| {
         match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {

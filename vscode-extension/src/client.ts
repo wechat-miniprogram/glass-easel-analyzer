@@ -28,7 +28,6 @@ export class Client {
       options: {
         env: {
           'RUST_BACKTRACE': '1',
-          'RUST_LOG': 'warn,glass_easel_analyzer=info',
         },
       },
     }
@@ -38,7 +37,6 @@ export class Client {
       options: {
         env: {
           'RUST_BACKTRACE': '1',
-          'RUST_LOG': 'warn,glass_easel_analyzer=debug',
         },
       },
     }

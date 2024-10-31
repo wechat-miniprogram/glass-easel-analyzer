@@ -7,13 +7,11 @@ use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 #[serde(rename_all = "camelCase")]
 pub(crate) struct JsonConfig {
     #[serde(default)]
+    #[allow(dead_code)]
     component: bool,
     #[serde(default)]
+    #[allow(dead_code)]
     using_components: HashMap<String, String>,
-}
-
-pub(crate) struct SourceMetadata {
-
 }
 
 pub(crate) struct Project {
@@ -41,10 +39,6 @@ impl Project {
 
     pub(crate) fn get_file_content(&self, abs_path: &Path) -> Option<&str> {
         self.file_contents.get(abs_path).map(|x| x.as_str())
-    }
-
-    pub(crate) fn template_group(&mut self) -> &mut TmplGroup {
-        &mut self.template_group
     }
 
     pub(crate) fn set_json(&mut self, abs_path: impl Into<PathBuf>, content: String) {

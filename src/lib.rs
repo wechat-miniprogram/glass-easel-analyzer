@@ -4,6 +4,7 @@ use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response
 mod context;
 mod file;
 mod folding;
+mod logger;
 pub(crate) mod utils;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
@@ -43,7 +44,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         // type_definition_provider: Some(lsp_types::TypeDefinitionProviderCapability::Simple(true)),
         // implementation_provider: Some(lsp_types::ImplementationProviderCapability::Simple(true)),
         // references_provider: Some(lsp_types::OneOf::Left(true)),
-        // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
+        document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
         // document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
         // workspace_symbol_provider: Some(lsp_types::OneOf::Left(true)),
         folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
@@ -63,13 +64,13 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
     }
 }
 
-fn handle_request(ctx: &ServerContext, Request { id, method, params }: Request) -> anyhow::Result<Response> {
+async fn handle_request(ctx: ServerContext, Request { id, method, params }: Request) -> anyhow::Result<Response> {
     macro_rules! handler {
         ($name:expr, $f:path) => {
             if method.as_str() == $name {
                 let params = serde_json::from_value(params)
                     .map_err(|err| anyhow::Error::from(err).context(format!("Invalid params on {:?}", method)))?;
-                let ret = futures::executor::block_on($f(ctx, params))?;
+                let ret = $f(ctx, params).await?;
                 let res = Response { id, result: Some(serde_json::to_value(ret)?), error: None };
                 return Ok(res);
             }
@@ -86,18 +87,19 @@ fn handle_request(ctx: &ServerContext, Request { id, method, params }: Request) 
     Ok(Response { id, result: None, error: Some(err) })
 }
 
-fn handle_notification(ctx: &ServerContext, Notification { method, params }: Notification) -> anyhow::Result<()> {
+async fn handle_notification(ctx: ServerContext, Notification { method, params }: Notification) -> anyhow::Result<()> {
     macro_rules! handler {
         ($name:expr, $f:path) => {
             if method.as_str() == $name {
                 let params = serde_json::from_value(params)
                     .map_err(|err| anyhow::Error::from(err).context(format!("Invalid params on {:?}", method)))?;
-                return Ok(futures::executor::block_on($f(ctx, params))?);
+                return Ok($f(ctx, params).await?);
             }
         };
     }
 
     // handlers for each method
+    handler!("$/setTrace", logger::set_trace);
     handler!("textDocument/didOpen", file::did_open);
     handler!("textDocument/didChange", file::did_change);
     handler!("textDocument/didSave", file::did_save);
@@ -116,16 +118,15 @@ struct InitializeParams {
     capabilities: lsp_types::ClientCapabilities,
 }
 
-pub async fn run() -> anyhow::Result<()> {
+async fn serve() -> anyhow::Result<()> {
     let (connection, _io_threads) = Connection::stdio();
 
     // handshake
     let (initialize_id, initialize_params) = connection.initialize_start()?;
     let initialize_params: InitializeParams = serde_json::from_value(initialize_params)?;
-    let client_supported = if let Some(workspace) = initialize_params.capabilities.workspace.as_ref() {
-        workspace.did_change_watched_files.and_then(|x| x.dynamic_registration) == Some(true)
-    } else {
-        false
+    let mut client_supported = true;
+    if initialize_params.capabilities.workspace.and_then(|x| x.did_change_watched_files.and_then(|x| x.dynamic_registration)) != Some(true) {
+        client_supported = false;
     };
     if !client_supported {
         log::error!("The client does not have enough LSP capabilities");
@@ -153,15 +154,17 @@ pub async fn run() -> anyhow::Result<()> {
         let server_context = ServerContext::new(&sender);
         (server_context, sender)
     };
+    logger::set_trace(server_context.clone(), lsp_types::SetTraceParams { value: lsp_types::TraceValue::Off }).await?;
 
     // waiting requests on a separate thread
     let connection_thread = {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
-        tokio::spawn(async move {
+        tokio::task::spawn_local(async move {
             while let Some(msg) = receiver.recv().await {
+                let ctx = server_context.clone();
                 match msg {
                     Message::Request(req) => {
-                        match handle_request(&server_context, req) {
+                        match handle_request(ctx, req).await {
                             Ok(res) => {
                                 if let Err(err) = lsp_sender.send(Message::Response(res)) {
                                     log::error!("{}", err);
@@ -176,7 +179,7 @@ pub async fn run() -> anyhow::Result<()> {
                         log::warn!("Missing LSP response handler for {:?}", id);
                     }
                     Message::Notification(note) => {
-                        if let Err(err) = handle_notification(&server_context, note) {
+                        if let Err(err) = handle_notification(ctx, note).await {
                             log::error!("{}", err);
                         }
                     }
@@ -193,4 +196,10 @@ pub async fn run() -> anyhow::Result<()> {
     std::mem::drop(sender);
 
     Ok(())
+}
+
+pub async fn run() -> anyhow::Result<()> {
+    logger::init_trace();
+    let local = tokio::task::LocalSet::new();
+    local.run_until(serve()).await
 }
