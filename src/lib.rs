@@ -4,6 +4,7 @@ use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response
 mod context;
 mod file;
 mod folding;
+pub(crate) mod utils;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
     let file_filter = lsp_types::FileOperationFilter {
@@ -18,7 +19,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Options(
             lsp_types::TextDocumentSyncOptions {
                 open_close: Some(true),
-                change: Some(lsp_types::TextDocumentSyncKind::INCREMENTAL),
+                change: Some(lsp_types::TextDocumentSyncKind::FULL),
                 will_save: None,
                 will_save_wait_until: None,
                 save: Some(lsp_types::TextDocumentSyncSaveOptions::Supported(true)),
@@ -98,6 +99,9 @@ fn handle_notification(ctx: &ServerContext, Notification { method, params }: Not
 
     // handlers for each method
     handler!("textDocument/didOpen", file::did_open);
+    handler!("textDocument/didChange", file::did_change);
+    handler!("textDocument/didSave", file::did_save);
+    handler!("textDocument/didClose", file::did_close);
 
     // method not found
     log::warn!("Missing LSP notification handler for {:?}", method);

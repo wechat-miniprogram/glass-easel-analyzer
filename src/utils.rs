@@ -2,6 +2,12 @@ use std::path::{Path, PathBuf};
 
 use lsp_types::Uri;
 
+pub(crate) fn log_if_err<T>(r: anyhow::Result<T>) {
+    if let Err(err) = r {
+        log::error!("{}", err);
+    }
+}
+
 pub(crate) fn url_to_path(uri: &Uri) -> Option<PathBuf> {
     if uri.scheme()?.as_str() != "file" {
         return None;
