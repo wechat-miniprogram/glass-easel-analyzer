@@ -6,6 +6,8 @@ mod file;
 mod folding;
 mod logger;
 pub(crate) mod utils;
+mod semantic;
+mod symbol;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
     let file_filter = lsp_types::FileOperationFilter {
@@ -44,10 +46,10 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         // type_definition_provider: Some(lsp_types::TypeDefinitionProviderCapability::Simple(true)),
         // implementation_provider: Some(lsp_types::ImplementationProviderCapability::Simple(true)),
         // references_provider: Some(lsp_types::OneOf::Left(true)),
-        document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
+        // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
         // document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
         // workspace_symbol_provider: Some(lsp_types::OneOf::Left(true)),
-        folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
+        // folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
         // declaration_provider: Some(lsp_types::DeclarationCapability::Simple(true)),
         // workspace: Some(lsp_types::WorkspaceServerCapabilities {
         //     workspace_folders: None,
@@ -60,6 +62,17 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         //         will_delete: None,
         //     })
         // }),
+        semantic_tokens_provider: Some(
+            lsp_types::SemanticTokensServerCapabilities::SemanticTokensOptions(lsp_types::SemanticTokensOptions {
+                work_done_progress_options: lsp_types::WorkDoneProgressOptions { work_done_progress: None },
+                legend: lsp_types::SemanticTokensLegend {
+                    token_types: semantic::TOKEN_TYPES.into(),
+                    token_modifiers: semantic::TOKEN_MODIFIERS.into(),
+                },
+                range: Some(true),
+                full: Some(lsp_types::SemanticTokensFullOptions::Delta { delta: Some(false) }),
+            })
+        ),
         ..Default::default()
     }
 }
@@ -79,6 +92,9 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
 
     // handlers for each method
     handler!("textDocument/foldingRange", folding::folding_range);
+    handler!("textDocument/semanticTokens/full", semantic::tokens_full);
+    handler!("textDocument/semanticTokens/range", semantic::tokens_range);
+    handler!("textDocument/documentSymbol", symbol::document_symbol);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);

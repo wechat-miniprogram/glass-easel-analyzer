@@ -49,7 +49,7 @@ pub(crate) async fn did_change(ctx: ServerContext, params: DidChangeTextDocument
         match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {
                 if let Some(content) = project.get_file_content(&abs_path) {
-                    let new_content = apply_content_changes_to_content(content, params.content_changes);
+                    let new_content = apply_content_changes_to_content(&content.content, params.content_changes);
                     match project.set_wxml(abs_path, new_content) {
                         Ok(diagnostics) => {
                             log_if_err(ctx.send_notification("textDocument/publishDiagnostics", PublishDiagnosticsParams {
