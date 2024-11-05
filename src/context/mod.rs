@@ -49,12 +49,8 @@ impl ServerContext {
                 let has_wxss = fs::metadata(&wxss).await.map(|x| x.is_file()).unwrap_or(false);
                 if !has_json && !has_wxss { continue; }
                 let mut new_project = project::Project::new(ancestor.to_path_buf());
-                if let Ok(content) = fs::read_to_string(&json).await {
-                    new_project.set_json(json, content);
-                }
-                if let Ok(content) = fs::read_to_string(&wxss).await {
-                    new_project.set_wxss(wxss, content);
-                }
+                new_project.file_content(&json);
+                new_project.file_content(&wxss);
                 project = Some(new_project);
                 break;
             }

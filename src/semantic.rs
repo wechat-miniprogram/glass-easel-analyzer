@@ -5,9 +5,8 @@ use lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType, Semanti
 
 use crate::{context::project::FileContentMetadata, ServerContext};
 
-pub(crate) const TOKEN_TYPES: [SemanticTokenType; 13] = [
+pub(crate) const TOKEN_TYPES: [SemanticTokenType; 12] = [
     SemanticTokenType::TYPE,
-    SemanticTokenType::CLASS,
     SemanticTokenType::VARIABLE,
     SemanticTokenType::PROPERTY,
     SemanticTokenType::EVENT,
@@ -26,7 +25,6 @@ pub(crate) const TOKEN_TYPES: [SemanticTokenType; 13] = [
 #[repr(u16)]
 enum TokenType {
     Type = 0,
-    Class,
     Variable,
     Property,
     Event,
@@ -53,12 +51,13 @@ enum TokenModifier {
     None = 0x00000000,
     Declaration = 0x00000001,
     Definition = 0x00000002,
+    #[allow(dead_code)]
     Deprecated = 0x00000004,
 }
 
 pub(crate) async fn tokens_full(ctx: ServerContext, params: SemanticTokensParams) -> anyhow::Result<SemanticTokens> {
     let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<_> {
-        let data = if let Some(content) = project.get_file_content(&abs_path) {
+        let data = if let Some(content) = project.cached_file_content(&abs_path) {
             match abs_path.extension().and_then(|x| x.to_str()) {
                 Some("wxml") => {
                     let template = project.get_wxml_tree(&abs_path)?;
@@ -77,7 +76,7 @@ pub(crate) async fn tokens_full(ctx: ServerContext, params: SemanticTokensParams
 
 pub(crate) async fn tokens_range(ctx: ServerContext, params: SemanticTokensRangeParams) -> anyhow::Result<SemanticTokens> {
     let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<_> {
-        let data = if let Some(content) = project.get_file_content(&abs_path) {
+        let data = if let Some(content) = project.cached_file_content(&abs_path) {
             match abs_path.extension().and_then(|x| x.to_str()) {
                 Some("wxml") => {
                     let template = project.get_wxml_tree(&abs_path)?;
@@ -225,17 +224,17 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             common,
                         } => {
                             let tag_locs = [
-                                elem.start_tag_location.0.start..tag_name.location.end,
-                                elem.start_tag_location.1.clone(),
+                                elem.tag_location.start.0.start..tag_name.location.end,
+                                elem.tag_location.start.1.clone(),
                             ];
                             for loc in tag_locs {
                                 tokens.push(WxmlToken { location: loc, ty: TokenType::Type, modifier: 0 });
                             }
-                            if let Some(x) = elem.end_tag_location.as_ref() {
+                            if let Some(x) = elem.tag_location.end.as_ref() {
                                 let loc = x.0.start..x.1.end;
                                 tokens.push(WxmlToken { location: loc, ty: TokenType::Type, modifier: 0 });
                             } else {
-                                tokens.push(WxmlToken { location: elem.close_location.clone(), ty: TokenType::Type, modifier: 0 });
+                                tokens.push(WxmlToken { location: elem.tag_location.close.clone(), ty: TokenType::Type, modifier: 0 });
                             }
                             for attr in attributes.iter().chain(change_attributes.iter()) {
                                 if let Some(p) = attr.prefix_location.as_ref() {
@@ -301,7 +300,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                                 let (loc, value) = name;
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
                                 collect_in_value(tokens, value);
-                            }                    
+                            }
                             for attr in values.iter() {
                                 if let Some(p) = attr.prefix_location.as_ref() {
                                     tokens.push(WxmlToken { location: p.clone(), ty: TokenType::Keyword, modifier: 0 });
@@ -332,6 +331,9 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             }
                             for (loc, value) in [item_name, index_name, key] {
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
+                                let mut t: WxmlToken = value.into();
+                                t.ty = TokenType::Variable;
+                                t.modifier = TokenModifier::Definition as u32;
                                 tokens.push(value.into());
                             }
                             collect_in_nodes(tokens, children);
@@ -503,23 +505,29 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
     }
 
     // collect all tokens from tree
-    for i in template.globals.imports.iter() {
+    for (_, location, i) in template.globals.imports.iter() {
+        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
         let mut t: WxmlToken = i.into();
         t.modifier = TokenModifier::Declaration as u32;
         tokens.push(t);
     }
-    for i in template.globals.includes.iter() {
+    for (_, location, i) in template.globals.includes.iter() {
+        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
         let mut t: WxmlToken = i.into();
         t.modifier = TokenModifier::Declaration as u32;
         tokens.push(t);
     }
     for i in template.globals.scripts.iter() {
+        tokens.push(WxmlToken { location: i.module_location(), ty: TokenType::Keyword, modifier: 0 });
         let mut t: WxmlToken = i.module_name().into();
         t.modifier = TokenModifier::Definition as u32;
         tokens.push(t);
     }
-    for (name, nodes) in template.globals.sub_templates.iter() {
-        tokens.push(name.into());
+    for (_, location, name, nodes) in template.globals.sub_templates.iter() {
+        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
+        let mut t: WxmlToken = name.into();
+        t.modifier = TokenModifier::Definition as u32;
+        tokens.push(t);
         collect_in_nodes(&mut tokens, nodes);
     }
     collect_in_nodes(&mut tokens, &template.content);
@@ -529,7 +537,8 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
     let mut rel_line = 0;
     let mut rel_col = 0;
     let mut ret: Vec<SemanticToken> = vec![];
-    for t in tokens {
+    let mut tokens = tokens.into_iter();
+    while let Some(mut t) = tokens.next() {
         if t >= end_bound { break; }
         let t_end = WxmlToken {
             location: t.location.end..t.location.end,
@@ -539,10 +548,15 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
         if t_end < start_bound {
             continue;
         }
+        eprintln!("!!! {:?}", t.location);
+        if t.location.start.line < rel_line || (t.location.start.line == rel_line && t.location.start.utf16_col < rel_col) {
+            t.location.start.line = rel_line;
+            t.location.end.line = rel_col;
+        }
         for line in t.location.start.line..=t.location.end.line {
             let start = if line == t.location.start.line { t.location.start.utf16_col } else { 0 };
             let end = if line == t.location.end.line { t.location.end.utf16_col } else { content.get_line_utf16_len(line) };
-            let length = end - start;
+            let length = end.saturating_sub(start);
             if length == 0 { continue; }
             let delta_line = line - rel_line;
             let delta_start = start - if delta_line > 0 { 0 } else { rel_col };
@@ -556,26 +570,6 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
             rel_line = line;
             rel_col = start;
         }
-        // let length = if t.location.start.line == t.location.end.line {
-        //     t.location.end.utf16_col - t.location.start.utf16_col
-        // } else {
-        //     let start_idx = content.content_index_for_line_utf16_col(t.location.start.line, t.location.start.utf16_col);
-        //     let end_idx = content.content_index_for_line_utf16_col(t.location.end.line, t.location.end.utf16_col);
-        //     eprintln!("!!! multiline {:?} = {:?}", start_idx..end_idx, content.content[start_idx..end_idx].chars().map(|x| x.len_utf16() as u32).sum::<u32>());
-        //     content.content[start_idx..end_idx].chars().map(|x| x.len_utf16() as u32).sum()
-        // };
-        // if length == 0 { continue; }
-        // let delta_line = t.location.start.line - rel_line;
-        // let delta_start = t.location.start.utf16_col - if delta_line > 0 { 0 } else { rel_col };
-        // ret.push(SemanticToken {
-        //     delta_line,
-        //     delta_start,
-        //     length,
-        //     token_type: t.ty as u32,
-        //     token_modifiers_bitset: t.modifier,
-        // });
-        // rel_line = t.location.start.line;
-        // rel_col = t.location.start.utf16_col;
     }
 
     ret

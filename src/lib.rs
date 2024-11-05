@@ -10,14 +10,14 @@ mod semantic;
 mod symbol;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
-    let file_filter = lsp_types::FileOperationFilter {
-        scheme: None,
-        pattern: lsp_types::FileOperationPattern {
-            glob: "**/*.{wxml,wxss,json}".to_string(),
-            matches: Some(lsp_types::FileOperationPatternKind::File),
-            options: None,
-        },
-    };
+    // let file_filter = lsp_types::FileOperationFilter {
+    //     scheme: None,
+    //     pattern: lsp_types::FileOperationPattern {
+    //         glob: "**/*.{wxml,wxss,json}".to_string(),
+    //         matches: Some(lsp_types::FileOperationPatternKind::File),
+    //         options: None,
+    //     },
+    // };
     lsp_types::ServerCapabilities {
         text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Options(
             lsp_types::TextDocumentSyncOptions {
@@ -42,15 +42,14 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         //     retrigger_characters: None,
         //     work_done_progress_options: lsp_types::WorkDoneProgressOptions { work_done_progress: None },
         // }),
+        // declaration_provider: Some(lsp_types::DeclarationCapability::Simple(true)),
         // definition_provider: Some(lsp_types::OneOf::Left(true)),
         // type_definition_provider: Some(lsp_types::TypeDefinitionProviderCapability::Simple(true)),
         // implementation_provider: Some(lsp_types::ImplementationProviderCapability::Simple(true)),
         // references_provider: Some(lsp_types::OneOf::Left(true)),
         // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
-        // document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
-        // workspace_symbol_provider: Some(lsp_types::OneOf::Left(true)),
-        // folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
-        // declaration_provider: Some(lsp_types::DeclarationCapability::Simple(true)),
+        document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
+        folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
         // workspace: Some(lsp_types::WorkspaceServerCapabilities {
         //     workspace_folders: None,
         //     file_operations: Some(lsp_types::WorkspaceFileOperationsServerCapabilities {
@@ -120,6 +119,7 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
     handler!("textDocument/didChange", file::did_change);
     handler!("textDocument/didSave", file::did_save);
     handler!("textDocument/didClose", file::did_close);
+    handler!("workspace/didChangeWatchedFiles", file::did_change_watched_files);
 
     // method not found
     log::warn!("Missing LSP notification handler for {:?}", method);
@@ -130,6 +130,7 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
 #[serde(rename_all = "camelCase")]
 struct InitializeParams {
     #[serde(default)]
+    #[allow(dead_code)]
     backend_configuration: String,
     capabilities: lsp_types::ClientCapabilities,
 }
@@ -156,6 +157,27 @@ async fn serve() -> anyhow::Result<()> {
         }),
     };
     connection.initialize_finish(initialize_id, serde_json::to_value(initialize_result)?)?;
+
+    // register capabilities
+    let registrations = lsp_types::RegistrationParams {
+        registrations: vec![
+            lsp_types::Registration {
+                id: "workspace/didChangeWatchedFiles".to_string(),
+                method: "workspace/didChangeWatchedFiles".to_string(),
+                register_options: Some(serde_json::to_value(lsp_types::DidChangeWatchedFilesRegistrationOptions {
+                    watchers: vec![lsp_types::FileSystemWatcher {
+                        glob_pattern: lsp_types::GlobPattern::String("**/*.{json,wxml,wxss}".to_string()),
+                        kind: Some(lsp_types::WatchKind::all()),
+                    }],
+                })?),
+            },
+        ],
+    };
+    connection.sender.send(Message::Request(Request {
+        id: "client/registerCapability".to_string().into(),
+        method: "client/registerCapability".to_string(),
+        params: serde_json::to_value(registrations)?,
+    }))?;
 
     // generate a `ServerContext`
     let Connection { sender: lsp_sender, receiver: lsp_receiver } = connection;
@@ -191,8 +213,11 @@ async fn serve() -> anyhow::Result<()> {
                             }
                         }
                     }
-                    Message::Response(Response { id, result: _, error: _ }) => {
-                        log::warn!("Missing LSP response handler for {:?}", id);
+                    Message::Response(Response { id: _, result: _, error }) => {
+                        if let Some(err) = error {
+                            log::error!("LSP response error: {:?}", err.message);
+                        }
+                        // log::warn!("Missing LSP response handler for {:?}", id);
                     }
                     Message::Notification(note) => {
                         if let Err(err) = handle_notification(ctx, note).await {

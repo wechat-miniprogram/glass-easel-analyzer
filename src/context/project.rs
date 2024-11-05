@@ -4,29 +4,41 @@ use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErr
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 
 pub(crate) struct FileContentMetadata {
+    opened: bool,
     pub(crate) content: String,
     pub(crate) line_starts: Vec<usize>,
 }
 
 impl FileContentMetadata {
     fn new(content: String) -> Self {
+        FileContentMetadata {
+            opened: false,
+            content,
+            line_starts: vec![],
+        }
+    }
+
+    fn open(&mut self) {
+        self.opened = true;
         let mut line_starts = vec![];
         line_starts.push(0);
-        let mut iter = content.as_bytes().iter().enumerate();
+        let mut iter = self.content.as_bytes().iter().enumerate();
         while let Some((idx, byte)) = iter.next() {
             let byte = *byte;
             if byte == b'\n' {
                 line_starts.push(idx + 1);
             } else if byte == b'\r' {
-                if content.as_bytes()[idx + 1] != b'\n' {
+                if self.content.as_bytes()[idx + 1] != b'\n' {
                     line_starts.push(idx + 1);
                 }
             }
         }
-        FileContentMetadata {
-            content,
-            line_starts,
-        }
+        self.line_starts = line_starts;
+    }
+
+    fn close(&mut self) {
+        self.opened = false;
+        self.line_starts.truncate(0);
     }
 
     pub(crate) fn get_line_utf16_len(&self, line: u32) -> u32 {
@@ -69,6 +81,7 @@ pub(crate) struct JsonConfig {
 pub(crate) struct Project {
     root: PathBuf,
     file_contents: HashMap<PathBuf, FileContentMetadata>,
+    json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
 }
 
@@ -77,6 +90,7 @@ impl Project {
         Self {
             root,
             file_contents: HashMap::new(),
+            json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
         }
     }
@@ -89,34 +103,169 @@ impl Project {
         crate::utils::unix_rel_path(&self.root, abs_path)
     }
 
-    pub(crate) fn get_file_content(&self, abs_path: &Path) -> Option<&FileContentMetadata> {
+    pub(crate) fn file_changed(&mut self, abs_path: &Path) {
+        if let Some(content_meta) = self.file_contents.get(abs_path) {
+            if !content_meta.opened {
+                let _ = self.load_file_from_fs(abs_path);
+            }
+        }
+    }
+
+    pub(crate) fn file_removed(&mut self, abs_path: &Path) {
+        if let Some(content_meta) = self.file_contents.get(abs_path) {
+            if !content_meta.opened {
+                match abs_path.extension().and_then(|x| x.to_str()) {
+                    Some("wxml") => {
+                        let _ = self.cleanup_wxml(abs_path);
+                    }
+                    Some("wxss") => {
+                        let _ = self.cleanup_wxss(abs_path);
+                    }
+                    Some("json") => {
+                        let _ = self.cleanup_json(abs_path);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    fn load_file_from_fs(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        match abs_path.extension().and_then(|x| x.to_str()) {
+            Some("wxml") => {
+                let content = std::fs::read_to_string(abs_path)?;
+                self.update_wxml(abs_path, content)?;
+            }
+            Some("wxss") => {
+                let content = std::fs::read_to_string(abs_path)?;
+                self.update_wxss(abs_path, content)?;
+            }
+            Some("json") => {
+                let content = std::fs::read_to_string(abs_path)?;
+                self.update_json(abs_path, content)?;
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    pub(crate) fn file_content(&mut self, abs_path: &Path) -> Option<&FileContentMetadata> {
+        if self.file_contents.contains_key(abs_path) {
+            return self.file_contents.get(abs_path);
+        }
+        self.load_file_from_fs(abs_path).ok()?;
         self.file_contents.get(abs_path)
     }
 
-    pub(crate) fn set_json(&mut self, abs_path: impl Into<PathBuf>, content: String) {
-        let _json_config: JsonConfig = serde_json::from_str(&content).unwrap_or_default(); // TODO handling failure
-        self.file_contents.insert(abs_path.into(), FileContentMetadata::new(content));
+    pub(crate) fn cached_file_content(&self, abs_path: &Path) -> Option<&FileContentMetadata> {
+        self.file_contents.get(abs_path)
     }
 
-    pub(crate) fn set_wxss(&mut self, abs_path: impl Into<PathBuf>, content: String) {
-         // TODO handling wxss content
-        self.file_contents.insert(abs_path.into(), FileContentMetadata::new(content));
+    fn update_json(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        let mut ret = vec![];
+        let json_config: Result<JsonConfig, _> = serde_json::from_str(&content);
+        match json_config {
+            Ok(json_config) => {
+                self.json_config_map.insert(abs_path.to_path_buf(), json_config);
+            }
+            Err(err) => {
+                let pos = Position::new(err.line().saturating_sub(1) as u32, err.column().saturating_sub(1) as u32);
+                ret.push(Diagnostic {
+                    range: Range { start: pos, end: pos },
+                    message: err.to_string(),
+                    severity: Some(DiagnosticSeverity::ERROR),
+                    ..Default::default()
+                });
+                self.json_config_map.insert(abs_path.to_path_buf(), Default::default());
+            }
+        }
+        Ok(ret)
     }
 
-    pub(crate) fn set_wxml(&mut self, abs_path: impl Into<PathBuf>, content: String) -> anyhow::Result<Vec<Diagnostic>> {
-        let abs_path = abs_path.into();
+    fn cleanup_json(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        self.json_config_map.remove(abs_path);
+        self.file_contents.remove(abs_path);
+        Ok(())
+    }
+
+    pub(crate) fn open_json(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        let diagnostics = self.update_json(abs_path, content)?;
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.open();
+        }
+        Ok(diagnostics)
+    }
+
+    pub(crate) fn close_json(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.close();
+        }
+        if std::fs::metadata(abs_path).ok().map(|x| x.is_file()) != Some(true) {
+            self.cleanup_json(abs_path)?;
+        }
+        Ok(())
+    }
+
+    fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        let mut ret = vec![];
+        // TODO
+        Ok(ret)
+    }
+
+    fn cleanup_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        self.json_config_map.remove(abs_path);
+        self.file_contents.remove(abs_path);
+        Ok(())
+    }
+
+    pub(crate) fn open_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        let diagnostics = self.update_wxss(abs_path, content)?;
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.open();
+        }
+        Ok(diagnostics)
+    }
+
+    pub(crate) fn close_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.close();
+        }
+        if std::fs::metadata(abs_path).ok().map(|x| x.is_file()) != Some(true) {
+            self.cleanup_wxss(abs_path)?;
+        }
+        Ok(())
+    }
+
+    fn update_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let tmpl_path = self.unix_rel_path(&abs_path)?;
         let err_list = self.template_group.add_tmpl(&tmpl_path, &content);
-        self.file_contents.insert(abs_path, FileContentMetadata::new(content));
+        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
         let diagnostics = err_list.into_iter().filter_map(diagnostic_from_wxml_parse_error).collect();
         Ok(diagnostics)
     }
 
-    pub(crate) fn remove_wxml(&mut self, abs_path: impl Into<PathBuf>) -> anyhow::Result<()> {
-        let abs_path = abs_path.into();
+    fn cleanup_wxml(&mut self, abs_path: &Path) -> anyhow::Result<()> {
         let tmpl_path = self.unix_rel_path(&abs_path)?;
         self.template_group.remove_tmpl(&tmpl_path);
-        self.file_contents.remove(&abs_path);
+        self.file_contents.remove(abs_path);
+        Ok(())
+    }
+
+    pub(crate) fn open_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        let diagnostics = self.update_wxml(abs_path, content)?;
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.open();
+        }
+        Ok(diagnostics)
+    }
+
+    pub(crate) fn close_wxml(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        if let Some(x) = self.file_contents.get_mut(abs_path) {
+            x.close();
+        }
+        if std::fs::metadata(abs_path).ok().map(|x| x.is_file()) != Some(true) {
+            self.cleanup_wxml(abs_path)?;
+        }
         Ok(())
     }
 
