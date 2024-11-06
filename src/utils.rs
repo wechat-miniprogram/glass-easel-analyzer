@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, str::FromStr};
 
 use lsp_types::Uri;
 
@@ -58,6 +58,22 @@ pub(crate) fn url_to_path(uri: &Uri) -> Option<PathBuf> {
     }
 
     Some(ret)
+}
+
+pub(crate) fn path_to_uri(abs_path: &Path) -> Uri {
+    if cfg!(target_os = "windows") {
+        let s = abs_path.to_string_lossy();
+        let prefix = if s.starts_with(r#"\\"#) {
+            "file:"
+        } else if s.starts_with(r#"\"#) {
+            "file://"
+        } else {
+            "file:///"
+        };
+        let s = s.replace('\\', "//");
+    }
+    // Uri::from_str().unwrap()
+    // TODO
 }
 
 pub(crate) fn unix_rel_path(base: &Path, target: &Path) -> anyhow::Result<String> {

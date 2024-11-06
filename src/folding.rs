@@ -43,7 +43,7 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
                         ElementKind::For { children, .. } => {
                             collect_in_nodes(ranges, &children);
                         }
-                        ElementKind::If { branches, else_branch } => {
+                        ElementKind::If { branches, else_branch, .. } => {
                             for br in branches {
                                 collect_in_nodes(ranges, &br.2);
                             }
@@ -54,24 +54,26 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
                         ElementKind::Slot { .. } |
                         ElementKind::TemplateRef { .. } |
                         ElementKind::Include { .. } => {}
+                        _ => {}
                     }
                 }
-                Node::Comment(_, loc) => {
-                    let mut loc = loc.clone();
+                Node::Comment(x) => {
+                    let mut loc = x.location.clone();
                     loc.start.utf16_col += 3;
                     if loc.end.utf16_col >= 3 { loc.end.utf16_col -= 3; }
                     ranges.push(convert_folding_range(loc, Some(FoldingRangeKind::Comment)));
                 }
                 Node::UnknownMetaTag(..) => {}
+                _ => {}
             }
         }
     }
-    for (tag_location, _, _, nodes) in template.globals.sub_templates.iter() {
-        if let Some(end_loc) = tag_location.end.as_ref() {
-            let loc = tag_location.start.1.end..end_loc.0.start;
+    for sub in template.globals.sub_templates.iter() {
+        if let Some(end_loc) = sub.tag_location.end.as_ref() {
+            let loc = sub.tag_location.start.1.end..end_loc.0.start;
             ranges.push(convert_folding_range(loc, None));
         }
-        collect_in_nodes(&mut ranges, nodes);
+        collect_in_nodes(&mut ranges, &sub.content);
     }
     collect_in_nodes(&mut ranges, &template.content);
     ranges

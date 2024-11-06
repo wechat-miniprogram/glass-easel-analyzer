@@ -5,9 +5,11 @@ mod context;
 mod file;
 mod folding;
 mod logger;
-pub(crate) mod utils;
+mod reference;
 mod semantic;
 mod symbol;
+pub(crate) mod utils;
+pub(crate) mod wxml_utils;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
     // let file_filter = lsp_types::FileOperationFilter {
@@ -42,11 +44,11 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         //     retrigger_characters: None,
         //     work_done_progress_options: lsp_types::WorkDoneProgressOptions { work_done_progress: None },
         // }),
-        // declaration_provider: Some(lsp_types::DeclarationCapability::Simple(true)),
-        // definition_provider: Some(lsp_types::OneOf::Left(true)),
+        definition_provider: Some(lsp_types::OneOf::Left(true)),
+        declaration_provider: Some(lsp_types::DeclarationCapability::Simple(true)),
         // type_definition_provider: Some(lsp_types::TypeDefinitionProviderCapability::Simple(true)),
         // implementation_provider: Some(lsp_types::ImplementationProviderCapability::Simple(true)),
-        // references_provider: Some(lsp_types::OneOf::Left(true)),
+        references_provider: Some(lsp_types::OneOf::Left(true)),
         // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
         document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
         folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
@@ -93,6 +95,9 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     handler!("textDocument/foldingRange", folding::folding_range);
     handler!("textDocument/semanticTokens/full", semantic::tokens_full);
     handler!("textDocument/semanticTokens/range", semantic::tokens_range);
+    handler!("textDocument/definition", reference::find_definition);
+    handler!("textDocument/declaration", reference::find_declaration);
+    handler!("textDocument/references", reference::find_references);
     handler!("textDocument/documentSymbol", symbol::document_symbol);
 
     // method not found
@@ -142,7 +147,13 @@ async fn serve() -> anyhow::Result<()> {
     let (initialize_id, initialize_params) = connection.initialize_start()?;
     let initialize_params: InitializeParams = serde_json::from_value(initialize_params)?;
     let mut client_supported = true;
-    if initialize_params.capabilities.workspace.and_then(|x| x.did_change_watched_files.and_then(|x| x.dynamic_registration)) != Some(true) {
+    if initialize_params.capabilities.workspace.as_ref().and_then(|x| x.did_change_watched_files.and_then(|x| x.dynamic_registration)) != Some(true) {
+        client_supported = false;
+    };
+    if initialize_params.capabilities.text_document.as_ref().and_then(|x| x.definition.and_then(|x| x.link_support)) != Some(true) {
+        client_supported = false;
+    };
+    if initialize_params.capabilities.text_document.as_ref().and_then(|x| x.declaration.and_then(|x| x.link_support)) != Some(true) {
         client_supported = false;
     };
     if !client_supported {

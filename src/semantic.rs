@@ -158,16 +158,8 @@ impl From<&Ident> for WxmlToken {
 
 fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template, range: std::ops::Range<Position>) -> Vec<SemanticToken> {
     let mut tokens: Vec<WxmlToken> = vec![];
-    let start_bound = WxmlToken {
-        location: range.start..range.start,
-        ty: TokenType::Comment,
-        modifier: 0,
-    };
-    let end_bound = WxmlToken {
-        location: range.end..range.end,
-        ty: TokenType::Comment,
-        modifier: 0,
-    };
+    let start_bound = range.start;
+    let end_bound = range.end;
 
     // collect in node tree recursively
     fn collect_in_common_attrs(tokens: &mut Vec<WxmlToken>, common: &CommonElementAttributes) {
@@ -222,6 +214,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             generics,
                             extra_attr,
                             common,
+                            ..
                         } => {
                             let tag_locs = [
                                 elem.tag_location.start.0.start..tag_name.location.end,
@@ -264,6 +257,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                                         collect_in_value(tokens, value);
                                     }
                                 }
+                                _ => {}
                             }
                             match style {
                                 StyleAttribute::None => {}
@@ -277,11 +271,12 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                                         collect_in_value(tokens, value);
                                     }
                                 }
+                                _ => {}
                             }
                             collect_in_common_attrs(tokens, common);
                             collect_in_nodes(tokens, &children);
                         }
-                        ElementKind::Pure { children, slot, slot_value_refs } => {
+                        ElementKind::Pure { children, slot, slot_value_refs, .. } => {
                             if let Some((loc, value)) = slot.as_ref() {
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
                                 collect_in_value(tokens, value);
@@ -295,7 +290,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             }
                             collect_in_nodes(tokens, &children);
                         }
-                        ElementKind::Slot { name, values, common } => {
+                        ElementKind::Slot { name, values, common, .. } => {
                             {
                                 let (loc, value) = name;
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
@@ -312,7 +307,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             }
                             collect_in_common_attrs(tokens, common);
                         }
-                        ElementKind::If { branches, else_branch } => {
+                        ElementKind::If { branches, else_branch, .. } => {
                             for (loc, value, nodes) in branches {
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
                                 collect_in_value(tokens, value);
@@ -323,7 +318,7 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                                 collect_in_nodes(tokens, nodes);
                             }
                         }
-                        ElementKind::For { list, item_name, index_name, key, children } => {
+                        ElementKind::For { list, item_name, index_name, key, children, .. } => {
                             {
                                 let (loc, value) = list;
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
@@ -338,25 +333,27 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                             }
                             collect_in_nodes(tokens, children);
                         }
-                        ElementKind::TemplateRef { target, data } => {
+                        ElementKind::TemplateRef { target, data, .. } => {
                             for (loc, value) in [target, data] {
                                 tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
                                 collect_in_value(tokens, value);
                             }
                         }
-                        ElementKind::Include { path } => {
+                        ElementKind::Include { path, .. } => {
                             let (loc, value) = path;
                             tokens.push(WxmlToken { location: loc.clone(), ty: TokenType::Keyword, modifier: 0 });
                             tokens.push(value.into());
                         }
+                        _ => {}
                     }
                 }
-                Node::Comment(_, location) => {
-                    tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Comment, modifier: 0 });
+                Node::Comment(x) => {
+                    tokens.push(WxmlToken { location: x.location.clone(), ty: TokenType::Comment, modifier: 0 });
                 }
-                Node::UnknownMetaTag(_, location) => {
-                    tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Macro, modifier: 0 });
+                Node::UnknownMetaTag(x) => {
+                    tokens.push(WxmlToken { location: x.location.clone(), ty: TokenType::Macro, modifier: 0 });
                 }
+                _ => {}
             }
         }
     }
@@ -367,14 +364,15 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
     }
     fn collect_in_value_with_static_type(tokens: &mut Vec<WxmlToken>, value: &Value, ty: TokenType) {
         match value {
-            Value::Static { value: _, location } => {
+            Value::Static { location, .. } => {
                 tokens.push(WxmlToken { location: location.clone(), ty, modifier: 0 });
             }
-            Value::Dynamic { expression, double_brace_location, binding_map_keys: _ } => {
+            Value::Dynamic { expression, double_brace_location, .. } => {
                 tokens.push(WxmlToken { location: double_brace_location.0.clone(), ty: TokenType::Operator, modifier: 0 });
                 collect_in_expr(tokens, expression);
                 tokens.push(WxmlToken { location: double_brace_location.1.clone(), ty: TokenType::Operator, modifier: 0 });
             }
+            _ => {}
         }
     }
     fn collect_in_expr(tokens: &mut Vec<WxmlToken>, expr: &Expression) {
@@ -501,19 +499,20 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
                 }
                 tokens.push(WxmlToken { location: paren_location.1.clone(), ty: TokenType::Operator, modifier: 0 });
             }
+            _ => {}
         }
     }
 
     // collect all tokens from tree
-    for (_, location, i) in template.globals.imports.iter() {
-        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
-        let mut t: WxmlToken = i.into();
+    for i in template.globals.imports.iter() {
+        tokens.push(WxmlToken { location: i.src_location.clone(), ty: TokenType::Keyword, modifier: 0 });
+        let mut t: WxmlToken = (&i.src).into();
         t.modifier = TokenModifier::Declaration as u32;
         tokens.push(t);
     }
-    for (_, location, i) in template.globals.includes.iter() {
-        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
-        let mut t: WxmlToken = i.into();
+    for i in template.globals.includes.iter() {
+        tokens.push(WxmlToken { location: i.src_location.clone(), ty: TokenType::Keyword, modifier: 0 });
+        let mut t: WxmlToken = (&i.src).into();
         t.modifier = TokenModifier::Declaration as u32;
         tokens.push(t);
     }
@@ -523,12 +522,12 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
         t.modifier = TokenModifier::Definition as u32;
         tokens.push(t);
     }
-    for (_, location, name, nodes) in template.globals.sub_templates.iter() {
-        tokens.push(WxmlToken { location: location.clone(), ty: TokenType::Keyword, modifier: 0 });
-        let mut t: WxmlToken = name.into();
+    for sub in template.globals.sub_templates.iter() {
+        tokens.push(WxmlToken { location: sub.name_location.clone(), ty: TokenType::Keyword, modifier: 0 });
+        let mut t: WxmlToken = (&sub.name).into();
         t.modifier = TokenModifier::Definition as u32;
         tokens.push(t);
-        collect_in_nodes(&mut tokens, nodes);
+        collect_in_nodes(&mut tokens, &sub.content);
     }
     collect_in_nodes(&mut tokens, &template.content);
 
@@ -539,16 +538,8 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
     let mut ret: Vec<SemanticToken> = vec![];
     let mut tokens = tokens.into_iter();
     while let Some(mut t) = tokens.next() {
-        if t >= end_bound { break; }
-        let t_end = WxmlToken {
-            location: t.location.end..t.location.end,
-            ty: TokenType::Comment,
-            modifier: 0,
-        };
-        if t_end < start_bound {
-            continue;
-        }
-        eprintln!("!!! {:?}", t.location);
+        if t.location.start >= end_bound { break; }
+        if t.location.start < start_bound { continue; }
         if t.location.start.line < rel_line || (t.location.start.line == rel_line && t.location.start.utf16_col < rel_col) {
             t.location.start.line = rel_line;
             t.location.end.line = rel_col;

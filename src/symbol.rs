@@ -19,14 +19,14 @@ pub(crate) async fn document_symbol(ctx: ServerContext, params: DocumentSymbolPa
 
 fn collect_wxml_symbol_list(template: &Template) -> Vec<DocumentSymbol> {
     let mut ret = vec![];
-    for (tag_location, _, name, _) in &template.globals.sub_templates {
-        let name_loc = name.location();
-        let tag_start_pos = tag_location.start.0.start.clone();
-        let tag_end_pos = tag_location.end.as_ref().unwrap_or(&tag_location.start).1.end.clone();
+    for sub in &template.globals.sub_templates {
+        let name_loc = sub.name.location();
+        let tag_start_pos = sub.tag_location.start.0.start.clone();
+        let tag_end_pos = sub.tag_location.end.as_ref().unwrap_or(&sub.tag_location.start).1.end.clone();
         #[allow(deprecated)]
         ret.push(DocumentSymbol {
-            name: name.name.to_string(),
-            detail: Some(format!("<template name={:?}>", name.name)),
+            name: sub.name.name.to_string(),
+            detail: Some(format!("<template name={:?}>", sub.name.name)),
             kind: SymbolKind::NAMESPACE,
             tags: Default::default(),
             deprecated: Default::default(),
