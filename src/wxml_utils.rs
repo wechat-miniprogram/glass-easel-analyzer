@@ -16,6 +16,7 @@ pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Range<Position> {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub(crate) enum Token<'a> {
     None,
     ScopeRef(Range<Position>, &'a StrName),
@@ -40,6 +41,7 @@ pub(crate) enum Token<'a> {
     SlotValueDefinition(&'a Ident),
     SlotValueRef(&'a Ident),
     SlotValueScope(&'a StrName),
+    SlotValueRefAndScope(&'a Ident),
     DataKey(&'a Ident),
     MarkKey(&'a Ident),
     EventName(&'a Ident),
@@ -146,6 +148,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             }
                             for attr in common.slot_value_refs.iter() {
                                 if ident_contains(&attr.name, pos) {
+                                    if attr.name.location == attr.value.location {
+                                        return Token::SlotValueRefAndScope(&attr.name);
+                                    }
                                     return Token::SlotValueRef(&attr.name);
                                 }
                                 if str_name_contains(&attr.value, pos) {
@@ -280,6 +285,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     }
                                     for attr in slot_value_refs.iter() {
                                         if ident_contains(&attr.name, pos) {
+                                            if attr.name.location == attr.value.location {
+                                                return Token::SlotValueRefAndScope(&attr.name);
+                                            }
                                             return Token::SlotValueDefinition(&attr.name);
                                         }
                                         if str_name_contains(&attr.value, pos) {

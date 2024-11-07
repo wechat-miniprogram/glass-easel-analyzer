@@ -25,7 +25,7 @@ pub(crate) async fn find_declaration(ctx: ServerContext, params: GotoDefinitionP
     let ret = ctx.clone().project_thread_task(uri, move |project, abs_path| -> anyhow::Result<Vec<LocationLink>> {
         let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {
-                todo!()
+                wxml::find_declaration(project, &abs_path, position)?
             }
             _ => vec![],
         };
@@ -50,7 +50,7 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
 }
 
 mod wxml {
-    use glass_easel_template_compiler::parse::Position;
+    use glass_easel_template_compiler::parse::{Position, TemplateStructure};
 
     use crate::wxml_utils::{location_to_lsp_range, Token};
 
@@ -64,10 +64,41 @@ mod wxml {
                 Token::ScopeRef(loc, target) => {
                     ret.push(LocationLink {
                         origin_selection_range: Some(location_to_lsp_range(&loc)),
-                        target_uri,
+                        target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
                         target_range: location_to_lsp_range(&target.location),
                         target_selection_range: location_to_lsp_range(&target.location),
                     })
+                }
+                Token::TemplateName(name)
+                | Token::ScriptModule(name)
+                | Token::SlotValueScope(name)
+                | Token::ForItem(name)
+                | Token::ForIndex(name)
+                | Token::ForKey(name) => {
+                    ret.push(LocationLink {
+                        origin_selection_range: Some(location_to_lsp_range(&name.location)),
+                        target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                        target_range: location_to_lsp_range(&name.location),
+                        target_selection_range: location_to_lsp_range(&name.location),
+                    });
+                }
+                Token::SlotValueRefAndScope(name) => {
+                    ret.push(LocationLink {
+                        origin_selection_range: Some(location_to_lsp_range(&name.location)),
+                        target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                        target_range: location_to_lsp_range(&name.location),
+                        target_selection_range: location_to_lsp_range(&name.location),
+                    });
+                }
+                Token::TemplateRef(is, loc) => {
+                    if let Some(x) = template.globals.sub_templates.iter().find(|x| x.name.is(is)) {
+                        ret.push(LocationLink {
+                            origin_selection_range: Some(location_to_lsp_range(&loc)),
+                            target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                            target_range: location_to_lsp_range(&x.name.location()),
+                            target_selection_range: location_to_lsp_range(&x.name.location()),
+                        });
+                    }
                 }
                 _ => {}
             }

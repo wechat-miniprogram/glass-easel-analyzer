@@ -1,7 +1,7 @@
 use std::{future::Future, path::{Path, PathBuf}, pin::Pin, sync::{Arc, Mutex}};
 
 use lsp_server::{Message, Notification};
-use lsp_types::Uri;
+use lsp_types::Url;
 use tokio::{fs, sync::mpsc};
 
 pub(crate) mod project;
@@ -79,10 +79,10 @@ impl ServerContext {
 
     pub(crate) async fn project_thread_async_task<R: 'static + Send, F: 'static + Send + Future<Output = R>>(
         &self,
-        uri: &Uri,
+        uri: &Url,
         f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf) -> F,
     ) -> anyhow::Result<R> {
-        let Some(path) = crate::utils::url_to_path(uri) else {
+        let Ok(path) = uri.to_file_path() else {
             return Err(anyhow::Error::msg("Illegal file URI"));
         };
         let sender = self.get_project_thread_sender(&path).await?;
@@ -100,7 +100,7 @@ impl ServerContext {
 
     pub(crate) async fn project_thread_task<R: 'static + Send>(
         &self,
-        uri: &Uri,
+        uri: &Url,
         f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf) -> R,
     ) -> anyhow::Result<R> {
         self.project_thread_async_task(uri, |project, abs_path| {

@@ -12,14 +12,6 @@ pub(crate) mod utils;
 pub(crate) mod wxml_utils;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
-    // let file_filter = lsp_types::FileOperationFilter {
-    //     scheme: None,
-    //     pattern: lsp_types::FileOperationPattern {
-    //         glob: "**/*.{wxml,wxss,json}".to_string(),
-    //         matches: Some(lsp_types::FileOperationPatternKind::File),
-    //         options: None,
-    //     },
-    // };
     lsp_types::ServerCapabilities {
         text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Options(
             lsp_types::TextDocumentSyncOptions {
@@ -30,7 +22,6 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
                 save: Some(lsp_types::TextDocumentSyncSaveOptions::Supported(true)),
             },
         )),
-        // selection_range_provider: Some(lsp_types::SelectionRangeProviderCapability::Simple(true)),
         // hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
         // completion_provider: Some(lsp_types::CompletionOptions {
         //     resolve_provider: None,
@@ -52,17 +43,6 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
         document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
         folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
-        // workspace: Some(lsp_types::WorkspaceServerCapabilities {
-        //     workspace_folders: None,
-        //     file_operations: Some(lsp_types::WorkspaceFileOperationsServerCapabilities {
-        //         did_create: Some(lsp_types::FileOperationRegistrationOptions { filters: vec![file_filter.clone()] }),
-        //         will_create: None,
-        //         did_rename: Some(lsp_types::FileOperationRegistrationOptions { filters: vec![file_filter.clone()] }),
-        //         will_rename: None,
-        //         did_delete: Some(lsp_types::FileOperationRegistrationOptions { filters: vec![file_filter.clone()] }),
-        //         will_delete: None,
-        //     })
-        // }),
         semantic_tokens_provider: Some(
             lsp_types::SemanticTokensServerCapabilities::SemanticTokensOptions(lsp_types::SemanticTokensOptions {
                 work_done_progress_options: lsp_types::WorkDoneProgressOptions { work_done_progress: None },
