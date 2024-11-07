@@ -1,0 +1,5 @@
+<view id="abc" slot="def" class="hello-class" style="width: auto;">
+  TEST
+</view>
+
+<view generic:a="view" />

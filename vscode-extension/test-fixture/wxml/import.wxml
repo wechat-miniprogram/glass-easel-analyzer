@@ -1,0 +1,5 @@
+<import src="global.wxml" />
+
+<template is="global-template"></template>
+
+<include src="global.wxml" />

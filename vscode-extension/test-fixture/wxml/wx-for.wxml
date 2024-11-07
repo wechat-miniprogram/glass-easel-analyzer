@@ -1,0 +1,5 @@
+<block wx:for="{{ list }}" wx:for-item="t" wx:for-index="i" wx:key="id">
+  <view>{{ i + ':' + t }}</view>
+</block>
+
+<view wx:for="ABC"></view>

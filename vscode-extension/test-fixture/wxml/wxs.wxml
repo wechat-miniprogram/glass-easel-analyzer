@@ -1,0 +1,10 @@
+<wxs module="helloScript">
+  exports.hello = function() {
+    return 'hello!'
+  }
+</wxs>
+
+<view wx:for="{{ list }}" wx:for-item="t">
+  <view>{{ helloScript.hello() }}</view>
+  <view>{{ t }}</view>
+</view>

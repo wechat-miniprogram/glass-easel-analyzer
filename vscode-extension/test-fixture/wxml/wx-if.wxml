@@ -1,0 +1,5 @@
+<block wx:if="{{ cond === 1 }}">
+  <view> 1 </view>
+</block>
+<view wx:elif="{{ cond === 2 }}"> 2 </view>
+<block wx:else />

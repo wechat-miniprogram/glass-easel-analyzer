@@ -1,0 +1,5 @@
+<view>
+  <view slot:a slot:b="c">
+    {{ a + b + c }}
+  </view>
+</view>

@@ -10,12 +10,12 @@
         "noImplicitThis": true,
         "strictFunctionTypes": true,
         "strictBindCallApply": true,
-        "module": "es6",
-        "target": "es6",
+        "module": "CommonJS",
+        "target": "es2020",
         "esModuleInterop": true,
         "moduleResolution": "node",
         "lib": ["ES6", "ES7", "DOM", "ESNext"],
-        "types": ["mocha"],
+        "types": ["mocha", "node"],
         "preserveConstEnums": true,
         "stripInternal": true
     }

@@ -21,20 +21,20 @@
       {
         "id": "wxml",
         "extensions": [
-            ".wxml"
+          ".wxml"
         ],
         "aliases": [
-            "WXML"
+          "WXML"
         ],
         "configuration": "./wxml-language-configuration.json"
       },
       {
         "id": "wxss",
         "extensions": [
-            ".wxss"
+          ".wxss"
         ],
         "aliases": [
-            "WXSS"
+          "WXSS"
         ],
         "configuration": "./wxss-language-configuration.json"
       }
@@ -84,8 +84,10 @@
     "@typescript-eslint/parser": "^8.7.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "chalk": "^5.3.0",
     "eslint": "^9.13.0",
     "glass-easel-miniprogram-template": "^0.10.3",
+    "pretty-format": "^29.7.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",
     "vscode-languageclient": "^9.0.1",

@@ -1,0 +1,7 @@
+<view bind:tap="a" />
+<view catch:tap="a" />
+<view mut-bind:tap="a" />
+<view capture-bind:tap="a" />
+<view capture-catch:tap="a" />
+<view capture-mut-bind:tap="a" />
+<view worklet:tap="a" />
