@@ -1,12 +1,12 @@
-import { ExtensionContext } from 'vscode'
+import { type ExtensionContext } from 'vscode'
 import {
-  Executable,
+  type Executable,
   LanguageClient,
-  LanguageClientOptions,
+  type LanguageClientOptions,
 } from 'vscode-languageclient/node'
 
 export type ClientOptions = {
-  serverPath: string,
+  serverPath: string
 }
 
 export class Client {
@@ -19,15 +19,22 @@ export class Client {
     this.options = options
   }
 
+  private getServerPath(): string {
+    if (process.env.GLASS_EASEL_ANALYZER_SERVER) {
+      return process.env.GLASS_EASEL_ANALYZER_SERVER
+    }
+    return this.options.serverPath
+  }
+
   async start() {
-    const command = this.options.serverPath
+    const command = this.getServerPath()
     const args: string[] = []
     const run: Executable = {
       command,
       args,
       options: {
         env: {
-          'RUST_BACKTRACE': '1',
+          RUST_BACKTRACE: '1',
         },
       },
     }
@@ -36,7 +43,7 @@ export class Client {
       args,
       options: {
         env: {
-          'RUST_BACKTRACE': '1',
+          RUST_BACKTRACE: '1',
         },
       },
     }
@@ -45,7 +52,7 @@ export class Client {
         { language: 'wxml', scheme: 'file' },
         { language: 'wxss', scheme: 'file' },
       ],
-      outputChannelName: 'glass-easel-analyzer'
+      outputChannelName: 'glass-easel-analyzer',
     }
     this.client = new LanguageClient(
       'glass_easel_analyzer',

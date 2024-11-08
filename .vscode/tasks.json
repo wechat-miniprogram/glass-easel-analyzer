@@ -55,13 +55,14 @@
 		{
 			"label": "tasks: watch-tests",
 			"dependsOn": [
+				"cargo-build-debug",
 				"npm: watch",
 				"npm: watch-tests"
 			],
 			"problemMatcher": []
 		},
 		{
-			"label": "tasks: debug-launch",
+			"label": "tasks: watch",
 			"dependsOn": [
 				"cargo-build-debug",
 				"npm: watch"

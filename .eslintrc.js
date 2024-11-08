@@ -69,6 +69,7 @@ module.exports = {
     'no-param-reassign': ['error', { props: false }],
     'no-redeclare': 'off',
     'prettier/prettier': 'warn',
+    'import/no-extraneous-dependencies': 'off',
     '@typescript-eslint/consistent-type-imports': [
       'warn',
       {
