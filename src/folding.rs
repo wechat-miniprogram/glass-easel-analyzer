@@ -1,4 +1,4 @@
-use glass_easel_template_compiler::parse::{tag::{ElementKind, Node}, Position, Template};
+use glass_easel_template_compiler::parse::{tag::{ElementKind, Node, Script}, Position, Template};
 use lsp_types::{FoldingRange, FoldingRangeKind, FoldingRangeParams};
 
 use crate::ServerContext;
@@ -66,6 +66,18 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
                 Node::UnknownMetaTag(..) => {}
                 _ => {}
             }
+        }
+    }
+    for script in template.globals.scripts.iter() {
+        match script {
+            Script::Inline { tag_location, .. } => {
+                dbg!(&tag_location);
+                if let Some(end_loc) = tag_location.end.as_ref() {
+                    let loc = tag_location.start.1.end..end_loc.0.start;
+                    ranges.push(convert_folding_range(loc, None));
+                }
+            }
+            _ => {}
         }
     }
     for sub in template.globals.sub_templates.iter() {

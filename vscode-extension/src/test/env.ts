@@ -23,7 +23,11 @@ const TEST_FIXTURE_DIR = path.resolve(EXTENSION_DIR, 'test-fixture')
 const SNAPSHOT_DIR = path.resolve(EXTENSION_DIR, 'test-snapshot')
 const OVERWRITE_SNAPSHOT = process.env.TEST_OVERWRITE_SNAPSHOT
 
-const normalizeTitle = (s: string) => s.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()
+const normalizeTitle = (title: string) =>
+  title
+    .match(/[a-zA-Z0-9]+/g)!
+    .map((x) => x.toLowerCase())
+    .join('-')
 
 export class Env {
   private namespace: string
@@ -43,17 +47,15 @@ export class Env {
       const expect = new Expect(`${this.namespace}/${testId}/${name}`)
       // eslint-disable-next-line no-await-in-loop
       await f(uri, expect)
-      if (OVERWRITE_SNAPSHOT) {
-        expect.overwriteExpected()
-        if (expect.failureCount > 0) {
+      if (expect.failureCount > 0) {
+        if (OVERWRITE_SNAPSHOT) {
+          expect.overwriteExpected()
           // eslint-disable-next-line no-console
           console.warn(
             chalk.yellow(`${expect.failureCount} snapshot(s) updated ${expect.snapshotPath()}`),
           )
-        }
-      } else {
-        expect.writeActualAndDiff()
-        if (expect.failureCount > 0) {
+        } else {
+          expect.writeActualAndDiff()
           // eslint-disable-next-line no-console
           console.error(
             chalk.red(
@@ -62,6 +64,8 @@ export class Env {
           )
           snapshotFails.push(expect.actualOutputPath())
         }
+      } else {
+        expect.writeActualAndDiff()
       }
     }
     if (snapshotFails.length > 0) {
@@ -143,13 +147,13 @@ class Expect {
   }
 
   snapshot(actual: unknown) {
-    const actualStr = prettyFormat(actual)
+    const actualStr = prettyFormat(actual, { printFunctionName: false })
     this.actualOutput += `// ====== SNAPSHOT ${this.index} ======\n`
     this.actualOutput += actualStr
     this.actualOutput += '\n'
     if (this.index >= this.snapshots.length) {
       this.failureCount += 1
-    } else if (this.snapshots[this.index] !== actual) {
+    } else if (this.snapshots[this.index] !== actualStr) {
       this.failureCount += 1
     }
     this.index += 1
