@@ -20,6 +20,7 @@ pub(crate) async fn document_symbol(ctx: ServerContext, params: DocumentSymbolPa
 fn collect_wxml_symbol_list(template: &Template) -> Vec<DocumentSymbol> {
     let mut ret = vec![];
     for sub in &template.globals.sub_templates {
+        if sub.name.is("") { continue; }
         let name_loc = sub.name.location();
         let tag_start_pos = sub.tag_location.start.0.start.clone();
         let tag_end_pos = sub.tag_location.end.as_ref().unwrap_or(&sub.tag_location.start).1.end.clone();
