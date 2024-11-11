@@ -52,7 +52,7 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
 mod wxml {
     use glass_easel_template_compiler::parse::{Position, TemplateStructure};
 
-    use crate::wxml_utils::{location_to_lsp_range, ScopeKind, Token};
+    use crate::{utils::add_file_extension, wxml_utils::{location_to_lsp_range, ScopeKind, Token}};
 
     use super::*;
 
@@ -62,6 +62,22 @@ mod wxml {
         if let Ok(template) = project.get_wxml_tree(abs_path) {
             let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
             match token {
+                Token::TagName(ident) => {
+                    if let Some(target_path) = project.get_cached_target_component_path(abs_path, &ident.name) {
+                        if let Some(target_wxml_path) = add_file_extension(&target_path, "wxml") {
+                            let target_range = lsp_types::Range::new(
+                                lsp_types::Position { line: 0, character: 0 },
+                                lsp_types::Position { line: 0, character: 0 },
+                            );
+                            ret.push(LocationLink {
+                                origin_selection_range: Some(location_to_lsp_range(&ident.location)),
+                                target_uri: lsp_types::Url::from_file_path(target_wxml_path).unwrap(),
+                                target_range: target_range.clone(),
+                                target_selection_range: target_range,
+                            });
+                        }
+                    }
+                }
                 Token::ScopeRef(loc, kind) => {
                     match kind {
                         ScopeKind::Script(script) => {

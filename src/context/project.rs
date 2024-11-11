@@ -211,6 +211,10 @@ impl Project {
         Ok(())
     }
 
+    pub(crate) fn get_json_config(&self, abs_path: &Path) -> Option<&JsonConfig> {
+        self.json_config_map.get(abs_path)
+    }
+
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let mut ret = vec![];
         // TODO
@@ -281,6 +285,7 @@ impl Project {
     }
 
     pub(crate) fn load_wxml_direct_deps(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        let _ = self.file_content(&abs_path.with_extension("json"));
         let paths: Vec<_> = {
             let tmpl_path = self.unix_rel_path(&abs_path)?;
             let tree = self.template_group.get_tree(&tmpl_path)?;
@@ -295,6 +300,17 @@ impl Project {
             let _ = self.file_content(&p);
         }
         Ok(())
+    }
+
+    pub(crate) fn get_cached_target_component_path(&self, abs_path: &Path, tag_name: &str) -> Option<PathBuf> {
+        let json_path = abs_path.with_extension("json");
+        let Some(json_config) = self.get_json_config(&json_path) else {
+            return None;
+        };
+        let Some(rel_path) = json_config.using_components.get(tag_name) else {
+            return None;
+        };
+        self.find_rel_path_for_file(&json_path, rel_path).ok()
     }
 }
 

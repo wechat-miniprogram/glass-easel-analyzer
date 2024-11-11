@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{borrow::Cow, path::{Path, PathBuf}};
 
 pub(crate) fn log_if_err<T>(r: anyhow::Result<T>) {
     if let Err(err) = r {
@@ -26,13 +26,19 @@ pub(crate) fn join_unix_rel_path(base: &Path, rel_path: &str, limit: &Path) -> a
     Ok(base)
 }
 
-pub(crate) fn ensure_file_extension(p: &Path, ext: &str) -> Option<PathBuf> {
+pub(crate) fn add_file_extension(p: &Path, ext: &str) -> Option<PathBuf> {
     let mut p = p.to_path_buf();
-    if p.extension().and_then(|x| x.to_str()) != Some(ext) {
-        let Some(name) = p.file_name().and_then(|x| x.to_str()) else {
-            return None;
-        };
-        p.set_file_name(&format!("{}.{}", name, ext));
-    }
+    let Some(name) = p.file_name().and_then(|x| x.to_str()) else {
+        return None;
+    };
+    p.set_file_name(&format!("{}.{}", name, ext));
     Some(p)
+}
+
+pub(crate) fn ensure_file_extension<'a>(p: &'a Path, ext: &str) -> Option<Cow<'a, Path>> {
+    if p.extension().and_then(|x| x.to_str()) != Some(ext) {
+        add_file_extension(p, ext).map(|x| Cow::Owned(x))
+    } else {
+        Some(Cow::Borrowed(p))
+    }
 }
