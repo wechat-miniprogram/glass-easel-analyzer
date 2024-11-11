@@ -20,7 +20,12 @@ suite('go to declaration', function () {
       { name: 'wx-for', args: [new vscode.Position(1, 11), new vscode.Position(1, 22)] },
       {
         name: 'slot-value',
-        args: [new vscode.Position(2, 7), new vscode.Position(2, 11), new vscode.Position(2, 15)],
+        args: [
+          new vscode.Position(1, 3),
+          new vscode.Position(2, 7),
+          new vscode.Position(2, 11),
+          new vscode.Position(2, 15),
+        ],
       },
     ]
     await env.wxmlCasesWith(this, cases, async (uri, list, expect) => {
