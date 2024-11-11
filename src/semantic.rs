@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use glass_easel_template_compiler::parse::{expr::{ArrayFieldKind, Expression, ObjectFieldKind}, tag::{ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, StrName, StyleAttribute, Value}, Position, Template};
+use glass_easel_template_compiler::parse::{expr::{ArrayFieldKind, Expression, ObjectFieldKind}, tag::{ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, Script, StrName, StyleAttribute, Value}, Position, Template};
 use lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensParams, SemanticTokensRangeParams};
 
 use crate::{context::project::FileContentMetadata, ServerContext};
@@ -521,6 +521,16 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
         let mut t: WxmlToken = i.module_name().into();
         t.modifier = TokenModifier::Definition as u32;
         tokens.push(t);
+        match i {
+            Script::Inline { .. } => {
+                // TODO pass to wxs ls
+            }
+            Script::GlobalRef { src_location, src, .. } => {
+                tokens.push(WxmlToken { location: src_location.clone(), ty: TokenType::Keyword, modifier: 0 });
+                tokens.push(src.into());
+            }
+            _ => {}
+        }
     }
     for sub in template.globals.sub_templates.iter() {
         tokens.push(WxmlToken { location: sub.name_location.clone(), ty: TokenType::Keyword, modifier: 0 });

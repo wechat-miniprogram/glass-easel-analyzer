@@ -4,7 +4,10 @@
   }
 </wxs>
 
+<wxs module="helloExternalScript" src="global" />
+
 <view wx:for="{{ list }}" wx:for-item="t">
   <view>{{ helloScript.hello() }}</view>
+  <view>{{ helloExternalScript.hello() }}</view>
   <view>{{ t }}</view>
 </view>

@@ -36,39 +36,73 @@ export class Env {
     this.namespace = normalizeTitle(suite.title)
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  async wrapExpect(id: string, f: (expect: Expect) => Promise<void>): Promise<number> {
+    const expect = new Expect(id)
+    // eslint-disable-next-line no-await-in-loop
+    await f(expect)
+    if (expect.failureCount > 0) {
+      if (OVERWRITE_SNAPSHOT) {
+        expect.overwriteExpected()
+        // eslint-disable-next-line no-console
+        console.warn(
+          chalk.yellow(`${expect.failureCount} snapshot(s) updated ${expect.snapshotPath()}`),
+        )
+      } else {
+        expect.writeActualAndDiff()
+        // eslint-disable-next-line no-console
+        console.error(
+          chalk.red(
+            `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
+          ),
+        )
+      }
+    } else {
+      expect.writeActualAndDiff()
+    }
+    return expect.failureCount
+  }
+
   async forEachWxmlCase(ctx: Mocha.Context, f: (uri: vscode.Uri, expect: Expect) => Promise<void>) {
     const testName = ctx.test?.title || '(unnamed test)'
     const testId = normalizeTitle(testName)
-    const snapshotFails = [] as string[]
-    // eslint-disable-next-line no-restricted-syntax
+    let snapshotFails = 0
     for (const name of wxmlCases) {
       const absPath = path.resolve(TEST_FIXTURE_DIR, 'wxml', `${name}.wxml`)
       const uri = vscode.Uri.file(absPath)
-      const expect = new Expect(`${this.namespace}/${testId}/${name}`)
-      // eslint-disable-next-line no-await-in-loop
-      await f(uri, expect)
-      if (expect.failureCount > 0) {
-        if (OVERWRITE_SNAPSHOT) {
-          expect.overwriteExpected()
-          // eslint-disable-next-line no-console
-          console.warn(
-            chalk.yellow(`${expect.failureCount} snapshot(s) updated ${expect.snapshotPath()}`),
-          )
-        } else {
-          expect.writeActualAndDiff()
-          // eslint-disable-next-line no-console
-          console.error(
-            chalk.red(
-              `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
-            ),
-          )
-          snapshotFails.push(expect.actualOutputPath())
-        }
-      } else {
-        expect.writeActualAndDiff()
-      }
+      snapshotFails += await this.wrapExpect(
+        `${this.namespace}/${testId}/${name}`,
+        async (expect) => {
+          await f(uri, expect)
+        },
+      )
     }
-    if (snapshotFails.length > 0) {
+    if (snapshotFails > 0) {
+      throw new Error(`several snapshot(s) miss match`)
+    }
+  }
+
+  async wxmlCasesWith<T>(
+    ctx: Mocha.Context,
+    cases: { name: string; args: T }[],
+    f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
+  ) {
+    const testName = ctx.test?.title || '(unnamed test)'
+    const testId = normalizeTitle(testName)
+    let snapshotFails = 0
+    // eslint-disable-next-line no-restricted-syntax
+    for (const { name, args } of cases) {
+      const absPath = path.resolve(TEST_FIXTURE_DIR, 'wxml', `${name}.wxml`)
+      const uri = vscode.Uri.file(absPath)
+      // eslint-disable-next-line no-await-in-loop
+      snapshotFails += await this.wrapExpect(
+        `${this.namespace}/${testId}/${name}`,
+        async (expect) => {
+          await f(uri, args, expect)
+        },
+      )
+    }
+    if (snapshotFails > 0) {
       throw new Error(`several snapshot(s) miss match`)
     }
   }

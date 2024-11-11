@@ -68,6 +68,8 @@ module.exports = {
     'no-lonely-if': 'off',
     'no-param-reassign': ['error', { props: false }],
     'no-redeclare': 'off',
+    'no-restricted-syntax': 'off',
+    'no-await-in-loop': 'off',
     'prettier/prettier': 'warn',
     'import/no-extraneous-dependencies': 'off',
     '@typescript-eslint/consistent-type-imports': [

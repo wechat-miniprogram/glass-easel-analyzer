@@ -376,7 +376,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     }
                                     match v {
                                         Value::Static { value, location, .. } => {
-                                            return Token::TemplateRef(&value, location.clone());
+                                            if inclusive_contains(location, pos) {
+                                                return Token::TemplateRef(&value, location.clone());
+                                            }
                                         }
                                         _ => {
                                             if inclusive_contains(&v.location(), pos) {

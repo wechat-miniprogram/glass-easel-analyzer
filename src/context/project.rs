@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, ffi::OsStr, path::{Path, PathBuf}};
 
 use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
@@ -101,6 +101,11 @@ impl Project {
 
     pub(crate) fn unix_rel_path(&self, abs_path: &Path) -> anyhow::Result<String> {
         crate::utils::unix_rel_path(&self.root, abs_path)
+    }
+
+    pub(crate) fn find_rel_path_for_file(&self, abs_path: &Path, rel_path: &str) -> anyhow::Result<PathBuf> {
+        let p = abs_path.parent().unwrap_or(abs_path);
+        crate::utils::join_unix_rel_path(p, rel_path, &self.root)
     }
 
     pub(crate) fn file_changed(&mut self, abs_path: &Path) {
@@ -273,6 +278,23 @@ impl Project {
         let tmpl_path = self.unix_rel_path(&abs_path)?;
         let tree = self.template_group.get_tree(&tmpl_path)?;
         Ok(tree)
+    }
+
+    pub(crate) fn load_wxml_direct_deps(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        let paths: Vec<_> = {
+            let tmpl_path = self.unix_rel_path(&abs_path)?;
+            let tree = self.template_group.get_tree(&tmpl_path)?;
+            tree.direct_dependencies().filter_map(|x| {
+                self.find_rel_path_for_file(abs_path, &x).ok()
+            }).collect()
+        };
+        for p in paths {
+            let Some(p) = crate::utils::ensure_file_extension(&p, "wxml") else {
+                continue;
+            };
+            let _ = self.file_content(&p);
+        }
+        Ok(())
     }
 }
 
