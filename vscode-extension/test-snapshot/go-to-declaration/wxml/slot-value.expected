@@ -43,32 +43,32 @@ Array [
   Object {
     "originSelectionRange": Array [
       Object {
-        "character": 7,
-        "line": 2,
+        "character": 9,
+        "line": 3,
       },
       Object {
-        "character": 8,
-        "line": 2,
+        "character": 10,
+        "line": 3,
       },
     ],
     "targetRange": Array [
       Object {
-        "character": 13,
-        "line": 1,
+        "character": 16,
+        "line": 2,
       },
       Object {
-        "character": 14,
-        "line": 1,
+        "character": 17,
+        "line": 2,
       },
     ],
     "targetSelectionRange": Array [
       Object {
-        "character": 13,
-        "line": 1,
+        "character": 16,
+        "line": 2,
       },
       Object {
-        "character": 14,
-        "line": 1,
+        "character": 17,
+        "line": 2,
       },
     ],
     "targetUri": Object {
@@ -85,32 +85,152 @@ Array [
   Object {
     "originSelectionRange": Array [
       Object {
-        "character": 15,
+        "character": 17,
+        "line": 3,
+      },
+      Object {
+        "character": 18,
+        "line": 3,
+      },
+    ],
+    "targetRange": Array [
+      Object {
+        "character": 26,
         "line": 2,
       },
       Object {
+        "character": 27,
+        "line": 2,
+      },
+    ],
+    "targetSelectionRange": Array [
+      Object {
+        "character": 26,
+        "line": 2,
+      },
+      Object {
+        "character": 27,
+        "line": 2,
+      },
+    ],
+    "targetUri": Object {
+      "$mid": 1,
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 4 ======
+Array [
+  Object {
+    "originSelectionRange": Array [
+      Object {
         "character": 16,
+        "line": 2,
+      },
+      Object {
+        "character": 17,
+        "line": 2,
+      },
+    ],
+    "targetRange": Array [
+      Object {
+        "character": 16,
+        "line": 2,
+      },
+      Object {
+        "character": 17,
+        "line": 2,
+      },
+    ],
+    "targetSelectionRange": Array [
+      Object {
+        "character": 16,
+        "line": 2,
+      },
+      Object {
+        "character": 17,
+        "line": 2,
+      },
+    ],
+    "targetUri": Object {
+      "$mid": 1,
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 5 ======
+Array [
+  Object {
+    "originSelectionRange": Array [
+      Object {
+        "character": 23,
+        "line": 2,
+      },
+      Object {
+        "character": 24,
         "line": 2,
       },
     ],
     "targetRange": Array [
       Object {
         "character": 23,
-        "line": 1,
+        "line": 2,
       },
       Object {
         "character": 24,
-        "line": 1,
+        "line": 2,
       },
     ],
     "targetSelectionRange": Array [
       Object {
         "character": 23,
-        "line": 1,
+        "line": 2,
       },
       Object {
         "character": 24,
-        "line": 1,
+        "line": 2,
+      },
+    ],
+    "targetUri": Object {
+      "$mid": 1,
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 6 ======
+Array [
+  Object {
+    "originSelectionRange": Array [
+      Object {
+        "character": 26,
+        "line": 2,
+      },
+      Object {
+        "character": 27,
+        "line": 2,
+      },
+    ],
+    "targetRange": Array [
+      Object {
+        "character": 26,
+        "line": 2,
+      },
+      Object {
+        "character": 27,
+        "line": 2,
+      },
+    ],
+    "targetSelectionRange": Array [
+      Object {
+        "character": 26,
+        "line": 2,
+      },
+      Object {
+        "character": 27,
+        "line": 2,
       },
     ],
     "targetUri": Object {

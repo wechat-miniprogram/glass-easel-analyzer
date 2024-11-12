@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use lsp_types::{GotoDefinitionParams, Location, LocationLink, ReferenceParams};
 
@@ -50,14 +50,60 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
 }
 
 mod wxml {
-    use glass_easel_template_compiler::parse::{Position, TemplateStructure};
+    use glass_easel_template_compiler::parse::{tag::{Element, ElementKind, Ident, Node}, Position, Template, TemplateStructure};
 
     use crate::{utils::add_file_extension, wxml_utils::{location_to_lsp_range, ScopeKind, Token}};
 
     use super::*;
 
-    fn find_slots_in_template() {
+    fn find_slots_in_template(template: &Template, mut f: impl FnMut(&Element)) {
+        fn rec(node: &Node, f: &mut impl FnMut(&Element)) {
+            match node {
+                Node::Element(elem) => {
+                    match &elem.kind {
+                        ElementKind::Slot { .. } => {
+                            f(elem)
+                        }
+                        _ => {}
+                    }
+                    for child in elem.iter_children() {
+                        rec(child, f);
+                    }
+                }
+                _ => {}
+            }
+        }
+        for sub in template.globals.sub_templates.iter() {
+            for node in sub.content.iter() {
+                rec(node, &mut f);
+            }
+        }
+        for node in template.content.iter() {
+            rec(node, &mut f);
+        }
+    }
 
+    fn find_slot_matching<'a>(
+        project: &'a Project,
+        abs_path: &Path,
+        tag_name: &str,
+        slot_name: &Ident,
+    ) -> Option<(PathBuf, Vec<std::ops::Range<Position>>)> {
+        let mut ret = vec![];
+        let target_path = project.get_cached_target_component_path(abs_path, tag_name)?;
+        let target_wxml_path = add_file_extension(&target_path, "wxml")?;
+        let template = project.get_wxml_tree(&target_wxml_path).ok()?;
+        find_slots_in_template(template, |slot_elem| {
+            match &slot_elem.kind {
+                ElementKind::Slot { values, .. } => {
+                    if let Some(attr) = values.iter().find(|x| &x.name.name == &slot_name.name) {
+                        ret.push(attr.name.location());
+                    }
+                }
+                _ => {}
+            }
+        });
+        Some((target_wxml_path, ret))
     }
 
     pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_types::Position, to_definition: bool) -> anyhow::Result<Vec<LocationLink>> {
@@ -100,9 +146,25 @@ mod wxml {
                                 target_selection_range: location_to_lsp_range(&target.location),
                             });
                         }
-                        ScopeKind::SlotValue(elem, attr) => {
-                            if to_definition {
-                                // TODO
+                        ScopeKind::SlotValue(attr, parent) => {
+                            let parent_tag_name = match &parent.kind {
+                                ElementKind::Normal { tag_name, .. } => {
+                                    Some(tag_name)
+                                }
+                                _ => None,
+                            };
+                            if to_definition && parent_tag_name.is_some() {
+                                let tag_name_str: &str = &parent_tag_name.unwrap().name;
+                                if let Some((target_wxml_path, ranges)) = find_slot_matching(&project, abs_path, tag_name_str, &attr.name) {
+                                    for target_loc in ranges {
+                                        ret.push(LocationLink {
+                                            origin_selection_range: Some(location_to_lsp_range(&loc)),
+                                            target_uri: lsp_types::Url::from_file_path(&target_wxml_path).unwrap(),
+                                            target_range: location_to_lsp_range(&target_loc),
+                                            target_selection_range: location_to_lsp_range(&target_loc),
+                                        });
+                                    }
+                                }
                             } else {
                                 ret.push(LocationLink {
                                     origin_selection_range: Some(location_to_lsp_range(&loc)),
@@ -126,9 +188,27 @@ mod wxml {
                         target_selection_range: location_to_lsp_range(&name.location),
                     });
                 }
-                Token::SlotValueScope(name) => {
-                    if to_definition {
-                        // TODO
+                Token::SlotValueScope(name, parent) => {
+                    let parent_tag_name = match &parent.kind {
+                        ElementKind::Normal { tag_name, .. } => {
+                            Some(tag_name)
+                        }
+                        _ => None,
+                    };
+                    let name_ident = name.to_ident();
+                    if to_definition && parent_tag_name.is_some() && name_ident.is_some() {
+                        let tag_name_str: &str = &parent_tag_name.unwrap().name;
+                        let name_ident = name_ident.unwrap();
+                        if let Some((target_wxml_path, ranges)) = find_slot_matching(&project, abs_path, tag_name_str, &name_ident) {
+                            for target_loc in ranges {
+                                ret.push(LocationLink {
+                                    origin_selection_range: Some(location_to_lsp_range(&name.location)),
+                                    target_uri: lsp_types::Url::from_file_path(&target_wxml_path).unwrap(),
+                                    target_range: location_to_lsp_range(&target_loc),
+                                    target_selection_range: location_to_lsp_range(&target_loc),
+                                });
+                            }
+                        }
                     } else {
                         ret.push(LocationLink {
                             origin_selection_range: Some(location_to_lsp_range(&name.location)),
@@ -138,8 +218,33 @@ mod wxml {
                         });
                     }
                 }
-                Token::SlotValueRef(key) | Token::SlotValueRefAndScope(key) => {
-                    // TODO go to target component
+                Token::SlotValueRef(key, parent) | Token::SlotValueRefAndScope(key, parent) => {
+                    let parent_tag_name = match &parent.kind {
+                        ElementKind::Normal { tag_name, .. } => {
+                            Some(tag_name)
+                        }
+                        _ => None,
+                    };
+                    if to_definition && parent_tag_name.is_some() {
+                        let tag_name_str: &str = &parent_tag_name.unwrap().name;
+                        if let Some((target_wxml_path, ranges)) = find_slot_matching(&project, abs_path, tag_name_str, &key) {
+                            for target_loc in ranges {
+                                ret.push(LocationLink {
+                                    origin_selection_range: Some(location_to_lsp_range(&key.location)),
+                                    target_uri: lsp_types::Url::from_file_path(&target_wxml_path).unwrap(),
+                                    target_range: location_to_lsp_range(&target_loc),
+                                    target_selection_range: location_to_lsp_range(&target_loc),
+                                });
+                            }
+                        }
+                    } else {
+                        ret.push(LocationLink {
+                            origin_selection_range: Some(location_to_lsp_range(&key.location)),
+                            target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                            target_range: location_to_lsp_range(&key.location),
+                            target_selection_range: location_to_lsp_range(&key.location),
+                        });
+                    }
                 }
                 Token::TemplateRef(is, loc) => {
                     if let Some(x) = template.globals.sub_templates.iter().rev().find(|x| x.name.is(is)) {

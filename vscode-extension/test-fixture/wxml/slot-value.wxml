@@ -1,5 +1,7 @@
 <view>
-  <comp slot:a slot:b="c">
-    {{ a + b + c }}
+  <comp>
+    <block slot:a slot:b="c">
+      {{ a + b + c }}
+    </block>
   </comp>
 </view>

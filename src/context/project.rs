@@ -285,7 +285,25 @@ impl Project {
     }
 
     pub(crate) fn load_wxml_direct_deps(&mut self, abs_path: &Path) -> anyhow::Result<()> {
-        let _ = self.file_content(&abs_path.with_extension("json"));
+        let json_abs_path = abs_path.with_extension("json");
+        let _ = self.file_content(&json_abs_path);
+        let using_paths: Vec<_> = self
+            .json_config_map
+            .get(&json_abs_path)
+            .cloned()
+            .map(|x| {
+                x.using_components.values().filter_map(|x| {
+                    self.find_rel_path_for_file(&abs_path, &x).ok()
+                }).collect()
+            })
+            .unwrap_or_default();
+        for p in using_paths {
+            let Some(p) = crate::utils::add_file_extension(&p, "wxml") else {
+                continue;
+            };
+            dbg!("!!! load", &p);
+            let _ = self.file_content(&p);
+        }
         let paths: Vec<_> = {
             let tmpl_path = self.unix_rel_path(&abs_path)?;
             let tree = self.template_group.get_tree(&tmpl_path)?;

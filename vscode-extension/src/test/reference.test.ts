@@ -21,9 +21,12 @@ const defCases = [
     name: 'slot-value',
     args: [
       new vscode.Position(1, 3),
-      new vscode.Position(2, 7),
-      new vscode.Position(2, 11),
-      new vscode.Position(2, 15),
+      new vscode.Position(3, 9),
+      new vscode.Position(3, 13),
+      new vscode.Position(3, 17),
+      new vscode.Position(2, 16),
+      new vscode.Position(2, 23),
+      new vscode.Position(2, 26),
     ],
   },
 ]

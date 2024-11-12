@@ -39,9 +39,9 @@ pub(crate) enum Token<'a> {
     EventHandler(&'a StrName),
     GenericRef(&'a StrName),
     SlotValueDefinition(&'a Ident),
-    SlotValueRef(&'a Ident),
-    SlotValueScope(&'a StrName),
-    SlotValueRefAndScope(&'a Ident),
+    SlotValueRef(&'a Ident, &'a Element),
+    SlotValueScope(&'a StrName, &'a Element),
+    SlotValueRefAndScope(&'a Ident, &'a Element),
     DataKey(&'a Ident),
     MarkKey(&'a Ident),
     EventName(&'a Ident),
@@ -54,7 +54,7 @@ pub(crate) enum Token<'a> {
 pub(crate) enum ScopeKind<'a> {
     Script(&'a Script),
     ForScope(&'a StrName),
-    SlotValue(&'a Element, &'a StaticAttribute),
+    SlotValue(&'a StaticAttribute, &'a Element),
 }
 
 fn exclusive_contains(loc: &Range<Position>, pos: Position) -> bool {
@@ -125,7 +125,12 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
             _ => Token::None
         }
     }
-    fn find_in_nodes<'a>(nodes: &'a [Node], pos: Position, scopes: &mut Vec<ScopeKind<'a>>) -> Token<'a> {
+    fn find_in_nodes<'a>(
+        parent: Option<&'a Element>,
+        nodes: &'a [Node],
+        pos: Position,
+        scopes: &mut Vec<ScopeKind<'a>>,
+    ) -> Token<'a> {
         for node in nodes {
             match node {
                 Node::Text(v) => {
@@ -136,11 +141,38 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                 Node::Element(elem) => {
                     if tag_contains(&elem.tag_location, pos) {
                         if let Some(attrs) = elem.slot_value_refs() {
-                            for attr in attrs {
-                                scopes.push(ScopeKind::SlotValue(elem, attr));
+                            if let Some(parent) = parent {
+                                for attr in attrs {
+                                    scopes.push(ScopeKind::SlotValue(attr, parent));
+                                }
                             }
                         }
-                        fn find_in_common<'a>(common: &'a CommonElementAttributes, pos: Position, scopes: &mut Vec<ScopeKind<'a>>) -> Token<'a> {
+                        fn find_in_slot_value_refs<'a>(
+                            parent: Option<&'a Element>,
+                            slot_value_refs: &'a [StaticAttribute],
+                            pos: Position,
+                        ) -> Token<'a> {
+                            if let Some(parent) = parent {
+                                for attr in slot_value_refs.iter() {
+                                    if ident_contains(&attr.name, pos) {
+                                        if attr.name.location == attr.value.location {
+                                            return Token::SlotValueRefAndScope(&attr.name, parent);
+                                        }
+                                        return Token::SlotValueRef(&attr.name, parent);
+                                    }
+                                    if str_name_contains(&attr.value, pos) {
+                                        return Token::SlotValueScope(&attr.value, parent);
+                                    }
+                                }
+                            }
+                            Token::None
+                        }
+                        fn find_in_common<'a>(
+                            parent: Option<&'a Element>,
+                            common: &'a CommonElementAttributes,
+                            pos: Position,
+                            scopes: &mut Vec<ScopeKind<'a>>,
+                        ) -> Token<'a> {
                             if let Some((loc, v)) = common.id.as_ref() {
                                 if inclusive_contains(loc, pos) {
                                     return Token::Keyword(loc.clone());
@@ -155,17 +187,6 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 }
                                 if inclusive_contains(&v.location(), pos) {
                                     return find_in_value(&v, pos, scopes);
-                                }
-                            }
-                            for attr in common.slot_value_refs.iter() {
-                                if ident_contains(&attr.name, pos) {
-                                    if attr.name.location == attr.value.location {
-                                        return Token::SlotValueRefAndScope(&attr.name);
-                                    }
-                                    return Token::SlotValueRef(&attr.name);
-                                }
-                                if str_name_contains(&attr.value, pos) {
-                                    return Token::SlotValueScope(&attr.value);
                                 }
                             }
                             for attr in common.data.iter() {
@@ -192,7 +213,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     return find_in_value(&ev.value, pos, scopes);
                                 }
                             }
-                            Token::None
+                            find_in_slot_value_refs(parent, &common.slot_value_refs, pos)
                         }
                         match &elem.kind {
                             ElementKind::Normal {
@@ -280,9 +301,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         _ => {}
                                     }
-                                    return find_in_common(common, pos, scopes);
+                                    return find_in_common(parent, common, pos, scopes);
                                 }
-                                return find_in_nodes(&children, pos, scopes);
+                                return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
                             ElementKind::Pure { children, slot, slot_value_refs, .. } => {
                                 if tag_body_contains(&elem.tag_location, pos) {
@@ -294,20 +315,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return find_in_value(&v, pos, scopes);
                                         }
                                     }
-                                    for attr in slot_value_refs.iter() {
-                                        if ident_contains(&attr.name, pos) {
-                                            if attr.name.location == attr.value.location {
-                                                return Token::SlotValueRefAndScope(&attr.name);
-                                            }
-                                            return Token::SlotValueDefinition(&attr.name);
-                                        }
-                                        if str_name_contains(&attr.value, pos) {
-                                            return Token::SlotValueScope(&attr.value);
-                                        }
-                                    }
-                                    return Token::None;
+                                    return find_in_slot_value_refs(parent, slot_value_refs, pos);
                                 }
-                                return find_in_nodes(&children, pos, scopes);
+                                return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
                             ElementKind::If { branches, else_branch, .. } => {
                                 for (loc, v, nodes) in branches {
@@ -317,7 +327,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     if inclusive_contains(&v.location(), pos) {
                                         return find_in_value(&v, pos, scopes);
                                     }
-                                    let ret = find_in_nodes(nodes, pos, scopes);
+                                    let ret = find_in_nodes(Some(elem), nodes, pos, scopes);
                                     if let Token::None = ret {
                                         continue;
                                     }
@@ -327,7 +337,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
                                     }
-                                    let ret = find_in_nodes(nodes, pos, scopes);
+                                    let ret = find_in_nodes(Some(elem), nodes, pos, scopes);
                                     return ret;
                                 }
                                 return Token::None;
@@ -366,7 +376,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 }
                                 scopes.push(ScopeKind::ForScope(&item_name.1));
                                 scopes.push(ScopeKind::ForScope(&index_name.1));
-                                return find_in_nodes(&children, pos, scopes);
+                                return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
                             ElementKind::TemplateRef { target, data, .. } => {
                                 if tag_body_contains(&elem.tag_location, pos) {
@@ -416,7 +426,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return find_in_value(&attr.value, pos, scopes);
                                         }
                                     }
-                                    return find_in_common(common, pos, scopes);
+                                    return find_in_common(Some(elem), common, pos, scopes);
                                 }
                                 return Token::None;
                             }
@@ -508,9 +518,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
             if str_name_contains(&i.name, pos) {
                 return Token::TemplateName(&i.name);
             }
-            return find_in_nodes(&i.content, pos, &mut scopes);
+            return find_in_nodes(None, &i.content, pos, &mut scopes);
         }
     }
 
-    find_in_nodes(&template.content, pos, &mut scopes)
+    find_in_nodes(None, &template.content, pos, &mut scopes)
 }
