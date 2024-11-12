@@ -28,6 +28,6 @@ Then go to `Test` side panel and run tests. Results will be listed in the `test 
 
 ### Run Tests in Terminal
 
-`npm test` is available, but make sure you have run `cargo build` before it.
+`npm test` is available.
 
 Run with `TEST_OVERWRITE_SNAPSHOT=1` to overwrite test snapshots.

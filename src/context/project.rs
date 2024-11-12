@@ -290,7 +290,7 @@ impl Project {
             let tmpl_path = self.unix_rel_path(&abs_path)?;
             let tree = self.template_group.get_tree(&tmpl_path)?;
             tree.direct_dependencies().filter_map(|x| {
-                self.find_rel_path_for_file(abs_path, &x).ok()
+                crate::utils::join_unix_rel_path(&self.root, &x, &self.root).ok()
             }).collect()
         };
         for p in paths {

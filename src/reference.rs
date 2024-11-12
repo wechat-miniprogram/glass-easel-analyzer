@@ -56,6 +56,10 @@ mod wxml {
 
     use super::*;
 
+    fn find_slots_in_template() {
+
+    }
+
     pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_types::Position, to_definition: bool) -> anyhow::Result<Vec<LocationLink>> {
         let mut ret = vec![];
         let _ = project.load_wxml_direct_deps(abs_path);
