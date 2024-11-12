@@ -40,7 +40,7 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
     let ret = ctx.clone().project_thread_task(&uri, move |project, abs_path| -> anyhow::Result<Vec<Location>> {
         let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {
-                todo!() // TODO
+                wxml::find_references(project, &abs_path, position)?
             }
             _ => vec![],
         };
@@ -50,38 +50,11 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
 }
 
 mod wxml {
-    use glass_easel_template_compiler::parse::{tag::{Element, ElementKind, Ident, Node}, Position, Template, TemplateStructure};
+    use glass_easel_template_compiler::parse::{tag::{ElementKind, Ident}, Position, TemplateStructure};
 
-    use crate::{utils::add_file_extension, wxml_utils::{location_to_lsp_range, ScopeKind, Token}};
+    use crate::{utils::add_file_extension, wxml_utils::{for_each_scope_ref, for_each_slot, location_to_lsp_range, ScopeKind, Token}};
 
     use super::*;
-
-    fn find_slots_in_template(template: &Template, mut f: impl FnMut(&Element)) {
-        fn rec(node: &Node, f: &mut impl FnMut(&Element)) {
-            match node {
-                Node::Element(elem) => {
-                    match &elem.kind {
-                        ElementKind::Slot { .. } => {
-                            f(elem)
-                        }
-                        _ => {}
-                    }
-                    for child in elem.iter_children() {
-                        rec(child, f);
-                    }
-                }
-                _ => {}
-            }
-        }
-        for sub in template.globals.sub_templates.iter() {
-            for node in sub.content.iter() {
-                rec(node, &mut f);
-            }
-        }
-        for node in template.content.iter() {
-            rec(node, &mut f);
-        }
-    }
 
     fn find_slot_matching<'a>(
         project: &'a Project,
@@ -93,7 +66,7 @@ mod wxml {
         let target_path = project.get_cached_target_component_path(abs_path, tag_name)?;
         let target_wxml_path = add_file_extension(&target_path, "wxml")?;
         let template = project.get_wxml_tree(&target_wxml_path).ok()?;
-        find_slots_in_template(template, |slot_elem| {
+        for_each_slot(template, |slot_elem, _| {
             match &slot_elem.kind {
                 ElementKind::Slot { values, .. } => {
                     if let Some(attr) = values.iter().find(|x| &x.name.name == &slot_name.name) {
@@ -138,7 +111,7 @@ mod wxml {
                                 target_selection_range: location_to_lsp_range(&script.module_name().location),
                             });
                         }
-                        ScopeKind::ForScope(target) => {
+                        ScopeKind::ForScope(target, _elem) => {
                             ret.push(LocationLink {
                                 origin_selection_range: Some(location_to_lsp_range(&loc)),
                                 target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
@@ -178,9 +151,8 @@ mod wxml {
                 }
                 Token::TemplateName(name)
                 | Token::ScriptModule(name)
-                | Token::ForItem(name)
-                | Token::ForIndex(name)
-                | Token::ForKey(name) => {
+                | Token::ForItem(name, _)
+                | Token::ForIndex(name, _) => {
                     ret.push(LocationLink {
                         origin_selection_range: Some(location_to_lsp_range(&name.location)),
                         target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
@@ -306,6 +278,85 @@ mod wxml {
                             });
                         }
                     }
+                }
+                Token::ScriptContent(..) => {
+                    // TODO pass to wxs ls
+                }
+                _ => {}
+            }
+        }
+        Ok(ret)
+    }
+
+    pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_types::Position) -> anyhow::Result<Vec<Location>> {
+        let mut ret: Vec<Location> = find_declaration(project, abs_path, pos, true)
+            .unwrap_or_default()
+            .into_iter()
+            .map(|x| {
+                Location { uri: x.target_uri, range: x.target_selection_range }
+            })
+            .collect();
+        if let Ok(template) = project.get_wxml_tree(abs_path) {
+            let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
+            match token {
+                Token::TagName(ident) => {
+                    // TODO
+                }
+                Token::ScopeRef(_loc, kind) => {
+                    for_each_scope_ref(template, |loc, other| {
+                        if kind.location_eq(other) {
+                            ret.push(Location {
+                                uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                                range: location_to_lsp_range(&loc),
+                            });
+                        }
+                    });
+                }
+                Token::ScriptModule(name) => {
+                    for_each_scope_ref(template, |loc, kind| {
+                        match kind {
+                            ScopeKind::Script(x) => {
+                                if x.module_name().name_eq(name) {
+                                    ret.push(Location {
+                                        uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                                        range: location_to_lsp_range(&loc),
+                                    });
+                                }
+                            }
+                            _ => {}
+                        }
+                    });
+                }
+                Token::ForItem(name, elem)
+                | Token::ForIndex(name, elem) => {
+                    for_each_scope_ref(template, |loc, kind| {
+                        match kind {
+                            ScopeKind::ForScope(x, target_elem) => {
+                                if x.name_eq(name) && elem as *const _ == target_elem as *const _ {
+                                    ret.push(Location {
+                                        uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                                        range: location_to_lsp_range(&loc),
+                                    });
+                                }
+                            }
+                            _ => {}
+                        }
+                    });
+                }
+                Token::SlotValueScope(name, parent) => {
+                    // TODO
+                }
+                Token::SlotValueRef(key, parent) | Token::SlotValueRefAndScope(key, parent) => {
+                    // TODO
+                }
+                Token::TemplateName(name) => {
+                    // TODO
+                }
+                Token::TemplateRef(is, loc) => {
+                    // TODO
+                }
+                Token::Src(_) | Token::ScriptSrc(_) => {
+                    ret.truncate(0);
                 }
                 Token::ScriptContent(..) => {
                     // TODO pass to wxs ls
