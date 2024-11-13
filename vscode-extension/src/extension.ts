@@ -8,8 +8,12 @@ export async function activate(context: vscode.ExtensionContext) {
   const serverPath = vscode.workspace
     .getConfiguration('glass-easel-analyzer')
     .get('serverPath') as string
+  const backendConfigPath = vscode.workspace
+    .getConfiguration('glass-easel-analyzer')
+    .get('backendConfigurationPath') as string
   const clientOptions = {
     serverPath,
+    backendConfigPath,
   }
   languageServer = new Client(context, clientOptions)
   await languageServer.start()

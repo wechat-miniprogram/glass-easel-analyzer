@@ -301,7 +301,6 @@ impl Project {
             let Some(p) = crate::utils::add_file_extension(&p, "wxml") else {
                 continue;
             };
-            dbg!("!!! load", &p);
             let _ = self.file_content(&p);
         }
         let paths: Vec<_> = {

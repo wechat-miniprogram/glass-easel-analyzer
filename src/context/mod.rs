@@ -4,6 +4,7 @@ use lsp_server::{Message, Notification};
 use lsp_types::Url;
 use tokio::{fs, sync::mpsc};
 
+pub(crate) mod backend_configuration;
 pub(crate) mod project;
 
 type TaskFn = Box<dyn 'static + Send + FnOnce(&mut project::Project) -> Pin<Box<dyn 'static + Send + Future<Output = ()>>>>;
@@ -11,16 +12,22 @@ type TaskFn = Box<dyn 'static + Send + FnOnce(&mut project::Project) -> Pin<Box<
 #[derive(Clone)]
 pub(crate) struct ServerContext {
     sender: mpsc::WeakUnboundedSender<Message>,
+    backend_config: Arc<backend_configuration::BackendConfig>,
     projects: Arc<Mutex<Vec<(PathBuf, mpsc::UnboundedSender<TaskFn>)>>>,
 }
 
 impl ServerContext {
-    pub(crate) fn new(sender: &mpsc::UnboundedSender<Message>) -> Self {
+    pub(crate) fn new(sender: &mpsc::UnboundedSender<Message>, backend_config: backend_configuration::BackendConfig) -> Self {
         let sender = sender.downgrade();
         Self {
             sender,
+            backend_config: Arc::new(backend_config),
             projects: Arc::new(Mutex::new(vec![])),
         }
+    }
+
+    pub(crate) fn backend_config(&self) -> Arc<backend_configuration::BackendConfig> {
+        self.backend_config.clone()
     }
 
     pub(crate) fn send_notification<T: serde::Serialize>(&self, method: &str, params: T) -> anyhow::Result<()> {

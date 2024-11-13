@@ -20,7 +20,8 @@ lsp-server = "0.7.7"
 lsp-types = "~0.95.1"
 serde = { version = "1.0.214", features = ["derive"] }
 serde_json = "1.0.132"
-tokio = { version = "1.41.0", features = ["fs", "macros", "rt", "sync"] }
+tokio = { version = "1.41.0", features = ["fs", "macros", "rt", "sync", "time"] }
+toml = "0.8.19"
 
 [patch.crates-io]
 glass-easel-template-compiler = { path = "../glass-easel/glass-easel-template-compiler" }

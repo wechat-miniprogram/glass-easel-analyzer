@@ -56,28 +56,36 @@ impl log::Log for LspLogger {
     #[inline]
     fn log(&self, record: &log::Record) {
         let trace = self.trace.clone();
-        if record.metadata().level() <= log::Level::Info {
-            if trace == TraceValue::Off {
-                return;
-            }
+        let is_current_module_message = {
             let module_path = record.module_path().unwrap_or_default();
-            if module_path != "glass_easel_analyzer" && !module_path.starts_with("glass_easel_analyzer::") {
+            module_path == "glass_easel_analyzer" || module_path.starts_with("glass_easel_analyzer::")
+        };
+        if record.metadata().level() > log::Level::Info {
+            if trace == TraceValue::Off || !is_current_module_message {
                 return;
             }
         }
         let message = format!("[{}:{}] {}", record.file().unwrap_or(""), record.line().unwrap_or(0), record.args());
         match record.level() {
             log::Level::Error => {
-                let _ = self.ctx.send_notification("window/showMessage", ShowMessageParams {
-                    message: message.clone(),
-                    typ: MessageType::ERROR,
-                });
+                if is_current_module_message {
+                    let _ = self.ctx.send_notification("window/showMessage", ShowMessageParams {
+                        message: format!("{}", record.args()),
+                        typ: MessageType::ERROR,
+                    });
+                }
                 let _ = self.ctx.send_notification("window/logMessage", LogMessageParams {
                     message,
                     typ: MessageType::ERROR,
                 });
             }
             log::Level::Warn => {
+                if is_current_module_message {
+                    let _ = self.ctx.send_notification("window/showMessage", ShowMessageParams {
+                        message: format!("{}", record.args()),
+                        typ: MessageType::WARNING,
+                    });
+                }
                 let _ = self.ctx.send_notification("window/logMessage", LogMessageParams {
                     message,
                     typ: MessageType::WARNING,
@@ -90,10 +98,11 @@ impl log::Log for LspLogger {
                 });
             }
             _ => {
-                let _ = self.ctx.send_notification("$/logTrace", LogTraceParams {
-                    message,
-                    verbose: None,
-                });
+                eprintln!("{}", message);
+                // let _ = self.ctx.send_notification("$/logTrace", LogTraceParams {
+                //     message,
+                //     verbose: None,
+                // });
             }
         }
     }
@@ -105,7 +114,8 @@ impl log::Log for LspLogger {
 }
 
 pub(crate) fn init_trace() {
-    let _ = log::set_logger(&*GLOBAL_LSP_LOGGER);
+    log::set_logger(&*GLOBAL_LSP_LOGGER).unwrap();
+    log::set_max_level(log::LevelFilter::max());
 }
 
 pub(crate) async fn set_trace(ctx: ServerContext, params: SetTraceParams) -> anyhow::Result<()> {

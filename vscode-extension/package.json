@@ -56,7 +56,7 @@
           "description": "The path to the language server binary."
         },
         "glass-easel-analyzer.backendConfigurationPath": {
-          "scope": "resource",
+          "scope": "window",
           "type": "string",
           "default": "",
           "description": "The path to the backend configuration file. Use common DOM backend configuration by default."

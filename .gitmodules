@@ -1,0 +1,3 @@
+[submodule "backend-configuration/web/mdn"]
+	path = backend-configuration/web/mdn
+	url = https://github.com/mdn/content

@@ -1,0 +1,18 @@
+[[global-attribute]]
+name = "hidden"
+description = "(description)"
+
+[[element]]
+tag-name = "div"
+description = "(description)"
+reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div"
+
+[[element]]
+tag-name = "input"
+description = "(description)"
+reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input"
+  [[attribute]]
+  name = "type"
+
+[[component]]
+tag-name = "view"

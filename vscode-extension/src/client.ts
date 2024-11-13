@@ -1,4 +1,5 @@
-import { type ExtensionContext } from 'vscode'
+import path from 'node:path'
+import * as vscode from 'vscode'
 import {
   type Executable,
   LanguageClient,
@@ -7,14 +8,15 @@ import {
 
 export type ClientOptions = {
   serverPath: string
+  backendConfigPath: string
 }
 
 export class Client {
-  ctx: ExtensionContext
+  ctx: vscode.ExtensionContext
   options: ClientOptions
   client: LanguageClient | null = null
 
-  constructor(ctx: ExtensionContext, options: ClientOptions) {
+  constructor(ctx: vscode.ExtensionContext, options: ClientOptions) {
     this.ctx = ctx
     this.options = options
   }
@@ -27,6 +29,31 @@ export class Client {
   }
 
   async start() {
+    let backendConfig = ''
+    const homeUri =
+      vscode.workspace.workspaceFile && vscode.workspace.workspaceFile.scheme !== 'untitled'
+        ? vscode.workspace.workspaceFile
+        : vscode.workspace.workspaceFolders?.[0]?.uri
+    const backendConfigUrl = path.isAbsolute(this.options.backendConfigPath)
+      ? vscode.Uri.file(this.options.backendConfigPath)
+      : homeUri && vscode.Uri.joinPath(homeUri, this.options.backendConfigPath)
+    if (backendConfigUrl) {
+      try {
+        backendConfig = new TextDecoder().decode(
+          await vscode.workspace.fs.readFile(backendConfigUrl),
+        )
+      } catch (err) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        vscode.window.showErrorMessage(
+          `Failed to read glass-easel backend configuration from ${backendConfigUrl.toString()}`,
+        )
+      }
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      vscode.window.showErrorMessage(
+        `Invalid glass-easel backend config path ${this.options.backendConfigPath}`,
+      )
+    }
     const command = this.getServerPath()
     const args: string[] = []
     const run: Executable = {
@@ -48,6 +75,7 @@ export class Client {
       },
     }
     const languageClientOptions: LanguageClientOptions = {
+      initializationOptions: { backendConfig },
       documentSelector: [
         { language: 'wxml', scheme: 'file' },
         { language: 'wxss', scheme: 'file' },

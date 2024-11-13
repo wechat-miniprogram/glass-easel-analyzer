@@ -1,9 +1,10 @@
-use context::ServerContext;
+use context::{ServerContext, backend_configuration::BackendConfig};
 use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response, ResponseError};
 
 mod context;
 mod file;
 mod folding;
+mod hover;
 mod logger;
 mod reference;
 mod semantic;
@@ -22,7 +23,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
                 save: Some(lsp_types::TextDocumentSyncSaveOptions::Supported(true)),
             },
         )),
-        // hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
+        hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
         // completion_provider: Some(lsp_types::CompletionOptions {
         //     resolve_provider: None,
         //     trigger_characters: Some(vec![String::from("<")]),
@@ -79,6 +80,7 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     handler!("textDocument/declaration", reference::find_declaration);
     handler!("textDocument/references", reference::find_references);
     handler!("textDocument/documentSymbol", symbol::document_symbol);
+    handler!("textDocument/hover", hover::hover);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);
@@ -115,9 +117,15 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
 #[serde(rename_all = "camelCase")]
 struct InitializeParams {
     #[serde(default)]
-    #[allow(dead_code)]
-    backend_configuration: String,
+    initialization_options: InitializationOptions,
     capabilities: lsp_types::ClientCapabilities,
+}
+
+#[derive(Default, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct InitializationOptions {
+    #[serde(default)]
+    backendConfig: String,
 }
 
 async fn serve() -> anyhow::Result<()> {
@@ -148,6 +156,29 @@ async fn serve() -> anyhow::Result<()> {
         }),
     };
     connection.initialize_finish(initialize_id, serde_json::to_value(initialize_result)?)?;
+
+    // parse backend configuration
+    let mut backend_config_failure = None;
+    let has_backend_config = !initialize_params.initialization_options.backendConfig.is_empty();
+    let backend_config = if !has_backend_config {
+        Default::default()
+    } else {
+        match toml::from_str(&initialize_params.initialization_options.backendConfig) {
+            Ok(x) => x,
+            Err(err) => {
+                backend_config_failure = Some(err);
+                Default::default()
+            }
+        }
+    };
+    tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        if !has_backend_config {
+            log::warn!("Missing glass-easel backend configuration");
+        } else if let Some(err) = backend_config_failure {
+            log::error!("Failed to parse glass-easel backend configuration: {}", err);
+        }
+    });
 
     // register capabilities
     let registrations = lsp_types::RegistrationParams {
@@ -180,7 +211,7 @@ async fn serve() -> anyhow::Result<()> {
                 lsp_sender.send(msg).unwrap();
             }
         });
-        let server_context = ServerContext::new(&sender);
+        let server_context = ServerContext::new(&sender, backend_config);
         (server_context, sender)
     };
     logger::set_trace(server_context.clone(), lsp_types::SetTraceParams { value: lsp_types::TraceValue::Off }).await?;

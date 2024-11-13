@@ -349,6 +349,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             }
                             ElementKind::If { branches, else_branch, .. } => {
                                 for (loc, v, nodes) in branches {
+                                    dbg!("!!!", &nodes);
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
                                     }
@@ -371,7 +372,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 return Token::None;
                             }
                             ElementKind::For { list, item_name, index_name, key, children, .. } => {
-                                if tag_body_contains(&elem.tag_location, pos) {
+                                {
                                     let (loc, v) = list;
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
@@ -400,7 +401,6 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     if str_name_contains(v, pos) {
                                         return Token::ForKey(v, elem);
                                     }
-                                    return Token::None;
                                 }
                                 scopes.push(ScopeKind::ForScope(&item_name.1, elem));
                                 scopes.push(ScopeKind::ForScope(&index_name.1, elem));
