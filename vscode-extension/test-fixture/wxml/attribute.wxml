@@ -1,0 +1,7 @@
+<view hidden bind:tap="ontap" bind:hoverstart="" />
+
+<div hidden aria-hidden="" bind:tap="ontap" bind:click="onclick" />
+
+<unknown bind:tap="ontap" />
+
+<slot bind:tap="ontap" />

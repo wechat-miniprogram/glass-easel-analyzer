@@ -1,9 +1,9 @@
 use std::path::Path;
 
-use glass_easel_template_compiler::parse::Position;
+use glass_easel_template_compiler::parse::{tag::ElementKind, Position};
 use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind};
 
-use crate::{context::{backend_configuration::ElementConfig, project::Project}, wxml_utils::{location_to_lsp_range, ScopeKind, Token}, BackendConfig, ServerContext};
+use crate::{context::{backend_configuration::{AttributeConfig, ComponentConfig, ElementConfig, EventConfig, PropertyConfig}, project::Project}, wxml_utils::{location_to_lsp_range, ScopeKind, Token}, BackendConfig, ServerContext};
 
 pub(crate) async fn hover(ctx: ServerContext, params: HoverParams) -> anyhow::Result<Option<Hover>> {
     let backend_config = ctx.backend_config();
@@ -28,7 +28,6 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
     fn md_str_hover_contents(s: impl Into<String>) -> HoverContents {
         HoverContents::Markup(MarkupContent { kind: MarkupKind::Markdown, value: s.into() })
     }
-    dbg!(&token);
     match token {
         Token::ScopeRef(loc, kind) => {
             let contents = match kind {
@@ -41,6 +40,14 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
         Token::TagName(tag_name) => {
             let contents = if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
                 plain_str_hover_contents("custom component")
+            } else if let Some(elem) = backend_config.search_component(&tag_name.name) {
+                let ComponentConfig { tag_name, description, reference, .. } = elem;
+                let reference_args = if let Some(r) = reference {
+                    format!("\n\n[Reference]({})", r)
+                } else {
+                    format!("")
+                };
+                md_str_hover_contents(format!("**{}** *component*\n\n{}{}", tag_name, description, reference_args))
             } else if let Some(elem) = backend_config.search_element(&tag_name.name) {
                 let ElementConfig { tag_name, description, reference, .. } = elem;
                 let reference_args = if let Some(r) = reference {
@@ -48,26 +55,68 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 } else {
                     format!("")
                 };
-                md_str_hover_contents(format!("**{}** *Element*\n\n{}{}", tag_name, description, reference_args))
-            } else if let Some(elem) = backend_config.search_component(&tag_name.name) {
-                let ElementConfig { tag_name, description, reference, .. } = elem;
-                let reference_args = if let Some(r) = reference {
-                    format!("\n\n[Reference]({})", r)
-                } else {
-                    format!("")
-                };
-                md_str_hover_contents(format!("**{}** *Component*\n\n{}{}", tag_name, description, reference_args))
+                md_str_hover_contents(format!("**{}** *element*\n\n{}{}", tag_name, description, reference_args))
             } else {
                 plain_str_hover_contents("unknown")
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&tag_name.location)) })
         }
-        // Token::AttributeName(attr_name) => {
-        //     // TODO
-        // }
-        // Token::EventName(event_name) => {
-        //     // TODO
-        // }
+        Token::AttributeName(attr_name, tag_name) => {
+            let contents = if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+                plain_str_hover_contents("custom component property")
+            } else if let Some(prop) = backend_config.search_property(&tag_name.name, &attr_name.name) {
+                let PropertyConfig { name, description, reference, .. } = prop;
+                let reference_args = if let Some(r) = reference {
+                    format!("\n\n[Reference]({})", r)
+                } else {
+                    format!("")
+                };
+                md_str_hover_contents(format!("**{}** *property*\n\n{}{}", name, description, reference_args))
+            } else if let Some(attr) = backend_config.search_attribute(&tag_name.name, &attr_name.name) {
+                let AttributeConfig { name, description, reference, .. } = attr;
+                let reference_args = if let Some(r) = reference {
+                    format!("\n\n[Reference]({})", r)
+                } else {
+                    format!("")
+                };
+                md_str_hover_contents(format!("**{}** *attribute*\n\n{}{}", name, description, reference_args))
+            } else {
+                plain_str_hover_contents("unknown")
+            };
+            Some(Hover { contents, range: Some(location_to_lsp_range(&attr_name.location)) })
+        }
+        Token::EventName(event_name, elem) => {
+            let tag_name = match &elem.kind {
+                ElementKind::Normal { tag_name, .. } => Some(tag_name),
+                _ => None
+            };
+            let contents = if let Some(tag_name) = tag_name {
+                if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+                    plain_str_hover_contents("custom component property")
+                } else if let Some(ev) = backend_config.search_event(&tag_name.name, &event_name.name) {
+                    let EventConfig { name, description, reference, .. } = ev;
+                    let reference_args = if let Some(r) = reference {
+                        format!("\n\n[Reference]({})", r)
+                    } else {
+                        format!("")
+                    };
+                    md_str_hover_contents(format!("**{}** *event*\n\n{}{}", name, description, reference_args))
+                } else {
+                    plain_str_hover_contents("unknown")
+                }
+            } else if let Some(ev) = backend_config.search_global_event(&event_name.name) {
+                let EventConfig { name, description, reference, .. } = ev;
+                let reference_args = if let Some(r) = reference {
+                    format!("\n\n[Reference]({})", r)
+                } else {
+                    format!("")
+                };
+                md_str_hover_contents(format!("**{}** *event*\n\n{}{}", name, description, reference_args))
+            } else {
+                plain_str_hover_contents("unknown")
+            };
+            Some(Hover { contents, range: Some(location_to_lsp_range(&event_name.location)) })
+        }
         // Token::ScriptContent(..) => {
         //     // TODO pass to wxs ls
         // }

@@ -1,0 +1,40 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 9,
+        "line": 3,
+      },
+      Object {
+        "character": 10,
+        "line": 3,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 1 ======
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 17,
+        "line": 3,
+      },
+      Object {
+        "character": 18,
+        "line": 3,
+      },
+    ],
+  },
+]

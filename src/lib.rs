@@ -99,8 +99,10 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
             }
         };
     }
+    async fn noop(_ctx: ServerContext, _params: serde_json::Value) -> anyhow::Result<()> { Ok(()) }
 
     // handlers for each method
+    handler!("$/cancelRequest", noop);
     handler!("$/setTrace", logger::set_trace);
     handler!("textDocument/didOpen", file::did_open);
     handler!("textDocument/didChange", file::did_change);

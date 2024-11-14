@@ -7,6 +7,7 @@ import { format as prettyFormat } from 'pretty-format'
 
 const wxmlCases = [
   'core-attribute',
+  'attribute',
   'comment',
   'meta-tag',
   'event-binding',

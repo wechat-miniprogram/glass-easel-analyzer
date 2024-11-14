@@ -33,18 +33,18 @@ pub(crate) enum Token<'a> {
     UnknownMetaTag(&'a UnknownMetaTag),
     StaticStr(Range<Position>),
     TagName(&'a Ident),
-    AttributeName(&'a Ident),
+    AttributeName(&'a Ident, &'a Ident),
     ClassName(&'a Ident),
     StyleName(&'a Ident),
-    EventHandler(&'a StrName),
-    GenericRef(&'a StrName),
+    EventHandler(&'a StrName, &'a Ident),
+    GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
     SlotValueRef(&'a Ident, &'a Element),
     SlotValueScope(&'a StrName, &'a Element),
     SlotValueRefAndScope(&'a Ident, &'a Element),
     DataKey(&'a Ident),
     MarkKey(&'a Ident),
-    EventName(&'a Ident),
+    EventName(&'a Ident, &'a Element),
     ForItem(&'a StrName, &'a Element),
     ForIndex(&'a StrName, &'a Element),
     ForKey(&'a StrName, &'a Element),
@@ -197,6 +197,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                         }
                         fn find_in_common<'a>(
                             parent: Option<&'a Element>,
+                            elem: &'a Element,
                             common: &'a CommonElementAttributes,
                             pos: Position,
                             scopes: &mut Vec<ScopeKind<'a>>,
@@ -235,7 +236,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             }
                             for ev in common.event_bindings.iter() {
                                 if ident_contains(&ev.name, pos) {
-                                    return Token::EventName(&ev.name);
+                                    return Token::EventName(&ev.name, elem);
                                 }
                                 if inclusive_contains(&ev.value.location(), pos) {
                                     return find_in_value(&ev.value, pos, scopes);
@@ -263,7 +264,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     }
                                     for attr in attributes.iter().chain(change_attributes.iter()) {
                                         if ident_contains(&attr.name, pos) {
-                                            return Token::AttributeName(&attr.name);
+                                            return Token::AttributeName(&attr.name, tag_name);
                                         }
                                         if inclusive_contains(&attr.value.location(), pos) {
                                             return find_in_value(&attr.value, pos, scopes);
@@ -271,18 +272,18 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     }
                                     for attr in worklet_attributes.iter() {
                                         if ident_contains(&attr.name, pos) {
-                                            return Token::AttributeName(&attr.name);
+                                            return Token::AttributeName(&attr.name, tag_name);
                                         }
                                         if str_name_contains(&attr.value, pos) {
-                                            return Token::EventHandler(&attr.value);
+                                            return Token::EventHandler(&attr.value, tag_name);
                                         }
                                     }
                                     for attr in generics.iter() {
                                         if ident_contains(&attr.name, pos) {
-                                            return Token::AttributeName(&attr.name);
+                                            return Token::AttributeName(&attr.name, tag_name);
                                         }
                                         if str_name_contains(&attr.value, pos) {
-                                            return Token::GenericRef(&attr.value);
+                                            return Token::GenericRef(&attr.value, tag_name);
                                         }
                                     }
                                     match class {
@@ -329,7 +330,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         _ => {}
                                     }
-                                    return find_in_common(parent, common, pos, scopes);
+                                    return find_in_common(parent, elem, common, pos, scopes);
                                 }
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
@@ -349,7 +350,6 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             }
                             ElementKind::If { branches, else_branch, .. } => {
                                 for (loc, v, nodes) in branches {
-                                    dbg!("!!!", &nodes);
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
                                     }
@@ -454,7 +454,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return find_in_value(&attr.value, pos, scopes);
                                         }
                                     }
-                                    return find_in_common(Some(elem), common, pos, scopes);
+                                    return find_in_common(parent, elem, common, pos, scopes);
                                 }
                                 return Token::None;
                             }
