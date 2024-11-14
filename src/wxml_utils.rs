@@ -19,6 +19,9 @@ pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Range<Position> {
 #[allow(dead_code)]
 pub(crate) enum Token<'a> {
     None,
+    TextContent(&'a Value),
+    StartTagBody(&'a Element),
+    EndTagBody(&'a Element),
     ScopeRef(Range<Position>, ScopeKind<'a>),
     DataField(&'a str, Range<Position>),
     StaticMember(&'a str, Range<Position>),
@@ -48,6 +51,16 @@ pub(crate) enum Token<'a> {
     ForItem(&'a StrName, &'a Element),
     ForIndex(&'a StrName, &'a Element),
     ForKey(&'a StrName, &'a Element),
+}
+
+impl<'a> Token<'a> {
+    fn or(self, default: Self) -> Self {
+        if let Self::None = self {
+            default
+        } else {
+            self
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -107,10 +120,17 @@ fn tag_contains(tag_loc: &TagLocation, pos: Position) -> bool {
     (start..=end).contains(&pos)
 }
 
-fn tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
+fn start_tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
     let start = tag_loc.start.0.start;
     let end = tag_loc.start.1.end;
-    (start..=end).contains(&pos)
+    exclusive_contains(&(start..end), pos)
+}
+
+fn end_tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
+    let Some(end_loc) = tag_loc.end.as_ref() else { return false };
+    let start = end_loc.0.start;
+    let end = end_loc.1.end;
+    exclusive_contains(&(start..end), pos)
 }
 
 pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Token {
@@ -162,6 +182,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
         for node in nodes {
             match node {
                 Node::Text(v) => {
+                    dbg!(&v, &pos);
                     if exclusive_contains(&v.location(), pos) {
                         return find_in_value(v, pos, scopes);
                     }
@@ -258,7 +279,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 common,
                                 ..
                             } => {
-                                if tag_body_contains(&elem.tag_location, pos) {
+                                if start_tag_body_contains(&elem.tag_location, pos) {
                                     if ident_contains(tag_name, pos) {
                                         return Token::TagName(tag_name);
                                     }
@@ -330,12 +351,15 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         _ => {}
                                     }
-                                    return find_in_common(parent, elem, common, pos, scopes);
+                                    return find_in_common(parent, elem, common, pos, scopes).or(Token::StartTagBody(elem));
+                                }
+                                if end_tag_body_contains(&elem.tag_location, pos) {
+                                    return Token::EndTagBody(elem);
                                 }
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
                             ElementKind::Pure { children, slot, slot_value_refs, .. } => {
-                                if tag_body_contains(&elem.tag_location, pos) {
+                                if start_tag_body_contains(&elem.tag_location, pos) {
                                     if let Some((loc, v)) = slot.as_ref() {
                                         if inclusive_contains(loc, pos) {
                                             return Token::Keyword(loc.clone());
@@ -344,7 +368,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return find_in_value(&v, pos, scopes);
                                         }
                                     }
-                                    return find_in_slot_value_refs(parent, slot_value_refs, pos);
+                                    return find_in_slot_value_refs(parent, slot_value_refs, pos).or(Token::StartTagBody(elem));
+                                }
+                                if end_tag_body_contains(&elem.tag_location, pos) {
+                                    return Token::EndTagBody(elem);
                                 }
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
@@ -407,7 +434,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
                             ElementKind::TemplateRef { target, data, .. } => {
-                                if tag_body_contains(&elem.tag_location, pos) {
+                                if start_tag_body_contains(&elem.tag_location, pos) {
                                     let (loc, v) = target;
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
@@ -431,6 +458,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     if inclusive_contains(&v.location(), pos) {
                                         return find_in_value(&v, pos, scopes);
                                     }
+                                    return Token::StartTagBody(elem);
+                                }
+                                if end_tag_body_contains(&elem.tag_location, pos) {
+                                    return Token::EndTagBody(elem);
                                 }
                                 return Token::None;
                             }
@@ -438,7 +469,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 return Token::None;
                             }
                             ElementKind::Slot { name, values, common, .. } => {
-                                if tag_body_contains(&elem.tag_location, pos) {
+                                if start_tag_body_contains(&elem.tag_location, pos) {
                                     let (loc, v) = name;
                                     if inclusive_contains(loc, pos) {
                                         return Token::Keyword(loc.clone());
@@ -454,7 +485,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return find_in_value(&attr.value, pos, scopes);
                                         }
                                     }
-                                    return find_in_common(parent, elem, common, pos, scopes);
+                                    return find_in_common(parent, elem, common, pos, scopes).or(Token::StartTagBody(elem));
+                                }
+                                if end_tag_body_contains(&elem.tag_location, pos) {
+                                    return Token::EndTagBody(elem);
                                 }
                                 return Token::None;
                             }

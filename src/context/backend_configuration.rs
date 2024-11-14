@@ -54,8 +54,6 @@ pub(crate) struct PropertyConfig {
     #[serde(default)]
     pub(crate) ty: String,
     #[serde(default)]
-    pub(crate) default_value: String,
-    #[serde(default)]
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,

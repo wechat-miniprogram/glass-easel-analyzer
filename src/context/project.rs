@@ -72,10 +72,10 @@ impl FileContentMetadata {
 pub(crate) struct JsonConfig {
     #[serde(default)]
     #[allow(dead_code)]
-    component: bool,
+    pub(crate) component: bool,
     #[serde(default)]
     #[allow(dead_code)]
-    using_components: HashMap<String, String>,
+    pub(crate) using_components: HashMap<String, String>,
 }
 
 pub(crate) struct Project {

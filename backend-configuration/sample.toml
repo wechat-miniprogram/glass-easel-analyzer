@@ -23,7 +23,6 @@ reference = "https://example.com/view"
 [[component.property]]
 name = "hidden"
 ty = "boolean"
-default-value = "false"
 description = "Whether the component should be hidden, a.k.a. `display: none`."
 reference = "https://example.com/view/hidden"
 [[component.event]]

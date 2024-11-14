@@ -1,6 +1,6 @@
 use std::sync::{LazyLock, RwLock};
 
-use lsp_types::{LogMessageParams, LogTraceParams, MessageType, SetTraceParams, ShowMessageParams, TraceValue};
+use lsp_types::{LogMessageParams, MessageType, SetTraceParams, ShowMessageParams, TraceValue};
 
 use crate::context::ServerContext;
 
