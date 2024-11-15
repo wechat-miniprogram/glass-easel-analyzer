@@ -2,30 +2,46 @@
 name = "hidden"
 description = "Whether the element should be hidden, a.k.a. `display: none`."
 
+
 [[global-event]]
 name = "tap"
 description = "When an element or component is clicked or touched."
 reference = "https://example.com/event/tap"
 
+[[global-event]]
+name = "canceltap"
+reference = "https://example.com/event/canceltap"
+
+
 [[element]]
 tag-name = "div"
 description = "The `div` element."
 reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div"
+
 [[element.attribute]]
 name = "aria-hidden"
+
 [[element.event]]
 name = "click"
+
 
 [[component]]
 tag-name = "view"
 description = "The `view` component."
 reference = "https://example.com/view"
+
 [[component.property]]
 name = "hidden"
 ty = "boolean"
 description = "Whether the component should be hidden, a.k.a. `display: none`."
 reference = "https://example.com/view/hidden"
+
 [[component.event]]
 name = "hoverstart"
 description = "When it enters hover state."
 reference = "https://example.com/event/view/hoverstart"
+
+[[component.event]]
+name = "hoverend"
+description = "When it leaves hover state."
+reference = "https://example.com/event/view/hoverend"

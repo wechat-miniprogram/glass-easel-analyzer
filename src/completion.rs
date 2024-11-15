@@ -108,7 +108,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             for name in ["generic:"] {
                 items.push(snippet_completion_item(name, format!("{}$1=\"$0\"", name), CompletionItemKind::KEYWORD));
             }
-            for name in ["wx:if", "wx:for", "wx:for-item", "wx:for-index", "wx:key"] {
+            for name in ["wx:if", "wx:elif", "wx:else", "wx:for", "wx:for-item", "wx:for-index", "wx:key"] {
                 items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
             }
             for name in ["bind:", "mut-bind:", "catch:", "capture-bind:", "capture-mut-bind:", "capture-catch:"] {
@@ -120,7 +120,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 }
             }
         } else if let ElementKind::Pure { .. } = &elem.kind {
-            for name in ["wx:if", "wx:for"] {
+            for name in ["wx:if", "wx:elif", "wx:else", "wx:for"] {
                 items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
             }
         } else if let ElementKind::For { list, item_name, index_name, key, .. } = &elem.kind {
@@ -163,7 +163,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         Some(CompletionList { is_incomplete: false, items })
     };
     match token {
-        Token::StaticTextContent(loc, _s, parent) => {
+        Token::StaticTextContent(loc, _s, _parent) => {
             let s_before = extract_str_before(&loc, pos);
             if s_before.ends_with("<") {
                 let mut items: Vec<CompletionItem> = vec![];
@@ -196,21 +196,18 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                     }
                 }
                 Some(CompletionList { is_incomplete: false, items })
-            } else if s_before.ends_with("</") {
-                if let Some(parent) = parent {
-                    match &parent.kind {
-                        ElementKind::Normal { tag_name, .. } => {
-                            let mut items: Vec<CompletionItem> = vec![];
-                            items.push(simple_completion_item(format!("{}>", tag_name.name), CompletionItemKind::CLASS));
-                            Some(CompletionList { is_incomplete: false, items })
-                        }
-                        _ => None
-                    }
-                } else {
-                    None
-                }
             } else {
                 None
+            }
+        }
+        Token::EndTagBody(elem) => {
+            match &elem.kind {
+                ElementKind::Normal { tag_name, .. } => {
+                    let mut items: Vec<CompletionItem> = vec![];
+                    items.push(simple_completion_item(format!("{}>", tag_name.name), CompletionItemKind::CLASS));
+                    Some(CompletionList { is_incomplete: false, items })
+                }
+                _ => None
             }
         }
         Token::TagName(_tag_name) => {
@@ -260,12 +257,10 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                     ElementKind::Normal { tag_name, .. } => Some(tag_name),
                     _ => None
                 };
-                if let Some(tag_name) = tag_name {
-                    if let Some(events) = backend_config.list_events(&tag_name.name) {
-                        for ev in events {
-                            if has_event(common, &ev.name) { continue; }
-                            items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE));
-                        }
+                if let Some(events) = tag_name.and_then(|x| backend_config.list_events(&x.name)) {
+                    for ev in events {
+                        if has_event(common, &ev.name) { continue; }
+                        items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE));
                     }
                 } else {
                     let events = backend_config.list_global_events();
@@ -274,6 +269,16 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                         items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE));
                     }
                 };
+            }
+            Some(CompletionList { is_incomplete: false, items })
+        }
+        Token::TemplateRef(_name, _loc) => {
+            let mut items: Vec<CompletionItem> = vec![];
+            if let Some(choices) = project.get_cached_wxml_template_names(abs_path) {
+                if choices.len() > 0 {
+                    let choices = choices.join(",");
+                    items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD));
+                }
             }
             Some(CompletionList { is_incomplete: false, items })
         }

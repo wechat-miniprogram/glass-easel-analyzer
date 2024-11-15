@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ffi::OsStr, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
