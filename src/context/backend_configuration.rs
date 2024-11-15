@@ -88,6 +88,16 @@ impl BackendConfig {
         comp.property.iter().find(|x| x.name == attr_name)
     }
 
+    pub(crate) fn list_attributes(&self, tag_name: &str) -> Option<impl Iterator<Item = &AttributeConfig>> {
+        let elem = self.search_element(tag_name)?;
+        Some(elem.attribute.iter().chain(self.global_attribute.iter()))
+    }
+
+    pub(crate) fn list_properties(&self, tag_name: &str) -> Option<impl Iterator<Item = &PropertyConfig>> {
+        let comp = self.search_component(tag_name)?;
+        Some(comp.property.iter())
+    }
+
     pub(crate) fn search_global_event(&self, event_name: &str) -> Option<&EventConfig> {
         self.global_event.iter().find(|x| x.name == event_name)
     }
@@ -107,6 +117,20 @@ impl BackendConfig {
             self.search_component_event(tag_name, event_name)
         } else {
             self.search_element_event(tag_name, event_name)
+        }
+    }
+
+    pub(crate) fn list_global_events(&self) -> impl Iterator<Item = &EventConfig> {
+        self.global_event.iter()
+    }
+
+    pub(crate) fn list_events(&self, tag_name: &str) -> Option<impl Iterator<Item = &EventConfig>> {
+        if let Some(comp) = self.search_component(tag_name) {
+            Some(comp.event.iter().chain(self.global_event.iter()))
+        } else if let Some(elem) = self.search_element(tag_name) {
+            Some(elem.event.iter().chain(self.global_event.iter()))
+        } else {
+            None
         }
     }
 }

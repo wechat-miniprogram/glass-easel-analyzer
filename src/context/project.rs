@@ -217,7 +217,7 @@ impl Project {
 
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let mut ret = vec![];
-        // TODO
+        // TODO support advanced wxss
         Ok(ret)
     }
 
@@ -328,6 +328,25 @@ impl Project {
             return None;
         };
         self.find_rel_path_for_file(&json_path, rel_path).ok()
+    }
+
+    pub(crate) fn get_cached_wxml_template_names(&self, abs_path: &Path) -> Option<Vec<String>> {
+        let Ok(tree) = self.get_wxml_tree(&abs_path) else {
+            return None;
+        };
+        let mut names: Vec<_> = tree.globals.sub_templates.iter().map(|x| x.name.name.to_string()).collect();
+        for import in tree.globals.imports.iter() {
+            if let Ok(p) = self.find_rel_path_for_file(abs_path, &import.src.name) {
+                if let Some(p) = crate::utils::ensure_file_extension(&p, "wxml") {
+                    if let Ok(tree) = self.get_wxml_tree(&p) {
+                        for item in tree.globals.sub_templates.iter() {
+                            names.push(item.name.name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        Some(names)
     }
 }
 

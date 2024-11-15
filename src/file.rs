@@ -9,7 +9,7 @@ fn apply_content_changes_to_content(content: &str, changes: Vec<TextDocumentCont
     let mut ret = String::new();
     for change in changes {
         if let Some(_range) = change.range {
-            todo!()
+            todo!() // TODO support range update
         } else {
             ret = change.text;
         }

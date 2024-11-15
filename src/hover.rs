@@ -61,30 +61,38 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&tag_name.location)) })
         }
-        Token::AttributeName(attr_name, tag_name) => {
-            let contents = if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
-                plain_str_hover_contents("custom component property")
-            } else if let Some(prop) = backend_config.search_property(&tag_name.name, &attr_name.name) {
-                let PropertyConfig { name, ty, description, reference, .. } = prop;
-                let ty_args = if ty.len() > 0 {
-                    format!(": {}", ty)
+        Token::AttributeName(attr_name, elem) => {
+            let tag_name = match &elem.kind {
+                ElementKind::Normal { tag_name, .. } => Some(tag_name),
+                _ => None
+            };
+            let contents = if let Some(tag_name) = tag_name {
+                if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+                    plain_str_hover_contents("custom component property")
+                } else if let Some(prop) = backend_config.search_property(&tag_name.name, &attr_name.name) {
+                    let PropertyConfig { name, ty, description, reference, .. } = prop;
+                    let ty_args = if ty.len() > 0 {
+                        format!(": {}", ty)
+                    } else {
+                        format!("")
+                    };
+                    let reference_args = if let Some(r) = reference {
+                        format!("\n\n[Reference]({})", r)
+                    } else {
+                        format!("")
+                    };
+                    md_str_hover_contents(format!("**{}**{} *property*\n\n{}{}", name, ty_args, description, reference_args))
+                } else if let Some(attr) = backend_config.search_attribute(&tag_name.name, &attr_name.name) {
+                    let AttributeConfig { name, description, reference, .. } = attr;
+                    let reference_args = if let Some(r) = reference {
+                        format!("\n\n[Reference]({})", r)
+                    } else {
+                        format!("")
+                    };
+                    md_str_hover_contents(format!("**{}** *attribute*\n\n{}{}", name, description, reference_args))
                 } else {
-                    format!("")
-                };
-                let reference_args = if let Some(r) = reference {
-                    format!("\n\n[Reference]({})", r)
-                } else {
-                    format!("")
-                };
-                md_str_hover_contents(format!("**{}**{} *property*\n\n{}{}", name, ty_args, description, reference_args))
-            } else if let Some(attr) = backend_config.search_attribute(&tag_name.name, &attr_name.name) {
-                let AttributeConfig { name, description, reference, .. } = attr;
-                let reference_args = if let Some(r) = reference {
-                    format!("\n\n[Reference]({})", r)
-                } else {
-                    format!("")
-                };
-                md_str_hover_contents(format!("**{}** *attribute*\n\n{}{}", name, description, reference_args))
+                    plain_str_hover_contents("unknown")
+                }
             } else {
                 plain_str_hover_contents("unknown")
             };
