@@ -9,6 +9,7 @@ import {
 export type ClientOptions = {
   serverPath: string
   backendConfigPath: string
+  ignorePaths: string[] // TODO support ignore
 }
 
 export class Client {
@@ -16,9 +17,22 @@ export class Client {
   options: ClientOptions
   client: LanguageClient | null = null
 
-  constructor(ctx: vscode.ExtensionContext, options: ClientOptions) {
+  constructor(ctx: vscode.ExtensionContext) {
     this.ctx = ctx
-    this.options = options
+    const serverPath = vscode.workspace
+      .getConfiguration('glass-easel-analyzer')
+      .get('serverPath') as string
+    const backendConfigPath = vscode.workspace
+      .getConfiguration('glass-easel-analyzer')
+      .get('backendConfigurationPath') as string
+    const ignorePaths = vscode.workspace
+      .getConfiguration('glass-easel-analyzer')
+      .get('ignorePaths') as string[]
+    this.options = {
+      serverPath,
+      backendConfigPath,
+      ignorePaths,
+    }
   }
 
   private getServerPath(): string {
@@ -54,6 +68,7 @@ export class Client {
         `Invalid glass-easel backend config path ${this.options.backendConfigPath}`,
       )
     }
+    const workspaceFolders = vscode.workspace.workspaceFolders?.map((x) => x.uri.toString()) ?? []
     const command = this.getServerPath()
     const args: string[] = []
     const run: Executable = {
@@ -75,12 +90,16 @@ export class Client {
       },
     }
     const languageClientOptions: LanguageClientOptions = {
-      initializationOptions: { backendConfig },
+      initializationOptions: {
+        backendConfig,
+        workspaceFolders,
+      },
       documentSelector: [
         { language: 'wxml', scheme: 'file' },
         { language: 'wxss', scheme: 'file' },
       ],
       outputChannelName: 'glass-easel-analyzer',
+      progressOnInitialization: true,
     }
     this.client = new LanguageClient(
       'glass_easel_analyzer',

@@ -60,6 +60,12 @@
           "type": "string",
           "default": "",
           "description": "The path to the backend configuration file. Use common DOM backend configuration by default."
+        },
+        "glass-easel-analyzer.ignorePaths": {
+          "scope": "window",
+          "type": "array",
+          "default": ["node_modules"],
+          "description": "The path to ignore when scanning component files (relative to the workspace root)."
         }
       }
     }

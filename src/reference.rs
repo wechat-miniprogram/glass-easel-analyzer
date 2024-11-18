@@ -81,7 +81,6 @@ mod wxml {
 
     pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_types::Position, to_definition: bool) -> anyhow::Result<Vec<LocationLink>> {
         let mut ret = vec![];
-        let _ = project.load_wxml_direct_deps(abs_path);
         if let Ok(template) = project.get_wxml_tree(abs_path) {
             let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
             match token {

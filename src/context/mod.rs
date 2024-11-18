@@ -17,13 +17,38 @@ pub(crate) struct ServerContext {
 }
 
 impl ServerContext {
-    pub(crate) fn new(sender: &mpsc::UnboundedSender<Message>, backend_config: backend_configuration::BackendConfig) -> Self {
+    pub(crate) fn new(
+        sender: &mpsc::UnboundedSender<Message>,
+        backend_config: backend_configuration::BackendConfig,
+        initial_projects: Vec<project::Project>,
+    ) -> Self {
         let sender = sender.downgrade();
-        Self {
+        let mut ret = Self {
             sender,
             backend_config: Arc::new(backend_config),
             projects: Arc::new(Mutex::new(vec![])),
+        };
+        for proj in initial_projects {
+            ret.add_project(proj);
         }
+        ret
+    }
+
+    fn add_project(&mut self, project: project::Project) {
+        let (sender, mut receiver) = mpsc::unbounded_channel::<TaskFn>();
+        self.projects.lock().unwrap().push((project.root().to_path_buf(), sender));
+        tokio::task::spawn_blocking(move || {
+            let mut project = project;
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            runtime.block_on(async move {
+                while let Some(f) = receiver.recv().await {
+                    f(&mut project).await;
+                }
+            });
+        });
     }
 
     pub(crate) fn backend_config(&self) -> Arc<backend_configuration::BackendConfig> {
@@ -40,46 +65,14 @@ impl ServerContext {
     }
 
     async fn get_project_thread_sender(&self, path: &Path) -> anyhow::Result<mpsc::UnboundedSender<TaskFn>> {
-        let mut projects = self.projects.lock().unwrap();
+        let projects = self.projects.lock().unwrap();
         let item = projects
             .iter()
             .find(|(x, ..)| path.ancestors().skip(1).any(|path| path == x.as_path()));
         let sender = if let Some((_, sender)) = item {
             sender.clone()
         } else {
-            // create a new project
-            let mut project = None;
-            for ancestor in path.ancestors().skip(1) {
-                let json = ancestor.join("app.json");
-                let wxss = ancestor.join("app.wxss");
-                let has_json = fs::metadata(&json).await.map(|x| x.is_file()).unwrap_or(false);
-                let has_wxss = fs::metadata(&wxss).await.map(|x| x.is_file()).unwrap_or(false);
-                if !has_json && !has_wxss { continue; }
-                let mut new_project = project::Project::new(ancestor.to_path_buf());
-                new_project.file_content(&json);
-                new_project.file_content(&wxss);
-                project = Some(new_project);
-                break;
-            }
-            let Some(project) = project else {
-                return Err(anyhow::Error::msg("Cannot find a proper project for this file. Please make sure an `app.json` or `app.wxss` exists."));
-            };
-            log::debug!("Project discovered: {}", project.root().to_str().unwrap_or(""));
-            let (sender, mut receiver) = mpsc::unbounded_channel();
-            projects.push((project.root().to_path_buf(), sender.clone()));
-            tokio::task::spawn_blocking(move || {
-                let mut project = project;
-                let runtime = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap();
-                runtime.block_on(async move {
-                    while let Some(f) = receiver.recv().await {
-                        f(&mut project).await;
-                    }
-                });
-            });
-            sender
+            return Err(anyhow::Error::msg("Cannot find a proper project for this file. Please make sure an `app.json` or `app.wxss` exists."));
         };
         Ok(sender)
     }

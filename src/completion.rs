@@ -22,7 +22,6 @@ pub(crate) async fn completion(ctx: ServerContext, params: CompletionParams) -> 
 }
 
 fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position, _trigger: &str) -> Option<CompletionList> {
-    let _ = project.load_wxml_direct_deps(abs_path);
     let template = project.get_wxml_tree(abs_path).ok()?;
     let file_content = project.cached_file_content(abs_path)?;
     let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });

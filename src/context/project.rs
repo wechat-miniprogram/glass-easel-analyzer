@@ -1,7 +1,9 @@
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
+use futures::StreamExt;
 use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use tokio::sync::Mutex as AsyncMutex;
 
 pub(crate) struct FileContentMetadata {
     opened: bool,
@@ -79,6 +81,7 @@ pub(crate) struct JsonConfig {
 }
 
 pub(crate) struct Project {
+    need_load_wxss: bool,
     root: PathBuf,
     file_contents: HashMap<PathBuf, FileContentMetadata>,
     json_config_map: HashMap<PathBuf, JsonConfig>,
@@ -86,13 +89,48 @@ pub(crate) struct Project {
 }
 
 impl Project {
-    pub(super) fn new(root: PathBuf) -> Self {
+    pub(crate) async fn search_projects(root: &Path) -> Vec<Self> {
+        async fn rec(ret: Arc<AsyncMutex<&mut Vec<Project>>>, p: &Path) -> anyhow::Result<()> {
+            let app_json = p.join("app.json");
+            let app_wxss = p.join("app.wxss");
+            let contains = tokio::fs::metadata(&app_json).await.map(|x| x.is_file()).unwrap_or(false)
+                || tokio::fs::metadata(&app_wxss).await.map(|x| x.is_file()).unwrap_or(false);
+            if contains {
+                ret.lock().await.push(Project::new(p));
+                return Ok(());
+            }
+            let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
+            dir.for_each_concurrent(None, |entry| {
+                let ret = ret.clone();
+                async move {
+                    let Ok(entry) = entry else { return };
+                    let Ok(ty) = entry.file_type().await else { return };
+                    let abs_path = entry.path();
+                    if ty.is_dir() {
+                        let _ = rec(ret, &abs_path).await;
+                        return;
+                    }
+                }
+            }).await;
+            Ok(())
+        }
+        let mut ret = vec![];
+        let _ = rec(Arc::new(AsyncMutex::new(&mut ret)), root).await;
+        ret
+    }
+
+    pub(crate) fn new(root: &Path) -> Self {
         Self {
-            root,
+            need_load_wxss: false, // TODO handling wxss
+            root: root.to_path_buf(),
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
         }
+    }
+
+    pub(crate) async fn init(&mut self) {
+        let _ = self.load_all_files_from_fs().await;
     }
 
     pub(crate) fn root(&self) -> &Path {
@@ -108,7 +146,7 @@ impl Project {
         crate::utils::join_unix_rel_path(p, rel_path, &self.root)
     }
 
-    pub(crate) fn file_changed(&mut self, abs_path: &Path) {
+    pub(crate) fn file_created_or_changed(&mut self, abs_path: &Path) {
         if let Some(content_meta) = self.file_contents.get(abs_path) {
             if !content_meta.opened {
                 let _ = self.load_file_from_fs(abs_path);
@@ -124,7 +162,9 @@ impl Project {
                         let _ = self.cleanup_wxml(abs_path);
                     }
                     Some("wxss") => {
-                        let _ = self.cleanup_wxss(abs_path);
+                        if self.need_load_wxss {
+                            let _ = self.cleanup_wxss(abs_path);
+                        }
                     }
                     Some("json") => {
                         let _ = self.cleanup_json(abs_path);
@@ -142,8 +182,10 @@ impl Project {
                 self.update_wxml(abs_path, content)?;
             }
             Some("wxss") => {
-                let content = std::fs::read_to_string(abs_path)?;
-                self.update_wxss(abs_path, content)?;
+                if self.need_load_wxss {
+                    let content = std::fs::read_to_string(abs_path)?;
+                    self.update_wxss(abs_path, content)?;
+                }
             }
             Some("json") => {
                 let content = std::fs::read_to_string(abs_path)?;
@@ -152,6 +194,54 @@ impl Project {
             _ => {}
         }
         Ok(())
+    }
+
+    async fn load_all_files_from_fs(&mut self) -> anyhow::Result<()> {
+        async fn rec(project: Arc<AsyncMutex<&mut Project>>, p: &Path) -> anyhow::Result<()> {
+            let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
+            dir.for_each_concurrent(None, |entry| {
+                let project = project.clone();
+                async move {
+                    let Ok(entry) = entry else { return };
+                    let Ok(ty) = entry.file_type().await else { return };
+                    let abs_path = entry.path();
+                    if ty.is_dir() {
+                        let _ = rec(project, &abs_path).await;
+                        return;
+                    }
+                    if ty.is_file() {
+                        let Some(ext) = abs_path.extension().and_then(|x| x.to_str()) else { return };
+                        match ext {
+                            "wxml" | "json" => {}
+                            "wxss" => {
+                                if !project.lock().await.need_load_wxss {
+                                    return;
+                                }
+                            }
+                            _ => { return; }
+                        }
+                        let Ok(content) = tokio::fs::read_to_string(&abs_path).await else { return };
+                        let mut project = project.lock().await;
+                        match ext {
+                            "wxml" => {
+                                let _ = project.update_wxml(&abs_path, content);
+                            }
+                            "wxss" => {
+                                let _ = project.update_wxss(&abs_path, content);
+                            }
+                            "json" => {
+                                let _ = project.update_json(&abs_path, content);
+                            }
+                            _ => unreachable!()
+                        }
+                    }
+                }
+            }).await;
+            Ok(())
+        }
+        let root = self.root.to_path_buf();
+        let proj = Arc::new(AsyncMutex::new(self));
+        rec(proj, &root).await
     }
 
     pub(crate) fn file_content(&mut self, abs_path: &Path) -> Option<&FileContentMetadata> {
@@ -216,18 +306,21 @@ impl Project {
     }
 
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        if !self.need_load_wxss { return Ok(vec![]); }
         let mut ret = vec![];
         // TODO support advanced wxss
         Ok(ret)
     }
 
     fn cleanup_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        if !self.need_load_wxss { return Ok(()); }
         self.json_config_map.remove(abs_path);
         self.file_contents.remove(abs_path);
         Ok(())
     }
 
     pub(crate) fn open_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+        if !self.need_load_wxss { return Ok(vec![]); }
         let diagnostics = self.update_wxss(abs_path, content)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
@@ -236,6 +329,7 @@ impl Project {
     }
 
     pub(crate) fn close_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
+        if !self.need_load_wxss { return Ok(()); }
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.close();
         }
@@ -282,41 +376,6 @@ impl Project {
         let tmpl_path = self.unix_rel_path(&abs_path)?;
         let tree = self.template_group.get_tree(&tmpl_path)?;
         Ok(tree)
-    }
-
-    pub(crate) fn load_wxml_direct_deps(&mut self, abs_path: &Path) -> anyhow::Result<()> {
-        let json_abs_path = abs_path.with_extension("json");
-        let _ = self.file_content(&json_abs_path);
-        let using_paths: Vec<_> = self
-            .json_config_map
-            .get(&json_abs_path)
-            .cloned()
-            .map(|x| {
-                x.using_components.values().filter_map(|x| {
-                    self.find_rel_path_for_file(&abs_path, &x).ok()
-                }).collect()
-            })
-            .unwrap_or_default();
-        for p in using_paths {
-            let Some(p) = crate::utils::add_file_extension(&p, "wxml") else {
-                continue;
-            };
-            let _ = self.file_content(&p);
-        }
-        let paths: Vec<_> = {
-            let tmpl_path = self.unix_rel_path(&abs_path)?;
-            let tree = self.template_group.get_tree(&tmpl_path)?;
-            tree.direct_dependencies().filter_map(|x| {
-                crate::utils::join_unix_rel_path(&self.root, &x, &self.root).ok()
-            }).collect()
-        };
-        for p in paths {
-            let Some(p) = crate::utils::ensure_file_extension(&p, "wxml") else {
-                continue;
-            };
-            let _ = self.file_content(&p);
-        }
-        Ok(())
     }
 
     pub(crate) fn get_cached_target_component_path(&self, abs_path: &Path, tag_name: &str) -> Option<PathBuf> {

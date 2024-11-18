@@ -1,5 +1,5 @@
-use context::{ServerContext, backend_configuration::BackendConfig};
-use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response, ResponseError};
+use context::{backend_configuration::BackendConfig, project::Project, ServerContext};
+use lsp_server::{Connection, ErrorCode, Message, Notification, Request, RequestId, Response, ResponseError};
 
 mod completion;
 mod context;
@@ -56,6 +56,13 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
                 full: Some(lsp_types::SemanticTokensFullOptions::Delta { delta: Some(false) }),
             })
         ),
+        workspace: Some(lsp_types::WorkspaceServerCapabilities {
+            workspace_folders: Some(lsp_types::WorkspaceFoldersServerCapabilities {
+                supported: Some(true),
+                change_notifications: Some(lsp_types::OneOf::Left(true)),
+            }),
+            file_operations: None,
+        }),
         ..Default::default()
     }
 }
@@ -117,19 +124,28 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
     Ok(())
 }
 
+fn generate_notification(method: impl Into<String>, params: impl serde::Serialize) -> Message {
+    Message::Notification(Notification {
+        method: method.into(),
+        params: serde_json::to_value(params).unwrap(),
+    })
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InitializeParams {
     #[serde(default)]
     initialization_options: InitializationOptions,
     capabilities: lsp_types::ClientCapabilities,
+    work_done_token: lsp_types::ProgressToken,
 }
 
 #[derive(Default, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct InitializationOptions {
     #[serde(default)]
-    backendConfig: String,
+    backend_config: String,
+    workspace_folders: Vec<String>,
 }
 
 async fn serve() -> anyhow::Result<()> {
@@ -139,6 +155,9 @@ async fn serve() -> anyhow::Result<()> {
     let (initialize_id, initialize_params) = connection.initialize_start()?;
     let initialize_params: InitializeParams = serde_json::from_value(initialize_params)?;
     let mut client_supported = true;
+    if initialize_params.capabilities.workspace.as_ref().and_then(|x| x.workspace_folders) != Some(true) {
+        client_supported = false;
+    };
     if initialize_params.capabilities.workspace.as_ref().and_then(|x| x.did_change_watched_files.and_then(|x| x.dynamic_registration)) != Some(true) {
         client_supported = false;
     };
@@ -152,6 +171,61 @@ async fn serve() -> anyhow::Result<()> {
         log::error!("The client does not have enough LSP capabilities");
         return Err(anyhow::Error::msg("unsupported client"));
     }
+    connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
+        token: initialize_params.work_done_token.clone(),
+        value: lsp_types::ProgressParamsValue::WorkDone(
+            lsp_types::WorkDoneProgress::Begin(lsp_types::WorkDoneProgressBegin {
+                title: "Initializing glass-easel-analyzer".to_string(),
+                message: Some("initializing".to_string()),
+                ..Default::default()
+            }),
+        ),
+    })).unwrap();
+
+    // request workspace folders
+    let mut projects = vec![];
+    for uri in initialize_params.initialization_options.workspace_folders.iter() {
+        let Ok(p) = lsp_types::Url::to_file_path(&lsp_types::Url::parse(uri).unwrap()) else { continue };
+        let name = p.file_name().and_then(|x| x.to_str()).unwrap_or_default();
+        connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
+            token: initialize_params.work_done_token.clone(),
+            value: lsp_types::ProgressParamsValue::WorkDone(
+                lsp_types::WorkDoneProgress::Report(lsp_types::WorkDoneProgressReport {
+                    message: Some(format!("scanning components in {:?}", name)),
+                    ..Default::default()
+                }),
+            ),
+        })).unwrap();
+        let found_projects = Project::search_projects(&p).await;
+        if found_projects.len() == 0 {
+            continue;
+        }
+        connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
+            token: initialize_params.work_done_token.clone(),
+            value: lsp_types::ProgressParamsValue::WorkDone(
+                lsp_types::WorkDoneProgress::Report(lsp_types::WorkDoneProgressReport {
+                    message: Some(format!("loading components in {}", name)),
+                    ..Default::default()
+                }),
+            ),
+        })).unwrap();
+        for mut project in found_projects {
+            project.init().await;
+            projects.push(project);
+        }
+    }
+    // TODO impl workspace change
+
+    // send initialize done
+    connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
+        token: initialize_params.work_done_token.clone(),
+        value: lsp_types::ProgressParamsValue::WorkDone(
+            lsp_types::WorkDoneProgress::End(lsp_types::WorkDoneProgressEnd {
+                message: Some("finished".to_string()),
+                ..Default::default()
+            }),
+        ),
+    })).unwrap();
     let initialize_result = lsp_types::InitializeResult {
         capabilities: server_capabilities(),
         server_info: Some(lsp_types::ServerInfo {
@@ -163,11 +237,11 @@ async fn serve() -> anyhow::Result<()> {
 
     // parse backend configuration
     let mut backend_config_failure = None;
-    let has_backend_config = !initialize_params.initialization_options.backendConfig.is_empty();
+    let has_backend_config = !initialize_params.initialization_options.backend_config.is_empty();
     let backend_config = if !has_backend_config {
         Default::default()
     } else {
-        match toml::from_str(&initialize_params.initialization_options.backendConfig) {
+        match toml::from_str(&initialize_params.initialization_options.backend_config) {
             Ok(x) => x,
             Err(err) => {
                 backend_config_failure = Some(err);
@@ -215,7 +289,7 @@ async fn serve() -> anyhow::Result<()> {
                 lsp_sender.send(msg).unwrap();
             }
         });
-        let server_context = ServerContext::new(&sender, backend_config);
+        let server_context = ServerContext::new(&sender, backend_config, projects);
         (server_context, sender)
     };
     logger::set_trace(server_context.clone(), lsp_types::SetTraceParams { value: lsp_types::TraceValue::Off }).await?;
