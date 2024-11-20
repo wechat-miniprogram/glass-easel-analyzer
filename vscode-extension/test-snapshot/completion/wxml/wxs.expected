@@ -1,0 +1,34 @@
+// ====== SNAPSHOT 0 ======
+xa {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "detail": undefined,
+      "documentation": undefined,
+      "filterText": undefined,
+      "insertText": no {
+        "e": 1,
+        "value": "wx:for-index=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:for-index",
+      "preselect": undefined,
+      "sortText": "wx:for-index",
+      "textEdit": undefined,
+    },
+    Object {
+      "detail": undefined,
+      "documentation": undefined,
+      "filterText": undefined,
+      "insertText": no {
+        "e": 1,
+        "value": "wx:key=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:key",
+      "preselect": undefined,
+      "sortText": "wx:key",
+      "textEdit": undefined,
+    },
+  ],
+}

@@ -89,8 +89,9 @@ pub(crate) struct Project {
 }
 
 impl Project {
-    pub(crate) async fn search_projects(root: &Path) -> Vec<Self> {
-        async fn rec(ret: Arc<AsyncMutex<&mut Vec<Project>>>, p: &Path) -> anyhow::Result<()> {
+    pub(crate) async fn search_projects(root: &Path, ignore: &[PathBuf]) -> Vec<Self> {
+        async fn rec(ret: Arc<AsyncMutex<&mut Vec<Project>>>, p: &Path, ignore: &[PathBuf]) -> anyhow::Result<()> {
+            if ignore.iter().map(|x| x.as_path()).find(|x| *x == p).is_some() { return Ok(()) };
             let app_json = p.join("app.json");
             let app_wxss = p.join("app.wxss");
             let contains = tokio::fs::metadata(&app_json).await.map(|x| x.is_file()).unwrap_or(false)
@@ -107,7 +108,7 @@ impl Project {
                     let Ok(ty) = entry.file_type().await else { return };
                     let abs_path = entry.path();
                     if ty.is_dir() {
-                        let _ = rec(ret, &abs_path).await;
+                        let _ = rec(ret, &abs_path, ignore).await;
                         return;
                     }
                 }
@@ -115,7 +116,7 @@ impl Project {
             Ok(())
         }
         let mut ret = vec![];
-        let _ = rec(Arc::new(AsyncMutex::new(&mut ret)), root).await;
+        let _ = rec(Arc::new(AsyncMutex::new(&mut ret)), root, ignore).await;
         ret
     }
 

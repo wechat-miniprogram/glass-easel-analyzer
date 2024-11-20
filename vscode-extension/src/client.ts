@@ -42,15 +42,23 @@ export class Client {
     return this.options.serverPath
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  private getHomeUri(): vscode.Uri {
+    return vscode.workspace.workspaceFile && vscode.workspace.workspaceFile.scheme !== 'untitled'
+      ? vscode.workspace.workspaceFile
+      : vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(process.cwd())
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private resolveRelativePath(homeUri: vscode.Uri, p: string): vscode.Uri {
+    const uri = path.isAbsolute(p) ? vscode.Uri.file(p) : homeUri && vscode.Uri.joinPath(homeUri, p)
+    return uri
+  }
+
   async start() {
     let backendConfig = ''
-    const homeUri =
-      vscode.workspace.workspaceFile && vscode.workspace.workspaceFile.scheme !== 'untitled'
-        ? vscode.workspace.workspaceFile
-        : vscode.workspace.workspaceFolders?.[0]?.uri
-    const backendConfigUrl = path.isAbsolute(this.options.backendConfigPath)
-      ? vscode.Uri.file(this.options.backendConfigPath)
-      : homeUri && vscode.Uri.joinPath(homeUri, this.options.backendConfigPath)
+    const homeUri = this.getHomeUri()
+    const backendConfigUrl = this.resolveRelativePath(homeUri, this.options.backendConfigPath)
     if (backendConfigUrl) {
       try {
         backendConfig = new TextDecoder().decode(
@@ -69,6 +77,9 @@ export class Client {
       )
     }
     const workspaceFolders = vscode.workspace.workspaceFolders?.map((x) => x.uri.toString()) ?? []
+    const ignorePaths = this.options.ignorePaths.map((x) =>
+      this.resolveRelativePath(homeUri, x).toString(),
+    )
     const command = this.getServerPath()
     const args: string[] = []
     const run: Executable = {
@@ -93,6 +104,7 @@ export class Client {
       initializationOptions: {
         backendConfig,
         workspaceFolders,
+        ignorePaths,
       },
       documentSelector: [
         { language: 'wxml', scheme: 'file' },

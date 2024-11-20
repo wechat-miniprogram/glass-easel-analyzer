@@ -1,0 +1,20 @@
+// ====== SNAPSHOT 0 ======
+xa {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "detail": undefined,
+      "documentation": undefined,
+      "filterText": undefined,
+      "insertText": no {
+        "e": 1,
+        "value": "template is=\"${1|test|}\" data=\"{{ $0 }}\" />",
+      },
+      "kind": "Keyword",
+      "label": "template is",
+      "preselect": undefined,
+      "sortText": "template is",
+      "textEdit": undefined,
+    },
+  ],
+}

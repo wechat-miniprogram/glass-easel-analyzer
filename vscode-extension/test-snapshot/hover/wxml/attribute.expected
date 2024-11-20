@@ -128,11 +128,11 @@ Array [
     ],
     "range": Array [
       Object {
-        "character": 12,
+        "character": 17,
         "line": 2,
       },
       Object {
-        "character": 23,
+        "character": 20,
         "line": 2,
       },
     ],
@@ -148,36 +148,18 @@ Array [
     ],
     "range": Array [
       Object {
-        "character": 32,
+        "character": 34,
         "line": 2,
       },
       Object {
-        "character": 35,
+        "character": 39,
         "line": 2,
       },
     ],
   },
 ]
 // ====== SNAPSHOT 8 ======
-Array [
-  Vd {
-    "canDecreaseVerbosity": undefined,
-    "canIncreaseVerbosity": undefined,
-    "contents": Array [
-      Q1 {},
-    ],
-    "range": Array [
-      Object {
-        "character": 49,
-        "line": 2,
-      },
-      Object {
-        "character": 54,
-        "line": 2,
-      },
-    ],
-  },
-]
+Array []
 // ====== SNAPSHOT 9 ======
 Array [
   Vd {

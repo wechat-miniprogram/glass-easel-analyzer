@@ -133,6 +133,7 @@ fn generate_notification(method: impl Into<String>, params: impl serde::Serializ
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 struct InitializeParams {
     #[serde(default)]
     initialization_options: InitializationOptions,
@@ -142,10 +143,12 @@ struct InitializeParams {
 
 #[derive(Default, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 struct InitializationOptions {
     #[serde(default)]
     backend_config: String,
     workspace_folders: Vec<String>,
+    ignore_paths: Vec<String>,
 }
 
 async fn serve() -> anyhow::Result<()> {
@@ -184,6 +187,9 @@ async fn serve() -> anyhow::Result<()> {
 
     // request workspace folders
     let mut projects = vec![];
+    let ignore_paths: Vec<_> = initialize_params.initialization_options.ignore_paths.iter().map(|x| {
+        std::path::PathBuf::from(x)
+    }).collect();
     for uri in initialize_params.initialization_options.workspace_folders.iter() {
         let Ok(p) = lsp_types::Url::to_file_path(&lsp_types::Url::parse(uri).unwrap()) else { continue };
         let name = p.file_name().and_then(|x| x.to_str()).unwrap_or_default();
@@ -196,7 +202,7 @@ async fn serve() -> anyhow::Result<()> {
                 }),
             ),
         })).unwrap();
-        let found_projects = Project::search_projects(&p).await;
+        let found_projects = Project::search_projects(&p, &ignore_paths).await;
         if found_projects.len() == 0 {
             continue;
         }
