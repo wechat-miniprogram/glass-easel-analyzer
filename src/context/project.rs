@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
 use futures::StreamExt;
-use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
+use glass_easel_template_compiler::{parse::{tag::{ElementKind, StrName, TemplateDefinition, Value}, ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -379,7 +379,13 @@ impl Project {
         Ok(tree)
     }
 
-    pub(crate) fn get_cached_target_component_path(&self, abs_path: &Path, tag_name: &str) -> Option<PathBuf> {
+    pub(crate) fn for_each_json_config(&self, mut f: impl FnMut(&Path, &JsonConfig)) {
+        for (p, json_config) in self.json_config_map.iter() {
+            f(p, json_config);
+        }
+    }
+
+    pub(crate) fn get_target_component_path(&self, abs_path: &Path, tag_name: &str) -> Option<PathBuf> {
         let json_path = abs_path.with_extension("json");
         let Some(json_config) = self.get_json_config(&json_path) else {
             return None;
@@ -390,7 +396,41 @@ impl Project {
         self.find_rel_path_for_file(&json_path, rel_path).ok()
     }
 
-    pub(crate) fn get_cached_wxml_template_names(&self, abs_path: &Path) -> Option<Vec<String>> {
+    pub(crate) fn search_component_wxml_usages(&self, abs_path: &Path, tag_name: &str, mut f: impl FnMut(&Path, &Template, &str)) {
+        if let Some(expected_target) = self.get_target_component_path(abs_path, &tag_name) {
+            self.for_each_json_config(|p, json_config| {
+                for (expected_tag_name, rel_path) in json_config.using_components.iter() {
+                    let Ok(target) = self.find_rel_path_for_file(p, &rel_path) else {
+                        continue;
+                    };
+                    if target == expected_target {
+                        let source_wxml = p.with_extension("wxml");
+                        if let Ok(template) = self.get_wxml_tree(&source_wxml) {
+                            f(&source_wxml, template, &expected_tag_name);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    pub(crate) fn get_target_template_path(&self, abs_path: &Path, source_tamplate: &Template, is: &str) -> Option<(PathBuf, &TemplateDefinition)> {
+        for import in source_tamplate.globals.imports.iter().rev() {
+            if let Ok(p) = self.find_rel_path_for_file(abs_path, &import.src.name) {
+                let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") else {
+                    continue;
+                };
+                if let Ok(imported_template) = self.get_wxml_tree(&imported_path) {
+                    if let Some(x) = imported_template.globals.sub_templates.iter().rfind(|x| x.name.is(is)) {
+                        return Some((imported_path.to_path_buf(), x));
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    pub(crate) fn get_wxml_template_names(&self, abs_path: &Path) -> Option<Vec<String>> {
         let Ok(tree) = self.get_wxml_tree(&abs_path) else {
             return None;
         };
@@ -407,6 +447,30 @@ impl Project {
             }
         }
         Some(names)
+    }
+
+    pub(crate) fn search_wxml_template_usages(&self, abs_path: &Path, is: &str, mut f: impl FnMut(&Path, std::ops::Range<glass_easel_template_compiler::parse::Position>)) {
+        for (source_p, tree) in self.template_group.list_template_trees() {
+            let Ok(source_p) = crate::utils::join_unix_rel_path(&self.root, source_p, &self.root) else { continue };
+            if let Some((p, _)) = self.get_target_template_path(&source_p, tree, is) {
+                if p.as_path() != abs_path { continue };
+                crate::wxml_utils::for_each_template_element(tree, |elem, _| {
+                    match &elem.kind {
+                        ElementKind::TemplateRef { target, .. } => {
+                            match &target.1 {
+                                Value::Static { value, location, .. } => {
+                                    if value.as_str() == is {
+                                        f(&source_p, location.clone());
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                        _ => {}
+                    }
+                });
+            }
+        }
     }
 }
 

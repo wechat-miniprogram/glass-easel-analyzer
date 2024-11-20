@@ -44,11 +44,11 @@ Array [
     "originSelectionRange": Array [
       Object {
         "character": 14,
-        "line": 4,
+        "line": 5,
       },
       Object {
         "character": 20,
-        "line": 4,
+        "line": 5,
       },
     ],
     "targetRange": Array [
@@ -84,11 +84,11 @@ Array [
     "originSelectionRange": Array [
       Object {
         "character": 14,
-        "line": 2,
+        "line": 3,
       },
       Object {
         "character": 29,
-        "line": 2,
+        "line": 3,
       },
     ],
     "targetRange": Array [
@@ -113,7 +113,7 @@ Array [
     ],
     "targetUri": Object {
       "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global.wxml",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
       "scheme": "file",
     },
   },

@@ -1,0 +1,3 @@
+<template name="global-template">
+  <view> global-template </view>
+</template>

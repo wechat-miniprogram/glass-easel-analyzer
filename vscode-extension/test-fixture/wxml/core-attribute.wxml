@@ -2,4 +2,4 @@
   TEST
 </view>
 
-<view generic:a="view" />
+<comp generic:a="view" />

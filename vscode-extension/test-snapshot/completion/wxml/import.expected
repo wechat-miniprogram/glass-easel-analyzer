@@ -8,7 +8,7 @@ xa {
       "filterText": undefined,
       "insertText": no {
         "e": 1,
-        "value": "template is=\"${1|global-template|}\" data=\"{{ $0 }}\" />",
+        "value": "template is=\"${1|global-template,global-template|}\" data=\"{{ $0 }}\" />",
       },
       "kind": "Keyword",
       "label": "template is",

@@ -61,7 +61,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             let has_attr = |name: &str| {
                 attributes.iter().chain(change_attributes.iter()).find(|x| x.name.name.as_str() == name).is_some()
             };
-            if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+            if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name) {
                 // empty
             } else if let Some(props) = backend_config.list_properties(&tag_name.name) {
                 for prop in props {
@@ -188,7 +188,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                     items.push(snippet_completion_item(key, format!("{key} src=\"$0\" />", key = key), CompletionItemKind::KEYWORD));
                 }
                 items.push(snippet_completion_item("template name", format!("template name=\"$1\">$0</template>"), CompletionItemKind::KEYWORD));
-                if let Some(choices) = project.get_cached_wxml_template_names(abs_path) {
+                if let Some(choices) = project.get_wxml_template_names(abs_path) {
                     if choices.len() > 0 {
                         let choices = choices.join(",");
                         items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD));
@@ -273,7 +273,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         }
         Token::TemplateRef(_name, _loc) => {
             let mut items: Vec<CompletionItem> = vec![];
-            if let Some(choices) = project.get_cached_wxml_template_names(abs_path) {
+            if let Some(choices) = project.get_wxml_template_names(abs_path) {
                 if choices.len() > 0 {
                     let choices = choices.join(",");
                     items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD));

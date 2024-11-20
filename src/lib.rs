@@ -1,5 +1,5 @@
 use context::{backend_configuration::BackendConfig, project::Project, ServerContext};
-use lsp_server::{Connection, ErrorCode, Message, Notification, Request, RequestId, Response, ResponseError};
+use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response, ResponseError};
 
 mod completion;
 mod context;

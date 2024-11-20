@@ -38,7 +38,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             Some(Hover { contents, range: Some(location_to_lsp_range(&loc)) })
         }
         Token::TagName(tag_name) => {
-            let contents = if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+            let contents = if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name) {
                 plain_str_hover_contents("custom component")
             } else if let Some(elem) = backend_config.search_component(&tag_name.name) {
                 let ComponentConfig { tag_name, description, reference, .. } = elem;
@@ -67,7 +67,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 _ => None
             };
             let contents = if let Some(tag_name) = tag_name {
-                if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+                if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name) {
                     plain_str_hover_contents("custom component property")
                 } else if let Some(prop) = backend_config.search_property(&tag_name.name, &attr_name.name) {
                     let PropertyConfig { name, ty, description, reference, .. } = prop;
@@ -104,7 +104,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 _ => None
             };
             let contents = if let Some(tag_name) = tag_name {
-                if let Some(_target_path) = project.get_cached_target_component_path(abs_path, &tag_name.name) {
+                if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name) {
                     plain_str_hover_contents("custom component property")
                 } else if let Some(ev) = backend_config.search_event(&tag_name.name, &event_name.name) {
                     let EventConfig { name, description, reference, .. } = ev;

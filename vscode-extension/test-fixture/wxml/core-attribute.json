@@ -1,5 +1,5 @@
 {
   "usingComponents": {
-    "slot-comp": "./component"
+    "comp": "./component"
   }
 }

@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use glass_easel_template_compiler::parse::{expr::Expression, tag::{Attribute, ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value}, Position, Template, TemplateStructure};
+use glass_easel_template_compiler::parse::{expr::Expression, tag::{ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value}, Position, Template};
 
 pub(crate) fn location_to_lsp_range(loc: &Range<Position>) -> lsp_types::Range {
     lsp_types::Range {
@@ -45,9 +45,9 @@ pub(crate) enum Token<'a> {
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
-    SlotValueRef(&'a Ident, &'a Element),
-    SlotValueScope(&'a StrName, &'a Element),
-    SlotValueRefAndScope(&'a Ident, &'a Element),
+    SlotValueRef(&'a Ident, &'a StrName, &'a Element),
+    SlotValueScope(&'a StrName, &'a Ident, &'a Element),
+    SlotValueRefAndScope(&'a Ident, &'a StrName, &'a Element),
     DataKey(&'a Ident),
     MarkKey(&'a Ident),
     EventName(&'a Ident, &'a Element),
@@ -247,12 +247,12 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 for attr in slot_value_refs.iter() {
                                     if ident_contains(&attr.name, pos) {
                                         if attr.name.location == attr.value.location {
-                                            return Token::SlotValueRefAndScope(&attr.name, parent);
+                                            return Token::SlotValueRefAndScope(&attr.name, &attr.value, parent);
                                         }
-                                        return Token::SlotValueRef(&attr.name, parent);
+                                        return Token::SlotValueRef(&attr.name, &attr.value, parent);
                                     }
                                     if str_name_contains(&attr.value, pos) {
-                                        return Token::SlotValueScope(&attr.value, parent);
+                                        return Token::SlotValueScope(&attr.value, &attr.name, parent);
                                     }
                                 }
                             }
@@ -659,52 +659,68 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     find_in_nodes(None, &template.content, pos, &mut scopes)
 }
 
-pub(crate) fn for_each_template_node_in_subtree<'a>(
-    node: &'a Node,
-    scopes: &mut Vec<ScopeKind<'a>>,
-    f: &mut impl FnMut(&'a Node, &[ScopeKind<'a>]),
-) {
-    f(node, scopes);
-    match node {
-        Node::Element(elem) => {
-            let scopes_len = scopes.len();
-            match &elem.kind {
-                ElementKind::For { item_name, index_name, .. } => {
-                    scopes.push(ScopeKind::ForScope(&item_name.1, elem));
-                    scopes.push(ScopeKind::ForScope(&index_name.1, elem));
-                }
-                ElementKind::Normal { common: CommonElementAttributes { slot_value_refs, .. }, .. }
-                | ElementKind::Slot { common: CommonElementAttributes { slot_value_refs, .. }, .. }
-                | ElementKind::Pure { slot_value_refs, .. }=> {
-                    for attr in slot_value_refs {
-                        scopes.push(ScopeKind::SlotValue(attr, elem));
-                    }
-                }
-                _ => {}
+pub(crate) fn for_each_template_root<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &mut Vec<ScopeKind<'a>>)) {
+    let mut scopes: Vec<_> = template.globals.scripts.iter().map(|x| ScopeKind::Script(x)).collect();
+    for sub in template.globals.sub_templates.iter() {
+        for node in sub.content.iter() {
+            f(node, &mut scopes);
+        }
+    }
+    for node in template.content.iter() {
+        f(node, &mut scopes);
+    }
+}
+
+pub(crate) fn insert_element_scopes<'a>(scopes: &mut Vec<ScopeKind<'a>>, elem: &'a Element) {
+    match &elem.kind {
+        ElementKind::For { item_name, index_name, .. } => {
+            scopes.push(ScopeKind::ForScope(&item_name.1, elem));
+            scopes.push(ScopeKind::ForScope(&index_name.1, elem));
+        }
+        ElementKind::Normal { common: CommonElementAttributes { slot_value_refs, .. }, .. }
+        | ElementKind::Slot { common: CommonElementAttributes { slot_value_refs, .. }, .. }
+        | ElementKind::Pure { slot_value_refs, .. }=> {
+            for attr in slot_value_refs {
+                scopes.push(ScopeKind::SlotValue(attr, elem));
             }
-            for child in elem.iter_children() {
-                for_each_template_node_in_subtree(child, scopes, f);
-            }
-            scopes.truncate(scopes_len);
         }
         _ => {}
     }
 }
 
-pub(crate) fn for_each_template_node<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &[ScopeKind<'a>])) {
-    let mut scopes = template.globals.scripts.iter().map(|x| ScopeKind::Script(x)).collect();
-    for sub in template.globals.sub_templates.iter() {
-        for node in sub.content.iter() {
-            for_each_template_node_in_subtree(node, &mut scopes, &mut f);
+pub(crate) fn for_each_template_node_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    f: &mut impl FnMut(&'a Node, &[ScopeKind<'a>]),
+) {
+    match node {
+        Node::Element(elem) => {
+            let scopes_len = scopes.len();
+            insert_element_scopes(scopes, elem);
+            f(node, scopes);
+            for child in elem.iter_children() {
+                for_each_template_node_in_subtree(child, scopes, f);
+            }
+            scopes.truncate(scopes_len);
         }
-    }
-    for node in template.content.iter() {
-        for_each_template_node_in_subtree(node, &mut scopes, &mut f);
+        _ => {
+            f(node, scopes);
+        }
     }
 }
 
-pub(crate) fn for_each_template_element<'a>(template: &'a Template, mut f: impl FnMut(&'a Element, &[ScopeKind<'a>])) {
-    for_each_template_node(template, |node, scopes| {
+pub(crate) fn for_each_template_node<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &[ScopeKind<'a>])) {
+    for_each_template_root(template, |node, scopes| {
+        for_each_template_node_in_subtree(node, scopes, &mut f);
+    });
+}
+
+pub(crate) fn for_each_template_element_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    f: &mut impl FnMut(&'a Element, &[ScopeKind<'a>]),
+) {
+    for_each_template_node_in_subtree(node, scopes, &mut |node, scopes| {
         match node {
             Node::Element(elem) => {
                 f(elem, scopes)
@@ -714,8 +730,14 @@ pub(crate) fn for_each_template_element<'a>(template: &'a Template, mut f: impl 
     });
 }
 
-pub(crate) fn for_each_template_value<'a>(template: &'a Template, mut f: impl FnMut(&'a Value, &[ScopeKind<'a>])) {
-    for_each_template_node(template, |node, scopes| {
+pub(crate) fn for_each_template_element<'a>(template: &'a Template, mut f: impl FnMut(&'a Element, &[ScopeKind<'a>])) {
+    for_each_template_root(template, |node, scopes| {
+        for_each_template_element_in_subtree(node, scopes, &mut f);
+    });
+}
+
+pub(crate) fn for_each_template_value_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Value, &[ScopeKind<'a>])) {
+    for_each_template_node_in_subtree(node, scopes, &mut |node, scopes| {
         fn handle_common<'a>(common: &'a CommonElementAttributes, scopes: &[ScopeKind<'a>], f: &mut impl FnMut(&'a Value, &[ScopeKind<'a>])) {
             if let Some((_, value)) = common.id.as_ref() {
                 f(value, scopes);
@@ -807,8 +829,8 @@ pub(crate) fn for_each_template_value<'a>(template: &'a Template, mut f: impl Fn
     });
 }
 
-pub(crate) fn for_each_template_expression_root<'a>(template: &'a Template, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
-    for_each_template_value(template, |value, scopes| {
+pub(crate) fn for_each_template_expression_root_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
+    for_each_template_value_in_subtree(node, scopes, |value, scopes| {
         match value {
             Value::Dynamic { expression, .. } => f(expression, scopes),
             Value::Static { .. } => {}
@@ -817,18 +839,18 @@ pub(crate) fn for_each_template_expression_root<'a>(template: &'a Template, mut 
     });
 }
 
-pub(crate) fn for_each_template_expression<'a>(template: &'a Template, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
+pub(crate) fn for_each_template_expression_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
     fn rec<'a>(expression: &'a Expression, scopes: &[ScopeKind<'a>], f: &mut impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
         f(expression, scopes);
         for sub in expression.sub_expressions() {
             rec(sub, scopes, f);
         }
     }
-    for_each_template_expression_root(template, |expression, scopes| { rec(expression, scopes, &mut f); });
+    for_each_template_expression_root_in_subtree(node, scopes, |expression, scopes| { rec(expression, scopes, &mut f); });
 }
 
-pub(crate) fn for_each_scope_ref<'a>(template: &'a Template, mut f: impl FnMut(Range<Position>, ScopeKind<'a>)) {
-    for_each_template_expression(template, |expr, scopes| {
+pub(crate) fn for_each_scope_ref_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(Range<Position>, ScopeKind<'a>)) {
+    for_each_template_expression_in_subtree(node, scopes, |expr, scopes| {
         match expr {
             Expression::ScopeRef { location, index } => {
                 if let Some(s) = scopes.get(*index) {
@@ -840,11 +862,34 @@ pub(crate) fn for_each_scope_ref<'a>(template: &'a Template, mut f: impl FnMut(R
     });
 }
 
-pub(crate) fn for_each_slot<'a>(template: &'a Template, mut f: impl FnMut(&Element, &[ScopeKind<'a>])) {
-    for_each_template_element(template, |elem, scopes| {
+pub(crate) fn for_each_scope_ref<'a>(template: &'a Template, mut f: impl FnMut(Range<Position>, ScopeKind<'a>)) {
+    for_each_template_root(&template, |node, scopes| {
+        for_each_scope_ref_in_subtree(node, scopes, &mut f);
+    });
+}
+
+pub(crate) fn for_each_slot_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&Element)) {
+    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| {
         match &elem.kind {
             ElementKind::Slot { .. } => {
-                f(elem, scopes)
+                f(elem)
+            }
+            _ => {}
+        }
+    });
+}
+
+pub(crate) fn for_each_slot<'a>(template: &'a Template, mut f: impl FnMut(&Element)) {
+    for_each_template_root(&template, |node, scopes| {
+        for_each_slot_in_subtree(node, scopes, &mut f);
+    });
+}
+
+pub(crate) fn for_each_tag_name_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Ident)) {
+    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| {
+        match &elem.kind {
+            ElementKind::Normal { tag_name, .. } => {
+                f(tag_name)
             }
             _ => {}
         }
@@ -852,12 +897,7 @@ pub(crate) fn for_each_slot<'a>(template: &'a Template, mut f: impl FnMut(&Eleme
 }
 
 pub(crate) fn for_each_tag_name<'a>(template: &'a Template, mut f: impl FnMut(&'a Ident)) {
-    for_each_template_element(template, |elem, _scopes| {
-        match &elem.kind {
-            ElementKind::Normal { tag_name, .. } => {
-                f(tag_name)
-            }
-            _ => {}
-        }
+    for_each_template_root(&template, |node, scopes| {
+        for_each_tag_name_in_subtree(node, scopes, &mut f);
     });
 }

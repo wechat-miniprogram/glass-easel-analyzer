@@ -18,7 +18,15 @@ pub(crate) fn unix_rel_path(base: &Path, target: &Path) -> anyhow::Result<String
 pub(crate) fn join_unix_rel_path(base: &Path, rel_path: &str, limit: &Path) -> anyhow::Result<PathBuf> {
     let mut base = base.to_path_buf();
     for slice in rel_path.split('/') {
-        base.push(slice);
+        match slice {
+            "." => {}
+            ".." => {
+                base.pop();
+            }
+            slice => {
+                base.push(slice);
+            }
+        }
         if !base.starts_with(limit) {
             return Err(anyhow::Error::msg("invalid relative path"));
         }

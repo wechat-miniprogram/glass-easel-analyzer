@@ -20,7 +20,7 @@ const defCases = [
   },
   {
     name: 'import',
-    args: [new vscode.Position(2, 14)],
+    args: [new vscode.Position(3, 14)],
   },
   {
     name: 'template',
