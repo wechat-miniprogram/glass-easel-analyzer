@@ -37,6 +37,7 @@ pub(crate) enum Token<'a> {
     Comment(&'a Comment),
     UnknownMetaTag(&'a UnknownMetaTag),
     TagName(&'a Ident),
+    AttributeStaticValue(Range<Position>, &'a str, &'a Ident, &'a Element),
     AttributeName(&'a Ident, &'a Element),
     ModelAttributeName(&'a Ident, &'a Element),
     ChangeAttributeName(&'a Ident, &'a Element),
@@ -333,6 +334,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return Token::AttributeName(&attr.name, elem);
                                         }
                                         if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                            if let Token::StaticValuePart(loc, v) = ret {
+                                                return Token::AttributeStaticValue(loc, v, &attr.name, elem);
+                                            }
                                             return ret;
                                         }
                                     }
@@ -341,6 +345,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return Token::AttributeName(&attr.name, elem);
                                         }
                                         if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                            if let Token::StaticValuePart(loc, v) = ret {
+                                                return Token::AttributeStaticValue(loc, v, &attr.name, elem);
+                                            }
                                             return ret;
                                         }
                                     }

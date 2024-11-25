@@ -159,8 +159,46 @@ Array [
   },
 ]
 // ====== SNAPSHOT 8 ======
-Array []
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 50,
+        "line": 2,
+      },
+      Object {
+        "character": 62,
+        "line": 2,
+      },
+    ],
+  },
+]
 // ====== SNAPSHOT 9 ======
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 64,
+        "line": 2,
+      },
+      Object {
+        "character": 69,
+        "line": 2,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 10 ======
 Array [
   Vd {
     "canDecreaseVerbosity": undefined,
@@ -180,7 +218,7 @@ Array [
     ],
   },
 ]
-// ====== SNAPSHOT 10 ======
+// ====== SNAPSHOT 11 ======
 Array [
   Vd {
     "canDecreaseVerbosity": undefined,
@@ -200,9 +238,9 @@ Array [
     ],
   },
 ]
-// ====== SNAPSHOT 11 ======
-Array []
 // ====== SNAPSHOT 12 ======
+Array []
+// ====== SNAPSHOT 13 ======
 Array [
   Vd {
     "canDecreaseVerbosity": undefined,
@@ -218,6 +256,46 @@ Array [
       Object {
         "character": 14,
         "line": 6,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 14 ======
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 1,
+        "line": 8,
+      },
+      Object {
+        "character": 7,
+        "line": 8,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 15 ======
+Array [
+  Vd {
+    "canDecreaseVerbosity": undefined,
+    "canIncreaseVerbosity": undefined,
+    "contents": Array [
+      Q1 {},
+    ],
+    "range": Array [
+      Object {
+        "character": 8,
+        "line": 8,
+      },
+      Object {
+        "character": 12,
+        "line": 8,
       },
     ],
   },

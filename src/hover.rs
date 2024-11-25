@@ -130,6 +130,29 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&event_name.location)) })
         }
+        Token::AttributeStaticValue(loc, value, name, elem) => {
+            if let ElementKind::Normal { tag_name, .. } = &elem.kind {
+                let value_options1 = backend_config.search_property(&tag_name.name, &name.name).map(|x| (&x.value_option, &x.reference));
+                let value_options2 = backend_config.search_attribute(&tag_name.name, &name.name).map(|x| (&x.value_option, &x.reference));
+                if let Some((value_options, reference)) = value_options1.or(value_options2) {
+                    let reference_args = if let Some(r) = reference {
+                        format!("\n\n[Reference]({})", r)
+                    } else {
+                        format!("")
+                    };
+                    if let Some(option) = value_options.iter().find(|x| x.value.as_str() == value) {
+                        let contents = md_str_hover_contents(format!("**{}**\n\n{}{}", option.value, option.description, reference_args));
+                        Some(Hover { contents, range: Some(location_to_lsp_range(&loc)) })
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        }
         // Token::ScriptContent(..) => {
         //     // TODO pass to wxs ls
         // }

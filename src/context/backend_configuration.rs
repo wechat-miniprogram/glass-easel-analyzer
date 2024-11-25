@@ -25,6 +25,8 @@ pub(crate) struct ElementConfig {
     pub(crate) attribute: Vec<AttributeConfig>,
     #[serde(default)]
     pub(crate) event: Vec<EventConfig>,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -37,6 +39,8 @@ pub(crate) struct AttributeConfig {
     pub(crate) reference: Option<Url>,
     #[serde(default)]
     pub(crate) value_option: Vec<ValueOption>,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -51,6 +55,8 @@ pub(crate) struct ComponentConfig {
     pub(crate) property: Vec<PropertyConfig>,
     #[serde(default)]
     pub(crate) event: Vec<EventConfig>,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -65,14 +71,18 @@ pub(crate) struct PropertyConfig {
     pub(crate) reference: Option<Url>,
     #[serde(default)]
     pub(crate) value_option: Vec<ValueOption>,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) struct ValueOption {
-    value: String,
+    pub(crate) value: String,
     #[serde(default)]
-    description: String,
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -83,6 +93,8 @@ pub(crate) struct EventConfig {
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,
+    #[serde(default)]
+    pub(crate) deprecated: bool,
 }
 
 impl BackendConfig {

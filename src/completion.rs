@@ -25,20 +25,22 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
     let template = project.get_wxml_tree(abs_path).ok()?;
     let file_content = project.cached_file_content(abs_path)?;
     let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
-    fn simple_completion_item(s: impl Into<String>, kind: CompletionItemKind) -> CompletionItem {
+    fn simple_completion_item(s: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
         CompletionItem {
             label: s.into(),
             kind: Some(kind),
             insert_text_format: Some(InsertTextFormat::PLAIN_TEXT),
+            deprecated: if deprecated { Some(deprecated) } else { None },
             ..Default::default()
         }
     }
-    fn snippet_completion_item(s: impl Into<String>, snippet: impl Into<String>, kind: CompletionItemKind) -> CompletionItem {
+    fn snippet_completion_item(s: impl Into<String>, snippet: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
         CompletionItem {
             label: s.into(),
             kind: Some(kind),
             insert_text: Some(snippet.into()),
             insert_text_format: Some(InsertTextFormat::SNIPPET),
+            deprecated: if deprecated { Some(deprecated) } else { None },
             ..Default::default()
         }
     }
@@ -68,16 +70,16 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                     let name = &prop.name;
                     if has_attr(name) { continue; }
                     if prop.ty == "boolean" {
-                        items.push(simple_completion_item(name, CompletionItemKind::VARIABLE));
+                        items.push(simple_completion_item(name, CompletionItemKind::VARIABLE, prop.deprecated));
                     } else {
-                        items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::VARIABLE));
+                        items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::VARIABLE, prop.deprecated));
                     }
                 }
                 if !has_prefix {
                     for name in ["model:", "change:"] {
                         let choices = backend_config.list_properties(&tag_name.name).unwrap().map(|x| &x.name).filter(|x| !has_attr(x)).join(",");
                         if choices.len() > 0 {
-                            items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD));
+                            items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD, false));
                         }
                     }
                 }
@@ -85,55 +87,55 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 for attr in attrs {
                     let name = &attr.name;
                     if has_attr(&name) { continue; }
-                    items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::VARIABLE));
+                    items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::VARIABLE, attr.deprecated));
                 }
                 if !has_prefix {
                     for name in ["model:", "change:"] {
                         let choices = backend_config.list_attributes(&tag_name.name).unwrap().map(|x| &x.name).filter(|x| !has_attr(x)).join(",");
                         if choices.len() > 0 {
-                            items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD));
+                            items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD, false));
                         }
                     }
                 }
             }
             if let ClassAttribute::None = class {
                 let name = "class";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             if let StyleAttribute::None = style {
                 let name = "style";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             for name in ["generic:"] {
-                items.push(snippet_completion_item(name, format!("{}$1=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}$1=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             for name in ["wx:if", "wx:elif", "wx:else", "wx:for", "wx:for-item", "wx:for-index", "wx:key"] {
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             for name in ["bind:", "mut-bind:", "catch:", "capture-bind:", "capture-mut-bind:", "capture-catch:"] {
                 if let Some(choices) = backend_config.list_events(&tag_name.name) {
                     let choices = choices.map(|x| &x.name).filter(|x| !has_event(common, x)).join(",");
                     if choices.len() > 0 {
-                        items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD));
+                        items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD, false));
                     }
                 }
             }
         } else if let ElementKind::Pure { .. } = &elem.kind {
             for name in ["wx:if", "wx:elif", "wx:else", "wx:for"] {
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
         } else if let ElementKind::For { list, item_name, index_name, key, .. } = &elem.kind {
             if item_name.0.start == list.0.start {
                 let name = "wx:for-item";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             if index_name.0.start == list.0.start {
                 let name = "wx:for-index";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             if key.0.start == list.0.start {
                 let name = "wx:key";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
         } else {
             if let Some(common) = common {
@@ -141,7 +143,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                     let choices = backend_config.list_global_events();
                     let choices = choices.map(|x| &x.name).filter(|x| !has_event(common, x)).join(",");
                     if choices.len() > 0 {
-                        items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD));
+                        items.push(snippet_completion_item(name, format!("{}${{1|{}|}}=\"$0\"", name, choices), CompletionItemKind::KEYWORD, false));
                     }
                 }
             }
@@ -149,14 +151,14 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         if let Some(common) = common {
             if common.id.is_none() {
                 let name = "id";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             if common.slot.is_none() {
                 let name = "slot";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
             for name in ["slot:", "data:", "mark:"] {
-                items.push(snippet_completion_item(name, format!("{}$1=\"$0\"", name), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item(name, format!("{}$1=\"$0\"", name), CompletionItemKind::KEYWORD, false));
             }
         }
         Some(CompletionList { is_incomplete: false, items })
@@ -169,29 +171,29 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 if let Some(config) = project.get_json_config(abs_path) {
                     for key in config.using_components.keys() {
                         if Ident::is_valid(key) {
-                            items.push(snippet_completion_item(key, format!("{key}>$0</{key}>", key = key), CompletionItemKind::CLASS));
+                            items.push(snippet_completion_item(key, format!("{key}>$0</{key}>", key = key), CompletionItemKind::CLASS, false));
                         }
                     }
                 }
                 for comp in backend_config.component.iter() {
                     let name = &comp.tag_name;
-                    items.push(snippet_completion_item(name, format!("{key}>$0</{key}>", key = name), CompletionItemKind::CLASS));
+                    items.push(snippet_completion_item(name, format!("{key}>$0</{key}>", key = name), CompletionItemKind::CLASS, comp.deprecated));
                 }
                 for elem in backend_config.element.iter() {
                     let name = &elem.tag_name;
-                    items.push(snippet_completion_item(name, format!("{key}>$0</{key}>", key = name), CompletionItemKind::CLASS));
+                    items.push(snippet_completion_item(name, format!("{key}>$0</{key}>", key = name), CompletionItemKind::CLASS, elem.deprecated));
                 }
                 for key in ["slot", "block"] {
-                    items.push(snippet_completion_item(key, format!("{key}>$0</{key}>", key = key), CompletionItemKind::KEYWORD));
+                    items.push(snippet_completion_item(key, format!("{key}>$0</{key}>", key = key), CompletionItemKind::KEYWORD, false));
                 }
                 for key in ["include", "import"] {
-                    items.push(snippet_completion_item(key, format!("{key} src=\"$0\" />", key = key), CompletionItemKind::KEYWORD));
+                    items.push(snippet_completion_item(key, format!("{key} src=\"$0\" />", key = key), CompletionItemKind::KEYWORD, false));
                 }
-                items.push(snippet_completion_item("template name", format!("template name=\"$1\">$0</template>"), CompletionItemKind::KEYWORD));
+                items.push(snippet_completion_item("template name", format!("template name=\"$1\">$0</template>"), CompletionItemKind::KEYWORD, false));
                 if let Some(choices) = project.get_wxml_template_names(abs_path) {
                     if choices.len() > 0 {
                         let choices = choices.join(",");
-                        items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD));
+                        items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD, false));
                     }
                 }
                 Some(CompletionList { is_incomplete: false, items })
@@ -203,7 +205,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => {
                     let mut items: Vec<CompletionItem> = vec![];
-                    items.push(simple_completion_item(format!("{}>", tag_name.name), CompletionItemKind::CLASS));
+                    items.push(simple_completion_item(format!("{}>", tag_name.name), CompletionItemKind::CLASS, false));
                     Some(CompletionList { is_incomplete: false, items })
                 }
                 _ => None
@@ -214,15 +216,15 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             if let Some(config) = project.get_json_config(abs_path) {
                 for key in config.using_components.keys() {
                     if Ident::is_valid(key) {
-                        items.push(simple_completion_item(key, CompletionItemKind::CLASS));
+                        items.push(simple_completion_item(key, CompletionItemKind::CLASS, false));
                     }
                 }
             }
             for comp in backend_config.component.iter() {
-                items.push(simple_completion_item(&comp.tag_name, CompletionItemKind::CLASS));
+                items.push(simple_completion_item(&comp.tag_name, CompletionItemKind::CLASS, comp.deprecated));
             }
             for elem in backend_config.element.iter() {
-                items.push(simple_completion_item(&elem.tag_name, CompletionItemKind::CLASS));
+                items.push(simple_completion_item(&elem.tag_name, CompletionItemKind::CLASS, elem.deprecated));
             }
             Some(CompletionList { is_incomplete: false, items })
         }
@@ -259,24 +261,40 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 if let Some(events) = tag_name.and_then(|x| backend_config.list_events(&x.name)) {
                     for ev in events {
                         if has_event(common, &ev.name) { continue; }
-                        items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE));
+                        items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE, ev.deprecated));
                     }
                 } else {
                     let events = backend_config.list_global_events();
                     for ev in events {
                         if has_event(common, &ev.name) { continue; }
-                        items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE));
+                        items.push(simple_completion_item(&ev.name, CompletionItemKind::VARIABLE, ev.deprecated));
                     }
                 };
             }
             Some(CompletionList { is_incomplete: false, items })
+        }
+        Token::AttributeStaticValue(_loc, _value, name, elem) => {
+            if let ElementKind::Normal { tag_name, .. } = &elem.kind {
+                let value_options1 = backend_config.search_property(&tag_name.name, &name.name).map(|x| &x.value_option);
+                let value_options2 = backend_config.search_attribute(&tag_name.name, &name.name).map(|x| &x.value_option);
+                if let Some(value_options) = value_options1.or(value_options2) {
+                    let list = value_options.iter().map(|x| {
+                        simple_completion_item(&x.value, CompletionItemKind::ENUM_MEMBER, x.deprecated)
+                    }).collect();
+                    Some(CompletionList { is_incomplete: false, items: list })
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
         }
         Token::TemplateRef(_name, _loc) => {
             let mut items: Vec<CompletionItem> = vec![];
             if let Some(choices) = project.get_wxml_template_names(abs_path) {
                 if choices.len() > 0 {
                     let choices = choices.join(",");
-                    items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD));
+                    items.push(snippet_completion_item("template is", format!("template is=\"${{1|{}|}}\" data=\"{{{{ $0 }}}}\" />", choices), CompletionItemKind::KEYWORD, false));
                 }
             }
             Some(CompletionList { is_incomplete: false, items })

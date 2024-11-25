@@ -20,6 +20,7 @@ reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div"
 
 [[element.attribute]]
 name = "aria-checked"
+reference = "https://example.com/attribute/aria-checked"
 
 [[element.attribute.value-option]]
 value = "false"
