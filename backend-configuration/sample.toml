@@ -19,10 +19,33 @@ description = "The `div` element."
 reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div"
 
 [[element.attribute]]
-name = "aria-hidden"
+name = "aria-checked"
+
+[[element.attribute.value-option]]
+value = "false"
+description = "The element supports being checked but is not currently checked."
+
+[[element.attribute.value-option]]
+value = "true"
+description = "The element is checked."
+
+[[element.attribute.value-option]]
+value = "mixed"
+description = "Indicating a mixed mode value of neither checked nor unchecked."
 
 [[element.event]]
 name = "click"
+
+
+[[element]]
+tag-name = "anchor"
+description = "(deprecated element)"
+deprecated = true
+
+[[element.attribute]]
+name = "href"
+description = "(deprecated attribute)"
+deprecated = true
 
 
 [[component]]

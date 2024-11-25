@@ -3,9 +3,13 @@ use lsp_types::Url;
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) struct BackendConfig {
+    #[serde(default)]
     pub(crate) element: Vec<ElementConfig>,
+    #[serde(default)]
     pub(crate) component: Vec<ComponentConfig>,
+    #[serde(default)]
     pub(crate) global_attribute: Vec<AttributeConfig>,
+    #[serde(default)]
     pub(crate) global_event: Vec<EventConfig>,
 }
 
@@ -31,6 +35,8 @@ pub(crate) struct AttributeConfig {
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,
+    #[serde(default)]
+    pub(crate) value_option: Vec<ValueOption>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -57,6 +63,16 @@ pub(crate) struct PropertyConfig {
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,
+    #[serde(default)]
+    pub(crate) value_option: Vec<ValueOption>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct ValueOption {
+    value: String,
+    #[serde(default)]
+    description: String,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]

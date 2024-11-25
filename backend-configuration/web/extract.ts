@@ -5,6 +5,12 @@ import path from 'node:path'
 const mdnDir = path.join(__dirname, 'mdn')
 
 // utils
+const hasDeprecatedSign = (content: string) => {
+  if (content.includes('{{Deprecated_Inline}}')) return true
+  if (content.includes('{{deprecated_inline}}')) return true
+  if (content.includes('{{Deprecated_inline}}')) return true
+  return false
+}
 const extractContentBetween = (
   fullContent: string,
   startSign: string,
@@ -50,6 +56,74 @@ const extractCascadeLists = (fullContent: string): CascadeListItem[] => {
   return ret
 }
 
+// utils for write a description line
+const writeDescriptionLine = (content: string) => {
+  const filtered = content
+    .trim()
+    .replace(/\{\{(.+?)\}\}/g, (full, text: string) => {
+      if (text === 'experimental_inline' || text === 'non-standard_inline') return ''
+      if (text.startsWith('RFC(')) {
+        const args = /^\s*\S+\(\s*(.*?(,\s*["'].*?["'])*?)\s*\)\s*$/.exec(text)
+        if (args) {
+          const title = args[1] ?? args[0]
+          const url = `https://datatracker.ietf.org/doc/html/rfc${args[0]}`
+          return `[${title}](${url})`
+        }
+      }
+      const cmdWithArgs = /^\s*(\S+)\(\s*(["'].*?["'](,\s*["'].*?["'])*?)\s*\)\s*$/.exec(text)
+      if (cmdWithArgs) {
+        const cmd = cmdWithArgs[1]!.toLowerCase()
+        const args = cmdWithArgs[2]!.split(',').map((x) => x.trim().slice(1, -1))
+        const title = args[1] ?? args[0]
+        const pathSeg = args[0]!.replaceAll(' ', '_')
+        if (cmd === 'htmlelement') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/HTML/Element/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'glossary') {
+          const url = `https://developer.mozilla.org/en-US/docs/Glossary/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'domxref') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/API/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'cssxref') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/CSS/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'jsxref') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'httpheader') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'httpmethod') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/${pathSeg}`
+          return `[${title}](${url})`
+        }
+      }
+      console.warn(`Unrecognized command: ${full}`)
+      return full
+    })
+    .replace(/\[(.+?)\]\(([\S]+?)\)/g, (full, title: string, url: string) => {
+      if (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('<')) {
+        return full
+      }
+      if (url.startsWith('#')) {
+        return title
+      }
+      if (url.startsWith('/en-US/')) {
+        return `[${title}](https://developer.mozilla.org${url})`
+      }
+      console.warn(`Unrecognized link: ${full}`)
+      return full
+    })
+  fs.writeSync(outFile, `description = '''${filtered}'''\n`)
+}
+
 // write header
 const outFile = fs.openSync(path.join(__dirname, 'web.toml'), 'w', 0o666)
 fs.writeSync(
@@ -90,9 +164,22 @@ const extractGlobalAttrFromContent = (attrName: string, content: string) => {
   console.info(`Global Attribute: ${attrName}`)
   fs.writeSync(outFile, '[[global-attribute]]\n')
   fs.writeSync(outFile, `name = "${attrName}"\n`)
-  fs.writeSync(outFile, `description = '''${description}'''\n`)
+  writeDescriptionLine(description)
   fs.writeSync(outFile, `reference = "${reference}"\n`)
   fs.writeSync(outFile, `\n`)
+  const cascadeList = extractCascadeLists(content)
+  cascadeList.forEach((item) => {
+    if (
+      (item.content.startsWith('`') || item.content.startsWith('[`')) &&
+      item.children[0]?.content.startsWith(': ')
+    ) {
+      const valueOption = extractContentBetween(item.content, '`', '`')
+      fs.writeSync(outFile, '[[global-attribute.value-option]]\n')
+      fs.writeSync(outFile, `value = "${valueOption}"\n`)
+      writeDescriptionLine(item.children[0].content.slice(2))
+      fs.writeSync(outFile, `\n`)
+    }
+  })
 }
 fs.readdirSync(globalAttrDir).forEach((attrName) => {
   if (attrName.indexOf('.') >= 0) return
@@ -114,6 +201,7 @@ type EventDesc = {
   name: string
   description: string
   reference: string
+  deprecated: boolean
 }
 const extractEventList = (content: string): EventDesc[] => {
   const ret: EventDesc[] = []
@@ -145,7 +233,7 @@ const extractEventList = (content: string): EventDesc[] => {
         relPath = extractContentBetween(content, '](', ')') ?? ''
       }
       if (!relPath || !evName) {
-        if (!seg.content.includes('{{Deprecated_Inline}}')) {
+        if (!hasDeprecatedSign(seg.content)) {
           console.error(`Cannot find a proper event in line "- ${seg.content}".`)
         }
         return
@@ -162,6 +250,7 @@ const extractEventList = (content: string): EventDesc[] => {
         name: evName,
         description,
         reference: `https://developer.mozilla.org/en-US/docs/Web/API/${relPath}`,
+        deprecated: hasDeprecatedSign(seg.content),
       })
     })
   }
@@ -173,12 +262,13 @@ fs.readdirSync(apiDir).forEach((fileName) => {
     const elementPath = path.join(apiDir, fileName, 'index.md')
     const content = fs.readFileSync(elementPath, { encoding: 'utf8' })
     const eventList = extractEventList(content)
-    eventList.forEach(({ name, description, reference }) => {
+    eventList.forEach(({ name, description, reference, deprecated }) => {
       console.info(`Global Event: ${name}`)
       fs.writeSync(outFile, '[[global-event]]\n')
       fs.writeSync(outFile, `name = "${name}"\n`)
-      fs.writeSync(outFile, `description = '''${description}'''\n`)
+      writeDescriptionLine(description)
       fs.writeSync(outFile, `reference = "${reference}"\n`)
+      if (deprecated) fs.writeSync(outFile, 'deprecated = true\n')
       fs.writeSync(outFile, `\n`)
     })
     return
@@ -220,7 +310,7 @@ const extractElementFromContent = (tagName: string, content: string) => {
   console.info(`Element: ${tagName}`)
   fs.writeSync(outFile, '\n[[element]]\n')
   fs.writeSync(outFile, `tag-name = "${tagName}"\n`)
-  fs.writeSync(outFile, `description = '''${description}'''\n`)
+  writeDescriptionLine(description)
   fs.writeSync(outFile, `reference = "${reference}"\n`)
   if (deprecated) {
     fs.writeSync(outFile, `deprecated = true\n`)
@@ -252,20 +342,39 @@ const extractElementFromContent = (tagName: string, content: string) => {
       const description = attrDescLine.content.slice(2, attrDescEnd + 1)
       fs.writeSync(outFile, '[[element.attribute]]\n')
       fs.writeSync(outFile, `name = "${attrName}"\n`)
-      if (description) fs.writeSync(outFile, `description = '''${description}'''\n`)
+      writeDescriptionLine(description)
       fs.writeSync(outFile, `reference = "${reference}"\n`)
+      if (hasDeprecatedSign(seg.content)) {
+        fs.writeSync(outFile, `deprecated = true\n`)
+      }
       fs.writeSync(outFile, `\n`)
+      attrDescLine.children.forEach((item) => {
+        if (item.content.startsWith('`') || item.content.startsWith('[`')) {
+          let valueOption = extractContentBetween(item.content, '`', '`')
+          const description = item.children?.[0]?.content.startsWith(': ')
+            ? item.children[0].content.slice(2)
+            : item.content
+          if (valueOption?.startsWith('"') && valueOption.endsWith('"')) {
+            valueOption = valueOption.slice(1, -1)
+          }
+          fs.writeSync(outFile, '[[element.attribute.value-option]]\n')
+          fs.writeSync(outFile, `value = "${valueOption}"\n`)
+          writeDescriptionLine(description)
+          fs.writeSync(outFile, `\n`)
+        }
+      })
     })
   }
 
   // write extracted events
   const evList = elementEventMap[tagName]
-  evList?.forEach(({ name, description, reference }) => {
+  evList?.forEach(({ name, description, reference, deprecated }) => {
     console.info(`Element Event: ${name}`)
     fs.writeSync(outFile, '[[element.event]]\n')
     fs.writeSync(outFile, `name = "${name}"\n`)
-    fs.writeSync(outFile, `description = '''${description}'''\n`)
+    writeDescriptionLine(description)
     fs.writeSync(outFile, `reference = "${reference}"\n`)
+    if (deprecated) fs.writeSync(outFile, 'deprecated = true\n')
     fs.writeSync(outFile, `\n`)
   })
 }
