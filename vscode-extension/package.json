@@ -68,6 +68,11 @@
           "description": "The path to ignore when scanning component files (relative to the workspace root)."
         }
       }
+    },
+    "configurationDefaults": {
+      "files.associations": {
+        "*.wxs": "javascript"
+      }
     }
   },
   "scripts": {
