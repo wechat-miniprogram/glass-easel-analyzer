@@ -11,6 +11,16 @@ pub(crate) struct BackendConfig {
     pub(crate) global_attribute: Vec<AttributeConfig>,
     #[serde(default)]
     pub(crate) global_event: Vec<EventConfig>,
+    #[serde(default)]
+    pub(crate) media_type: Vec<MediaTypeConfig>,
+    #[serde(default)]
+    pub(crate) media_feature: Vec<MediaFeatureConfig>,
+    #[serde(default)]
+    pub(crate) pseudo_class: Vec<PseudoClassConfig>,
+    #[serde(default)]
+    pub(crate) pseudo_element: Vec<PseudoElementConfig>,
+    #[serde(default)]
+    pub(crate) style_property: Vec<StylePropertyConfig>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -161,4 +171,65 @@ impl BackendConfig {
             None
         }
     }
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct MediaTypeConfig {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) reference: Option<Url>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct MediaFeatureConfig {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) ty: Option<MediaFeatureType>,
+    #[serde(default)]
+    pub(crate) options: Vec<String>,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) reference: Option<Url>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum MediaFeatureType {
+    Any,
+    Range,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct PseudoClassConfig {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) reference: Option<Url>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct PseudoElementConfig {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) reference: Option<Url>,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct StylePropertyConfig {
+    pub(crate) name: String,
+    #[serde(default)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) reference: Option<Url>,
 }

@@ -69,3 +69,59 @@ reference = "https://example.com/event/view/hoverstart"
 name = "hoverend"
 description = "When it leaves hover state."
 reference = "https://example.com/event/view/hoverend"
+
+
+[[media-type]]
+name = "screen"
+description = "Intended primarily for screens."
+reference = "https://example.com/media-type/screen"
+
+[[media-type]]
+name = "print"
+description = "Intended for paged material and documents viewed on a screen in print preview mode."
+
+
+[[media-feature]]
+name = "width"
+ty = "range"
+description = "Width of the page."
+reference = "https://example.com/media-feature/width"
+
+[[media-feature]]
+name = "prefers-color-scheme"
+options = ["light", "dark"]
+description = "The current color scheme."
+
+[[media-feature]]
+name = "monochrome"
+description = "Intended for monochrome display."
+
+
+[[pseudo-class]]
+name = "hover"
+description = "Matches mouse hovers."
+reference = "https://example.com/pseudo-class/hover"
+
+[[pseudo-class]]
+name = "active"
+description = "Matches when activated, a.k.a. clicked."
+
+
+[[pseudo-element]]
+name = "before"
+description = "A pseudo-element that is the first child of the selected element."
+reference = "https://example.com/pseudo-element/before"
+
+[[pseudo-element]]
+name = "after"
+description = "A pseudo-element that is the last child of the selected element."
+
+
+[[style-property]]
+name = "color"
+description = "The font color."
+reference = "https://example.com/property/color"
+
+[[style-property]]
+name = "font"
+description = "The font."
