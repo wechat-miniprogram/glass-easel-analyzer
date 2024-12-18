@@ -10,8 +10,9 @@ mod logger;
 mod reference;
 mod semantic;
 mod symbol;
-pub(crate) mod utils;
-pub(crate) mod wxml_utils;
+mod utils;
+mod wxml_utils;
+mod wxss;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
     lsp_types::ServerCapabilities {
