@@ -14,7 +14,6 @@ pub(crate) enum TokenTree {
     Number(Number),
     Percentage(Percentage),
     Dimension(Dimension),
-    Comment(Comment),
     Colon(Colon),
     Semicolon(Semicolon),
     Comma(Comma),
@@ -25,6 +24,32 @@ pub(crate) enum TokenTree {
     Brace(Brace<Vec<TokenTree>>),
     BadUrl(BadUrl),
     BadString(BadString),
+}
+
+impl TokenTree {
+    pub(crate) fn children(&self) -> Option<&Vec<TokenTree>> {
+        match self {
+            Self::Ident(..)
+            | Self::AtKeyword(..)
+            | Self::Hash(..)
+            | Self::IDHash(..)
+            | Self::QuotedString(..)
+            | Self::UnquotedUrl(..)
+            | Self::Number(..)
+            | Self::Percentage(..)
+            | Self::Dimension(..)
+            | Self::Colon(..)
+            | Self::Semicolon(..)
+            | Self::Comma(..)
+            | Self::Operator(..)
+            | Self::BadUrl(..)
+            | Self::BadString(..) => None,
+            Self::Function(x) => Some(&x.paren.children),
+            Self::Paren(x) => Some(&x.children),
+            Self::Bracket(x) => Some(&x.children),
+            Self::Brace(x) => Some(&x.children),
+        }
+    }
 }
 
 pub(crate) trait TokenExt {
@@ -52,9 +77,9 @@ basic_token!(Hash);
 basic_token!(IDHash);
 basic_token!(QuotedString);
 basic_token!(UnquotedUrl);
-basic_token!(Comment);
 basic_token!(BadUrl);
 basic_token!(BadString);
+basic_token!(Comment);
 
 macro_rules! core_delim_token {
     ($t:ident) => {
@@ -80,7 +105,7 @@ pub(crate) struct Operator {
 }
 
 impl Operator {
-    pub(crate) fn new(s: &impl AsRef<str>, location: Location) -> Self {
+    pub(crate) fn new<S: ?Sized + AsRef<str>>(s: &S, location: Location) -> Self {
         let b = s.as_ref().as_bytes();
         assert!(b.len() <= 4);
         let mut name = [0u8; 4];
@@ -170,6 +195,15 @@ macro_rules! group_token {
         pub(crate) struct $t<T> {
             pub(crate) children: T,
             pub(crate) location: Location,
+        }
+
+        impl<T> $t<T> {
+            pub(crate) fn new(children: T, location: Location) -> Self {
+                Self {
+                    children,
+                    location,
+                }
+            }
         }
 
         impl<T> TokenExt for $t<T> {
