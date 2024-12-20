@@ -5,6 +5,8 @@ use glass_easel_template_compiler::{parse::{tag::{ElementKind, StrName, Template
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
+use crate::wxss::{self, StyleSheet};
+
 pub(crate) struct FileContentMetadata {
     opened: bool,
     pub(crate) content: String,
@@ -86,6 +88,7 @@ pub(crate) struct Project {
     file_contents: HashMap<PathBuf, FileContentMetadata>,
     json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
+    style_sheet_map: HashMap<PathBuf, StyleSheet>,
 }
 
 impl Project {
@@ -127,6 +130,7 @@ impl Project {
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
+            style_sheet_map: HashMap::new(),
         }
     }
 
@@ -307,10 +311,11 @@ impl Project {
     }
 
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
-        if !self.need_load_wxss { return Ok(vec![]); }
-        let mut ret = vec![];
-        // TODO support advanced wxss
-        Ok(ret)
+        let (ss, err_list) = StyleSheet::parse_str(&content);
+        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+        self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
+        let diagnostics = err_list.into_iter().filter_map(diagnostic_from_wxss_parse_error).collect();
+        Ok(diagnostics)
     }
 
     fn cleanup_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
@@ -476,6 +481,24 @@ impl Project {
 
 fn diagnostic_from_wxml_parse_error(x: ParseError) -> Option<Diagnostic> {
     if x.kind == ParseErrorKind::UnknownMetaTag { return None; }
+    Some(Diagnostic {
+        range: Range {
+            start: Position { line: x.location.start.line, character: x.location.start.utf16_col },
+            end: Position { line: x.location.end.line, character: x.location.end.utf16_col },
+        },
+        severity: Some(match x.level() {
+            ParseErrorLevel::Fatal => DiagnosticSeverity::ERROR,
+            ParseErrorLevel::Error => DiagnosticSeverity::ERROR,
+            ParseErrorLevel::Warn => DiagnosticSeverity::WARNING,
+            ParseErrorLevel::Note => DiagnosticSeverity::INFORMATION,
+        }),
+        code: Some(lsp_types::NumberOrString::Number(x.code() as i32)),
+        message: x.kind.to_string(),
+        ..Default::default()
+    })
+}
+
+fn diagnostic_from_wxss_parse_error(x: wxss::ParseError) -> Option<Diagnostic> {
     Some(Diagnostic {
         range: Range {
             start: Position { line: x.location.start.line, character: x.location.start.utf16_col },

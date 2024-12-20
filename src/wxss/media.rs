@@ -1,9 +1,9 @@
-use super::{token::{AtKeyword, Brace, Ident, Paren, TokenTree}, Item};
+use super::*;
 
 pub(crate) struct MediaRule {
     at_media: AtKeyword,
     list: MediaQueryList,
-    body: Brace<Vec<Item>>,
+    body: Brace<Vec<Rule>>,
 }
 
 pub(crate) enum MediaQueryList {
@@ -24,4 +24,10 @@ pub(crate) enum MediaOrKeyword {
     None,
     Or(Ident),
     Comma(Ident),
+}
+
+impl CSSParse for MediaRule {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        todo!() // TODO
+    }
 }

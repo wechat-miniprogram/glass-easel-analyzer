@@ -8,7 +8,7 @@ pub(crate) type Location = Range<Position>;
 
 pub(crate) mod font_face;
 pub(crate) mod import;
-pub(crate) mod key_frame;
+pub(crate) mod keyframe;
 pub(crate) mod media;
 pub(crate) mod property;
 pub(crate) mod rule;
@@ -19,16 +19,16 @@ trait CSSParse: Sized {
 }
 
 pub(crate) struct StyleSheet {
-    pub(crate) items: Vec<Item>,
+    pub(crate) items: Vec<Rule>,
     pub(crate) comments: Vec<Comment>,
 }
 
 impl StyleSheet {
-    fn parse_str(src: &str) -> (Self, Vec<ParseError>) {
+    pub(crate) fn parse_str(src: &str) -> (Self, Vec<ParseError>) {
         let mut pso = ParseStateOwned::new(src.to_string());
-        let mut items: Vec<Item> = vec![];
+        let mut items: Vec<Rule> = vec![];
         pso.run(|mut ps| {
-            while let Some(item) = Item::css_parse(&mut ps) {
+            while let Some(item) = Rule::css_parse(&mut ps) {
                 items.push(item);
             }
         });
@@ -41,20 +41,79 @@ impl StyleSheet {
     }
 }
 
-pub(crate) enum Item {
-    Unknown(Vec<TokenTree>),
+pub(crate) enum RuleOrProperty {
+    Rule(Rule),
     Property(property::Property),
+}
+
+impl CSSParse for RuleOrProperty {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        if let Some((TokenTree::Ident(..), TokenTree::Colon(..))) = ps.peek2() {
+            if let Some(p) = property::Property::css_parse(ps) {
+                return Some(Self::Property(p))
+            }
+        }
+        CSSParse::css_parse(ps).map(|x| Self::Rule(x))
+    }
+}
+
+pub(crate) enum Rule {
+    Unknown(Vec<TokenTree>),
     Style(rule::StyleRule),
     Import(import::ImportRule),
     Media(media::MediaRule),
     FontFace(font_face::FontFaceRule),
-    KeyFrames(key_frame::KeyFramesRule),
+    Keyframes(keyframe::KeyframesRule),
     UnknownAtRule(AtKeyword, Vec<TokenTree>),
 }
 
-impl CSSParse for Item {
+impl CSSParse for Rule {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
-        todo!() // TODO
+        let ret = match ps.peek()? {
+            TokenTree::AtKeyword(at_keyword) => {
+                match at_keyword.content.as_str() {
+                    "import" => Self::Import(CSSParse::css_parse(ps)?),
+                    "media" => Self::Media(CSSParse::css_parse(ps)?),
+                    "font-face" => Self::FontFace(CSSParse::css_parse(ps)?),
+                    "keyframes" => Self::Keyframes(CSSParse::css_parse(ps)?),
+                    _ => {
+                        let Some(TokenTree::AtKeyword(at_keyword)) = ps.next() else { unreachable!() };
+                        let mut tt = vec![];
+                        while let Some(next) = ps.next() {
+                            let ended = match &next {
+                                TokenTree::Semicolon(..) | TokenTree::Brace(..) => true,
+                                _ => false,
+                            };
+                            tt.push(next);
+                            if ended { break };
+                        }
+                        Self::UnknownAtRule(at_keyword, tt)
+                    }
+                }
+            }
+            TokenTree::Ident(..)
+            | TokenTree::IDHash(..)
+            | TokenTree::Colon(..)
+            | TokenTree::Bracket(..) => {
+                Self::Style(CSSParse::css_parse(ps)?)
+            }
+            TokenTree::Operator(op) if op.is(".") => {
+                Self::Style(CSSParse::css_parse(ps)?)
+            }
+            _ => {
+                let mut tt = vec![];
+                while let Some(next) = ps.next() {
+                    let ended = match &next {
+                        TokenTree::Semicolon(..) | TokenTree::Brace(..) => true,
+                        _ => false,
+                    };
+                    tt.push(next);
+                    if ended { break };
+                }
+                Self::Unknown(tt)
+            }
+        };
+        Some(ret)
     }
 }
 
@@ -340,14 +399,30 @@ mod state {
             ret
         }
 
-        pub(super) fn peek_ident(&mut self) -> bool {
-            match self.peek() {
-                Some(TokenTree::Ident(..)) => true,
-                _ => false,
-            }
+        pub(super) fn peek2(&mut self) -> Option<(TokenTree, TokenTree)> {
+            let state = self.parser.state();
+            let start_pos = parser_position(&self.parser);
+            let next = self.parser.next();
+            let ret = match next {
+                Err(_) => None,
+                Ok(next) => {
+                    let ret1 = convert_css_token(next, start_pos..start_pos);
+                    if ret1.children().is_some() {
+                        None
+                    } else {
+                        let next = self.parser.next();
+                        match next {
+                            Err(_) => None,
+                            Ok(next) => Some((ret1, convert_css_token(next, start_pos..start_pos))),
+                        }
+                    }
+                }
+            };
+            self.parser.reset(&state);
+            ret
         }
 
-        fn parse_nested<R>(&mut self, f: impl FnOnce(ParseState) -> R) -> Option<R> {
+        fn parse_nested<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<R> {
             let Self { parser, warnings, comments } = self;
             parser.parse_nested_block::<_, _, ()>(|parser| {
                 let ps = ParseState {
@@ -363,38 +438,56 @@ mod state {
                 while !parser.is_exhausted() {
                     let _ = parser.next();
                 }
-                Ok(Some(r))
+                Ok(r)
             }).unwrap()
         }
 
-        pub(super) fn parse_paren<R>(&mut self, f: impl FnOnce(ParseState) -> R) -> Option<Paren<R>> {
+        pub(super) fn parse_function<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Function<R>> {
+            match self.peek() {
+                Some(TokenTree::Function(..)) => {}
+                _ => return None,
+            }
+            let start_pos = self.position();
+            let Ok(CSSToken::Function(name_str)) = self.parser.next().cloned() else { unreachable!() };
+            let name_end_pos = self.position();
+            let name = Ident { content: CompactString::new(name_str), location: start_pos..name_end_pos };
+            let r = self.parse_nested(f)?;
+            let end_pos = self.position();
+            let paren = Paren::new(r, start_pos..end_pos);
+            Some(Function { name, paren })
+        }
+
+        pub(super) fn parse_paren<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Paren<R>> {
             match self.peek() {
                 Some(TokenTree::Paren(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
+            self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Paren::new(r, start_pos..end_pos))
         }
 
-        pub(super) fn parse_bracket<R>(&mut self, f: impl FnOnce(ParseState) -> R) -> Option<Bracket<R>> {
+        pub(super) fn parse_bracket<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Bracket<R>> {
             match self.peek() {
                 Some(TokenTree::Bracket(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
+            self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Bracket::new(r, start_pos..end_pos))
         }
 
-        pub(super) fn parse_brace<R>(&mut self, f: impl FnOnce(ParseState) -> R) -> Option<Brace<R>> {
+        pub(super) fn parse_brace<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Brace<R>> {
             match self.peek() {
                 Some(TokenTree::Brace(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
+            self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Brace::new(r, start_pos..end_pos))

@@ -1,4 +1,4 @@
-use super::{media::MediaQueryList, token::{AtKeyword, QuotedString, TokenTree}};
+use super::{*, media::MediaQueryList};
 
 pub(crate) struct ImportRule {
     at_import: AtKeyword,
@@ -9,4 +9,10 @@ pub(crate) struct ImportRule {
 pub(crate) enum ImportCondition {
     Media(MediaQueryList),
     Unknown(Vec<TokenTree>),
+}
+
+impl CSSParse for ImportRule {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        todo!() // TODO
+    }
 }

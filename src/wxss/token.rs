@@ -1,9 +1,7 @@
 use compact_str::CompactString;
-use enum_dispatch::enum_dispatch;
 
-use super::Location;
+use super::{CSSParse, Location};
 
-#[enum_dispatch(TokenExt)]
 pub(crate) enum TokenTree {
     Ident(Ident),
     AtKeyword(AtKeyword),
@@ -68,6 +66,17 @@ macro_rules! basic_token {
                 self.location.clone()
             }
         }
+
+        impl CSSParse for $t {
+            fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+                if let Some(TokenTree::$t(..)) = ps.peek() {
+                    let Some(TokenTree::$t(x)) = ps.next() else { unreachable!() };
+                    Some(x)
+                } else {
+                    None
+                }
+            }
+        }
     };
 }
 
@@ -79,7 +88,6 @@ basic_token!(QuotedString);
 basic_token!(UnquotedUrl);
 basic_token!(BadUrl);
 basic_token!(BadString);
-basic_token!(Comment);
 
 macro_rules! core_delim_token {
     ($t:ident) => {
@@ -90,6 +98,17 @@ macro_rules! core_delim_token {
         impl TokenExt for $t {
             fn location(&self) -> Location {
                 self.location.clone()
+            }
+        }
+
+        impl CSSParse for $t {
+            fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+                if let Some(TokenTree::$t(..)) = ps.peek() {
+                    let Some(TokenTree::$t(x)) = ps.next() else { unreachable!() };
+                    Some(x)
+                } else {
+                    None
+                }
             }
         }
     };
@@ -142,6 +161,17 @@ impl TokenExt for Number {
     }
 }
 
+impl CSSParse for Number {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        if let Some(TokenTree::Number(..)) = ps.peek() {
+            let Some(TokenTree::Number(x)) = ps.next() else { unreachable!() };
+            Some(x)
+        } else {
+            None
+        }
+    }
+}
+
 pub(crate) struct Percentage {
     pub(crate) has_sign: bool,
     pub(crate) value: f32,
@@ -152,6 +182,17 @@ pub(crate) struct Percentage {
 impl TokenExt for Percentage {
     fn location(&self) -> Location {
         self.location.clone()
+    }
+}
+
+impl CSSParse for Percentage {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        if let Some(TokenTree::Percentage(..)) = ps.peek() {
+            let Some(TokenTree::Percentage(x)) = ps.next() else { unreachable!() };
+            Some(x)
+        } else {
+            None
+        }
     }
 }
 
@@ -166,6 +207,17 @@ pub(crate) struct Dimension {
 impl TokenExt for Dimension {
     fn location(&self) -> Location {
         self.location.clone()
+    }
+}
+
+impl CSSParse for Dimension {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        if let Some(TokenTree::Dimension(..)) = ps.peek() {
+            let Some(TokenTree::Dimension(x)) = ps.next() else { unreachable!() };
+            Some(x)
+        } else {
+            None
+        }
     }
 }
 
@@ -190,8 +242,20 @@ impl<T> TokenGroupExt<T> for Function<T> {
     }
 }
 
+impl<T: CSSParse> CSSParse for Function<T> {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        if let Some(TokenTree::Function(..)) = ps.peek() {
+            ps.parse_function(|mut ps| {
+                CSSParse::css_parse(&mut ps)
+            })
+        } else {
+            None
+        }
+    }
+}
+
 macro_rules! group_token {
-    ($t:ident) => {
+    ($t:ident, $p:ident) => {
         pub(crate) struct $t<T> {
             pub(crate) children: T,
             pub(crate) location: Location,
@@ -217,9 +281,32 @@ macro_rules! group_token {
                 &self.children
             }
         }
+
+        impl<T: CSSParse> CSSParse for $t<T> {
+            fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+                if let Some(TokenTree::$t(..)) = ps.peek() {
+                    ps.$p(|mut ps| {
+                        CSSParse::css_parse(&mut ps)
+                    })
+                } else {
+                    None
+                }
+            }
+        }
     };
 }
 
-group_token!(Paren);
-group_token!(Bracket);
-group_token!(Brace);
+group_token!(Paren, parse_paren);
+group_token!(Bracket, parse_bracket);
+group_token!(Brace, parse_brace);
+
+pub(crate) struct Comment {
+    pub(crate) content: CompactString,
+    pub(crate) location: Location,
+}
+
+impl TokenExt for Comment {
+    fn location(&self) -> Location {
+        self.location.clone()
+    }
+}

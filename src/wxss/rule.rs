@@ -1,8 +1,8 @@
-use super::{token::{Brace, Bracket, Colon, Comma, Function, IDHash, Ident, Operator, TokenTree}, Item};
+use super::*;
 
 pub(crate) struct StyleRule {
     pub(crate) selector: Vec<Selector>,
-    pub(crate) brace: Brace<Vec<Item>>,
+    pub(crate) brace: Brace<Vec<Rule>>,
 }
 
 pub(crate) struct Selector {
@@ -28,4 +28,10 @@ pub(crate) enum SelectorSegment {
 pub(crate) enum IdentOrFunction {
     Ident(Ident),
     Function(Function<Vec<TokenTree>>),
+}
+
+impl CSSParse for StyleRule {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        todo!() // TODO
+    }
 }
