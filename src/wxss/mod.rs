@@ -15,7 +15,25 @@ pub(crate) mod rule;
 pub(crate) mod token;
 
 trait CSSParse: Sized {
+    /// Do real parsing.
+    /// 
+    /// Returns `None` if it cannot be parsed at all.
+    /// Otherwise, try parse as many tokens as possible,
+    /// and generates warnings and collect comments if any.
     fn css_parse(ps: &mut ParseState) -> Option<Self>;
+}
+
+impl<C: CSSParse> CSSParse for Vec<C> {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        let mut items = vec![];
+        while let Some(c) = C::css_parse(ps) {
+            items.push(c);
+        }
+        if items.len() == 0 {
+            return None;
+        }
+        Some(items)
+    }
 }
 
 pub(crate) struct StyleSheet {
@@ -114,6 +132,36 @@ impl CSSParse for Rule {
             }
         };
         Some(ret)
+    }
+}
+
+pub(crate) struct Repeat<C: CSSParse, S: TokenExt> {
+    pub(crate) items: Vec<(C, Option<S>)>,
+}
+
+impl<C: CSSParse, S: TokenExt> CSSParse for Repeat<C, S> {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        let mut items = vec![];
+        while let Some(c) = C::css_parse(ps) {
+            let s = S::css_parse(ps);
+            let ended = s.is_none();
+            items.push((c, s));
+            if ended { break; }
+        }
+        if items.len() == 0 {
+            return None;
+        }
+        Some(Self { items })
+    }
+}
+
+impl<C: CSSParse, S: TokenExt> Repeat<C, S> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &C> {
+        self.items.iter().map(|(c, _)| c)
+    }
+
+    pub(crate) fn iter_items(&self) -> impl Iterator<Item = (&C, Option<&S>)> {
+        self.items.iter().map(|(c, s)| (c, s.as_ref()))
     }
 }
 
@@ -315,6 +363,9 @@ mod state {
             parser_position(&self.parser)
         }
 
+        /// Get the next non-comment token and advance the cursor.
+        /// 
+        /// It will collect comments and return the next `TokenTree` if not ended.
         pub(super) fn next(&mut self) -> Option<TokenTree> {
             fn rec(
                 parser: &mut cssparser::Parser<'static, '_>,
@@ -387,7 +438,26 @@ mod state {
             rec(&mut self.parser, &mut self.warnings, &mut self.comments)
         }
 
+        /// Get the next non-comment token.
+        /// 
+        /// It will not collect any comment.
+        /// Note that it will not parse any child inside paren, brackets, brace, and function.
         pub(super) fn peek(&mut self) -> Option<TokenTree> {
+            let state = self.parser.state();
+            let start_pos = parser_position(&self.parser);
+            let next = self.parser.next();
+            let ret = match next {
+                Err(_) => None,
+                Ok(next) => Some(convert_css_token(next, start_pos..start_pos)),
+            };
+            self.parser.reset(&state);
+            ret
+        }
+
+        /// Get the next token, returning `None` if it is whitespace or comment.
+        /// 
+        /// Note that it will not parse any child inside paren, brackets, brace, and function.
+        pub(super) fn peek_with_whitespace(&mut self) -> Option<TokenTree> {
             let state = self.parser.state();
             let start_pos = parser_position(&self.parser);
             let next = self.parser.next();
@@ -463,7 +533,7 @@ mod state {
                 _ => return None,
             }
             let start_pos = self.position();
-            self.parser.next();
+            let _ = self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Paren::new(r, start_pos..end_pos))
@@ -475,7 +545,7 @@ mod state {
                 _ => return None,
             }
             let start_pos = self.position();
-            self.parser.next();
+            let _ = self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Bracket::new(r, start_pos..end_pos))
@@ -487,7 +557,7 @@ mod state {
                 _ => return None,
             }
             let start_pos = self.position();
-            self.parser.next();
+            let _ = self.parser.next();
             let r = self.parse_nested(f)?;
             let end_pos = self.position();
             Some(Brace::new(r, start_pos..end_pos))
@@ -524,10 +594,6 @@ impl ParseError {
 
     pub(crate) fn code(&self) -> u32 {
         self.kind.clone() as u32
-    }
-
-    pub(crate) fn prevent_success(&self) -> bool {
-        self.level() >= ParseErrorLevel::Error
     }
 }
 

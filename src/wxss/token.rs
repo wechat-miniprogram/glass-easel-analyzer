@@ -2,6 +2,7 @@ use compact_str::CompactString;
 
 use super::{CSSParse, Location};
 
+#[derive(Debug, Clone)]
 pub(crate) enum TokenTree {
     Ident(Ident),
     AtKeyword(AtKeyword),
@@ -50,12 +51,19 @@ impl TokenTree {
     }
 }
 
-pub(crate) trait TokenExt {
+impl CSSParse for TokenTree {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        ps.next()
+    }
+}
+
+pub(crate) trait TokenExt: CSSParse {
     fn location(&self) -> Location;
 }
 
 macro_rules! basic_token {
     ($t:ident) => {
+        #[derive(Debug, Clone)]
         pub(crate) struct $t {
             pub(crate) content: CompactString,
             pub(crate) location: Location,
@@ -91,6 +99,7 @@ basic_token!(BadString);
 
 macro_rules! core_delim_token {
     ($t:ident) => {
+        #[derive(Debug, Clone)]
         pub(crate) struct $t {
             pub(crate) location: Location,
         }
@@ -118,6 +127,7 @@ core_delim_token!(Colon);
 core_delim_token!(Semicolon);
 core_delim_token!(Comma);
 
+#[derive(Debug, Clone)]
 pub(crate) struct Operator {
     pub(crate) name: [u8; 4],
     pub(crate) location: Location,
@@ -148,6 +158,18 @@ impl Operator {
     }
 }
 
+impl CSSParse for Operator {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        if let Some(TokenTree::Operator(..)) = ps.peek() {
+            let Some(TokenTree::Operator(x)) = ps.next() else { unreachable!() };
+            Some(x)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub(crate) struct Number {
     pub(crate) has_sign: bool,
     pub(crate) value: f32,
@@ -172,6 +194,7 @@ impl CSSParse for Number {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct Percentage {
     pub(crate) has_sign: bool,
     pub(crate) value: f32,
@@ -196,6 +219,7 @@ impl CSSParse for Percentage {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct Dimension {
     pub(crate) has_sign: bool,
     pub(crate) value: f32,
@@ -225,12 +249,13 @@ pub(crate) trait TokenGroupExt<T> {
     fn children(&self) -> &T;
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct Function<T> {
     pub(crate) name: Ident,
     pub(crate) paren: Paren<T>,
 }
 
-impl<T> TokenExt for Function<T> {
+impl<T: CSSParse> TokenExt for Function<T> {
     fn location(&self) -> Location {
         self.name.location.start..self.paren.location.end
     }
@@ -256,6 +281,7 @@ impl<T: CSSParse> CSSParse for Function<T> {
 
 macro_rules! group_token {
     ($t:ident, $p:ident) => {
+        #[derive(Debug, Clone)]
         pub(crate) struct $t<T> {
             pub(crate) children: T,
             pub(crate) location: Location,
@@ -270,7 +296,7 @@ macro_rules! group_token {
             }
         }
 
-        impl<T> TokenExt for $t<T> {
+        impl<T: CSSParse> TokenExt for $t<T> {
             fn location(&self) -> Location {
                 self.location.clone()
             }
@@ -300,13 +326,25 @@ group_token!(Paren, parse_paren);
 group_token!(Bracket, parse_bracket);
 group_token!(Brace, parse_brace);
 
+#[derive(Debug, Clone)]
 pub(crate) struct Comment {
     pub(crate) content: CompactString,
     pub(crate) location: Location,
 }
 
-impl TokenExt for Comment {
-    fn location(&self) -> Location {
-        self.location.clone()
+#[derive(Debug, Clone)]
+pub(crate) enum BraceOrSemicolon<T> {
+    Brace(Brace<T>),
+    Semicolon(Semicolon),
+}
+
+impl<T: CSSParse> CSSParse for BraceOrSemicolon<T> {
+    fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        let ret = match ps.next()? {
+            TokenTree::Brace(_) => Self::Brace(CSSParse::css_parse(ps)?),
+            TokenTree::Semicolon(_) => Self::Semicolon(CSSParse::css_parse(ps)?),
+            _ => return None
+        };
+        Some(ret)
     }
 }
