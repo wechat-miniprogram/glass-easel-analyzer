@@ -49,6 +49,34 @@ impl TokenTree {
             Self::Brace(x) => Some(&x.children),
         }
     }
+
+    pub(crate) fn is_ident(&self) -> bool {
+        if let Self::Ident(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub(crate) fn is_function(&self) -> bool {
+        if let Self::Function(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub(crate) fn is_ident_or_function(&self) -> bool {
+        self.is_ident() || self.is_function()
+    }
+
+    pub(crate) fn is_operator(&self, is: &str) -> bool {
+        if let Self::Operator(x) = self {
+            x.is(is)
+        } else {
+            false
+        }
+    }
 }
 
 impl CSSParse for TokenTree {

@@ -22,7 +22,7 @@ pub(crate) enum Selector {
     Attribute(Bracket<TokenTree>),
     NextSibling(Operator),
     Child(Operator),
-    Column(Operator),
+    Column(Operator, Operator),
     SubsequentSibling(Operator),
     Namespace(Operator),
     PseudoClass(Colon, IdentOrFunction),
@@ -52,17 +52,48 @@ impl CSSParse for Selector {
                 if x.is("*") {
                     Self::Universal(CSSParse::css_parse(ps)?)
                 } else if x.is(".") {
-                    todo!()
+                    let op = CSSParse::css_parse(ps)?;
+                    if let Some(TokenTree::Ident(..)) = ps.peek_with_whitespace() {
+                        Self::Class(op, CSSParse::css_parse(ps)?)
+                    } else {
+                        Self::Unknown(vec![TokenTree::Operator(op)])
+                    }
                 } else if x.is("+") {
-                    todo!()
-                } else if x.is("||") {
-                    todo!()
+                    Self::NextSibling(CSSParse::css_parse(ps)?)
+                } else if x.is(">") {
+                    Self::Child(CSSParse::css_parse(ps)?)
                 } else if x.is("~") {
-                    todo!()
+                    Self::SubsequentSibling(CSSParse::css_parse(ps)?)
                 } else if x.is("|") {
-                    todo!()
+                    let op = CSSParse::css_parse(ps)?;
+                    if let Some(TokenTree::Operator(x)) = ps.peek_with_whitespace() {
+                        if x.is("|") {
+                            let op2 = CSSParse::css_parse(ps)?;
+                            Self::Column(op, op2)
+                        } else {
+                            Self::Namespace(CSSParse::css_parse(ps)?)
+                        }
+                    } else {
+                        Self::Namespace(CSSParse::css_parse(ps)?)
+                    }
                 } else if x.is(":") {
-                    todo!()
+                    let op = CSSParse::css_parse(ps)?;
+                    if let Some(peek2) = ps.peek_with_whitespace() {
+                        if peek2.is_ident_or_function() {
+                            Self::PseudoClass(op, CSSParse::css_parse(ps)?)
+                        } else if let TokenTree::Colon(_) = peek2 {
+                            let op2 = CSSParse::css_parse(ps)?;
+                            if ps.peek_with_whitespace().is_some_and(|x| x.is_ident_or_function()) {
+                                Self::PseudoElement(op, op2, CSSParse::css_parse(ps)?)
+                            } else {
+                                Self::Unknown(vec![TokenTree::Colon(op), TokenTree::Colon(op2)])
+                            }
+                        } else {
+                            Self::Unknown(vec![TokenTree::Colon(op)])
+                        }
+                    } else {
+                        Self::Unknown(vec![TokenTree::Colon(op)])
+                    }
                 } else if x.is("::") {
                     todo!()
                 } else {
