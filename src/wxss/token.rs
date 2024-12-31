@@ -50,6 +50,14 @@ impl TokenTree {
         }
     }
 
+    pub(crate) fn is_keyword(&self, is: &str) -> bool {
+        if let Self::Ident(x) = self {
+            x.content == is
+        } else {
+            false
+        }
+    }
+
     pub(crate) fn is_ident(&self) -> bool {
         if let Self::Ident(_) = self {
             true
@@ -68,6 +76,14 @@ impl TokenTree {
 
     pub(crate) fn is_ident_or_function(&self) -> bool {
         self.is_ident() || self.is_function()
+    }
+
+    pub(crate) fn is_colon(&self) -> bool {
+        if let Self::Colon(_) = self {
+            true
+        } else {
+            false
+        }
     }
 
     pub(crate) fn is_operator(&self, is: &str) -> bool {
@@ -313,13 +329,15 @@ macro_rules! group_token {
         pub(crate) struct $t<T> {
             pub(crate) children: T,
             pub(crate) location: Location,
+            pub(crate) trailing: Vec<TokenTree>,
         }
 
         impl<T> $t<T> {
-            pub(crate) fn new(children: T, location: Location) -> Self {
+            pub(crate) fn new(children: T, location: Location, trailing: Vec<TokenTree>) -> Self {
                 Self {
                     children,
                     location,
+                    trailing,
                 }
             }
         }

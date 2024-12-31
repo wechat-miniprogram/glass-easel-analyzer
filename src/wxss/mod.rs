@@ -135,7 +135,7 @@ impl CSSParse for Rule {
     }
 }
 
-pub(crate) struct Repeat<C: CSSParse, S: TokenExt> {
+pub(crate) struct Repeat<C, S> {
     pub(crate) items: Vec<(C, Option<S>)>,
 }
 
@@ -155,13 +155,32 @@ impl<C: CSSParse, S: TokenExt> CSSParse for Repeat<C, S> {
     }
 }
 
-impl<C: CSSParse, S: TokenExt> Repeat<C, S> {
+impl<C, S> Repeat<C, S> {
     pub(crate) fn iter(&self) -> impl Iterator<Item = &C> {
         self.items.iter().map(|(c, _)| c)
     }
 
     pub(crate) fn iter_items(&self) -> impl Iterator<Item = (&C, Option<&S>)> {
         self.items.iter().map(|(c, s)| (c, s.as_ref()))
+    }
+}
+
+pub(crate) enum MaybeUnknown<T> {
+    Unknown(Vec<TokenTree>),
+    Normal(T, Vec<TokenTree>),
+}
+
+impl<T: CSSParse> MaybeUnknown<T> {
+    fn parse_with_trailing(
+        ps: &mut ParseState,
+        trailing_f: impl for<'a, 'b, 'c> FnOnce(&'a mut ParseState<'b, 'c>) -> Vec<TokenTree>,
+    ) -> Self {
+        if let Some(t) = T::css_parse(ps) {
+            let trailing = trailing_f(ps);
+            Self::Normal(t, trailing)
+        } else {
+            Self::Unknown(trailing_f(ps))
+        }
     }
 }
 
@@ -319,18 +338,18 @@ mod state {
                 TokenTree::BadString(BadString { content: CompactString::new(s), location })
             }
             CSSToken::Function(name) => {
-                let paren = Paren::new(vec![], location.end..location.end);
+                let paren = Paren::new(vec![], location.end..location.end, vec![]);
                 let name = Ident { content: CompactString::new(name), location };
                 TokenTree::Function(Function { name, paren })
             }
             CSSToken::ParenthesisBlock => {
-                TokenTree::Paren(Paren::new(vec![], location))
+                TokenTree::Paren(Paren::new(vec![], location, vec![]))
             }
             CSSToken::SquareBracketBlock => {
-                TokenTree::Bracket(Bracket::new(vec![], location))
+                TokenTree::Bracket(Bracket::new(vec![], location, vec![]))
             }
             CSSToken::CurlyBracketBlock => {
-                TokenTree::Brace(Brace::new(vec![], location))
+                TokenTree::Brace(Brace::new(vec![], location, vec![]))
             }
             CSSToken::WhiteSpace(..)
             | CSSToken::Comment(..)
@@ -492,27 +511,61 @@ mod state {
             ret
         }
 
-        fn parse_nested<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<R> {
+        pub(super) fn skip_until_before(&mut self, mut f: impl FnMut(&TokenTree) -> bool) -> Vec<TokenTree> {
+            let mut ret = vec![];
+            while let Some(peek) = self.peek() {
+                if !f(&peek) {
+                    break
+                }
+                ret.push(self.next().unwrap());
+            }
+            ret
+        }
+
+        pub(super) fn skip_until_before_semicolon(&mut self) -> Vec<TokenTree> {
+            self.skip_until_before(|peek| {
+                match peek {
+                    TokenTree::Semicolon(_) => false,
+                    _ => true,
+                }
+            })
+        }
+
+        pub(super) fn skip_until_before_brace_or_semicolon(&mut self) -> Vec<TokenTree> {
+            self.skip_until_before(|peek| {
+                match peek {
+                    TokenTree::Semicolon(_) | TokenTree::Brace(_) => false,
+                    _ => true,
+                }
+            })
+        }
+
+        fn parse_nested<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<(R, Vec<TokenTree>)> {
             let Self { parser, warnings, comments } = self;
-            parser.parse_nested_block::<_, _, ()>(|parser| {
-                let ps = ParseState {
+            let before = parser.state();
+            let ret = parser.parse_nested_block::<_, _, ()>(|parser| {
+                let mut ps = ParseState {
                     parser,
                     warnings,
                     comments,
                 };
-                let r = f(ps);
-                if !parser.is_exhausted() {
-                    let pos = parser_position(parser);
-                    warnings.push(ParseError { kind: ParseErrorKind::UnexpectedToken, location: pos..pos })
+                let Some(r) = f(&mut ps) else {
+                    return Ok(None);
+                };
+                let mut trailing = vec![];
+                while let Some(next) = ps.next() {
+                    trailing.push(next);
                 }
-                while !parser.is_exhausted() {
-                    let _ = parser.next();
-                }
-                Ok(r)
-            }).unwrap()
+                Ok(Some((r, trailing)))
+            }).unwrap();
+            if ret.is_none() {
+                parser.reset(&before);
+                return None;
+            }
+            ret
         }
 
-        pub(super) fn parse_function<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Function<R>> {
+        pub(super) fn parse_function<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<Function<R>> {
             match self.peek() {
                 Some(TokenTree::Function(..)) => {}
                 _ => return None,
@@ -521,46 +574,46 @@ mod state {
             let Ok(CSSToken::Function(name_str)) = self.parser.next().cloned() else { unreachable!() };
             let name_end_pos = self.position();
             let name = Ident { content: CompactString::new(name_str), location: start_pos..name_end_pos };
-            let r = self.parse_nested(f)?;
+            let (r, trailing) = self.parse_nested(f)?;
             let end_pos = self.position();
-            let paren = Paren::new(r, start_pos..end_pos);
+            let paren = Paren::new(r, start_pos..end_pos, trailing);
             Some(Function { name, paren })
         }
 
-        pub(super) fn parse_paren<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Paren<R>> {
+        pub(super) fn parse_paren<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<Paren<R>> {
             match self.peek() {
                 Some(TokenTree::Paren(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
             let _ = self.parser.next();
-            let r = self.parse_nested(f)?;
+            let (r, trailing) = self.parse_nested(f)?;
             let end_pos = self.position();
-            Some(Paren::new(r, start_pos..end_pos))
+            Some(Paren::new(r, start_pos..end_pos, trailing))
         }
 
-        pub(super) fn parse_bracket<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Bracket<R>> {
+        pub(super) fn parse_bracket<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<Bracket<R>> {
             match self.peek() {
                 Some(TokenTree::Bracket(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
             let _ = self.parser.next();
-            let r = self.parse_nested(f)?;
+            let (r, trailing) = self.parse_nested(f)?;
             let end_pos = self.position();
-            Some(Bracket::new(r, start_pos..end_pos))
+            Some(Bracket::new(r, start_pos..end_pos, trailing))
         }
 
-        pub(super) fn parse_brace<R>(&mut self, f: impl FnOnce(ParseState) -> Option<R>) -> Option<Brace<R>> {
+        pub(super) fn parse_brace<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<Brace<R>> {
             match self.peek() {
                 Some(TokenTree::Brace(..)) => {}
                 _ => return None,
             }
             let start_pos = self.position();
             let _ = self.parser.next();
-            let r = self.parse_nested(f)?;
+            let (r, trailing) = self.parse_nested(f)?;
             let end_pos = self.position();
-            Some(Brace::new(r, start_pos..end_pos))
+            Some(Brace::new(r, start_pos..end_pos, trailing))
         }
     }
 }

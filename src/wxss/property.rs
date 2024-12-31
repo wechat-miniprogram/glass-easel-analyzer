@@ -11,15 +11,8 @@ impl CSSParse for Property {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let name = CSSParse::css_parse(ps)?;
         let colon = CSSParse::css_parse(ps)?;
-        let mut value = vec![];
-        let mut semicolon = None;
-        while let Some(tt) = ps.next() {
-            if let TokenTree::Semicolon(x) = tt {
-                semicolon = Some(x);
-                break;
-            }
-            value.push(tt);
-        }
+        let value = ps.skip_until_before_semicolon();
+        let mut semicolon = CSSParse::css_parse(ps);
         Some(Self { name, colon, value, semicolon })
     }
 }
