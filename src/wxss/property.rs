@@ -1,10 +1,10 @@
 use super::*;
 
 pub(crate) struct Property {
-    name: Ident,
-    colon: Colon,
-    value: Vec<TokenTree>,
-    semicolon: Option<Semicolon>,
+    pub(crate) name: Ident,
+    pub(crate) colon: Colon,
+    pub(crate) value: Vec<TokenTree>,
+    pub(crate) semicolon: Option<Semicolon>,
 }
 
 impl CSSParse for Property {
@@ -12,7 +12,7 @@ impl CSSParse for Property {
         let name = CSSParse::css_parse(ps)?;
         let colon = CSSParse::css_parse(ps)?;
         let value = ps.skip_until_before_semicolon();
-        let mut semicolon = CSSParse::css_parse(ps);
+        let semicolon = CSSParse::css_parse(ps);
         Some(Self { name, colon, value, semicolon })
     }
 }

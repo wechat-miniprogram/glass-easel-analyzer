@@ -1,10 +1,10 @@
 use super::{*, media::MediaQueryList};
 
 pub(crate) struct ImportRule {
-    at_import: AtKeyword,
-    url: MaybeUnknown<QuotedString>,
-    condition: Vec<TokenTree>,
-    semicolon: Option<Semicolon>,
+    pub(crate) at_import: AtKeyword,
+    pub(crate) url: MaybeUnknown<QuotedString>,
+    pub(crate) condition: Vec<TokenTree>,
+    pub(crate) semicolon: Option<Semicolon>,
 }
 
 impl CSSParse for ImportRule {

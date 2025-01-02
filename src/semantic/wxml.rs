@@ -1,98 +1,6 @@
-use std::cmp::Ordering;
-
 use glass_easel_template_compiler::parse::{expr::{ArrayFieldKind, Expression, ObjectFieldKind}, tag::{ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, Script, StrName, StyleAttribute, Value}, Position, Template};
-use lsp_types::{SemanticToken, SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensParams, SemanticTokensRangeParams};
 
-use crate::{context::project::FileContentMetadata, ServerContext};
-
-pub(crate) const TOKEN_TYPES: [SemanticTokenType; 12] = [
-    SemanticTokenType::TYPE,
-    SemanticTokenType::VARIABLE,
-    SemanticTokenType::PROPERTY,
-    SemanticTokenType::EVENT,
-    SemanticTokenType::FUNCTION,
-    SemanticTokenType::METHOD,
-    SemanticTokenType::KEYWORD,
-    SemanticTokenType::COMMENT,
-    SemanticTokenType::STRING,
-    SemanticTokenType::NUMBER,
-    SemanticTokenType::OPERATOR,
-    SemanticTokenType::MACRO,
-];
-
-// this list MUST matches the list above
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u16)]
-enum TokenType {
-    Type = 0,
-    Variable,
-    Property,
-    Event,
-    Function,
-    Method,
-    Keyword,
-    Comment,
-    String,
-    Number,
-    Operator,
-    Macro,
-}
-
-pub(crate) const TOKEN_MODIFIERS: [SemanticTokenModifier; 3] = [
-    SemanticTokenModifier::DECLARATION,
-    SemanticTokenModifier::DEFINITION,
-    SemanticTokenModifier::DEPRECATED,
-];
-
-// this list MUST matches the list above
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-enum TokenModifier {
-    None = 0x00000000,
-    Declaration = 0x00000001,
-    Definition = 0x00000002,
-    #[allow(dead_code)]
-    Deprecated = 0x00000004,
-}
-
-pub(crate) async fn tokens_full(ctx: ServerContext, params: SemanticTokensParams) -> anyhow::Result<SemanticTokens> {
-    let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<_> {
-        let data = if let Some(content) = project.cached_file_content(&abs_path) {
-            match abs_path.extension().and_then(|x| x.to_str()) {
-                Some("wxml") => {
-                    let template = project.get_wxml_tree(&abs_path)?;
-                    let range = Position { line: 0, utf16_col: 0 }..Position { line: u32::MAX, utf16_col: u32::MAX };
-                    find_wxml_semantic_tokens(content, template, range)
-                }
-                _ => vec![],
-            }
-        } else {
-            vec![]
-        };
-        Ok(SemanticTokens { result_id: None, data })
-    }).await??;
-    Ok(ret)
-}
-
-pub(crate) async fn tokens_range(ctx: ServerContext, params: SemanticTokensRangeParams) -> anyhow::Result<SemanticTokens> {
-    let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<_> {
-        let data = if let Some(content) = project.cached_file_content(&abs_path) {
-            match abs_path.extension().and_then(|x| x.to_str()) {
-                Some("wxml") => {
-                    let template = project.get_wxml_tree(&abs_path)?;
-                    let start = Position { line: params.range.start.line, utf16_col: params.range.start.character };
-                    let end = Position { line: params.range.end.line, utf16_col: params.range.end.character };
-                    find_wxml_semantic_tokens(content, template, start..end)
-                }
-                _ => vec![],
-            }
-        } else {
-            vec![]
-        };
-        Ok(SemanticTokens { result_id: None, data })
-    }).await??;
-    Ok(ret)
-}
+use super::*;
 
 struct WxmlToken {
     location: std::ops::Range<Position>,
@@ -156,10 +64,8 @@ impl From<&Ident> for WxmlToken {
     }
 }
 
-fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template, range: std::ops::Range<Position>) -> Vec<SemanticToken> {
+pub(super) fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template, range: std::ops::Range<Position>) -> Vec<SemanticToken> {
     let mut tokens: Vec<WxmlToken> = vec![];
-    let start_bound = range.start;
-    let end_bound = range.end;
 
     // collect in node tree recursively
     fn collect_in_common_attrs(tokens: &mut Vec<WxmlToken>, common: &CommonElementAttributes) {
@@ -542,36 +448,11 @@ fn find_wxml_semantic_tokens(content: &FileContentMetadata, template: &Template,
     collect_in_nodes(&mut tokens, &template.content);
 
     // construct LSP results
+    let mut gen = SemanticTokenGenerator::new(range);
     tokens.sort();
-    let mut rel_line = 0;
-    let mut rel_col = 0;
-    let mut ret: Vec<SemanticToken> = vec![];
     let mut tokens = tokens.into_iter();
-    while let Some(mut t) = tokens.next() {
-        if t.location.start >= end_bound { break; }
-        if t.location.start < start_bound { continue; }
-        if t.location.start.line < rel_line || (t.location.start.line == rel_line && t.location.start.utf16_col < rel_col) {
-            t.location.start.line = rel_line;
-            t.location.end.line = rel_col;
-        }
-        for line in t.location.start.line..=t.location.end.line {
-            let start = if line == t.location.start.line { t.location.start.utf16_col } else { 0 };
-            let end = if line == t.location.end.line { t.location.end.utf16_col } else { content.get_line_utf16_len(line) };
-            let length = end.saturating_sub(start);
-            if length == 0 { continue; }
-            let delta_line = line - rel_line;
-            let delta_start = start - if delta_line > 0 { 0 } else { rel_col };
-            ret.push(SemanticToken {
-                delta_line,
-                delta_start,
-                length,
-                token_type: t.ty as u32,
-                token_modifiers_bitset: t.modifier,
-            });
-            rel_line = line;
-            rel_col = start;
-        }
+    while let Some(t) = tokens.next() {
+        gen.push(content, t.location, t.ty, t.modifier);
     }
-
-    ret
+    gen.finish()
 }

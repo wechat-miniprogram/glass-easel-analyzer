@@ -1,8 +1,8 @@
 use super::*;
 
 pub(crate) struct FontFaceRule {
-    at_font_face: AtKeyword,
-    body: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
+    pub(crate) at_font_face: AtKeyword,
+    pub(crate) body: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
 }
 
 impl CSSParse for FontFaceRule {

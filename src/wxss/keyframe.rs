@@ -1,9 +1,9 @@
 use super::*;
 
 pub(crate) struct KeyframesRule {
-    at_keyframes: AtKeyword,
-    name: MaybeUnknown<Ident>,
-    body: Option<BraceOrSemicolon<Vec<Keyframe>>>,
+    pub(crate) at_keyframes: AtKeyword,
+    pub(crate) name: MaybeUnknown<Ident>,
+    pub(crate) body: Option<BraceOrSemicolon<Vec<Keyframe>>>,
 }
 
 impl CSSParse for KeyframesRule {

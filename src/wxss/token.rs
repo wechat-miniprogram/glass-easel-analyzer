@@ -43,7 +43,7 @@ impl TokenTree {
             | Self::Operator(..)
             | Self::BadUrl(..)
             | Self::BadString(..) => None,
-            Self::Function(x) => Some(&x.paren.children),
+            Self::Function(x) => Some(&x.children),
             Self::Paren(x) => Some(&x.children),
             Self::Bracket(x) => Some(&x.children),
             Self::Brace(x) => Some(&x.children),
@@ -202,6 +202,12 @@ impl Operator {
     }
 }
 
+impl TokenExt for Operator {
+    fn location(&self) -> Location {
+        self.location.clone()
+    }
+}
+
 impl CSSParse for Operator {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Operator(..)) = ps.peek() {
@@ -290,24 +296,42 @@ impl CSSParse for Dimension {
 }
 
 pub(crate) trait TokenGroupExt<T> {
+    fn left(&self) -> Location;
+    fn right(&self) -> Location;
     fn children(&self) -> &T;
+    fn trailing(&self) -> &[TokenTree];
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct Function<T> {
-    pub(crate) name: Ident,
-    pub(crate) paren: Paren<T>,
+    pub(crate) name: CompactString,
+    pub(crate) children: T,
+    pub(crate) left: Location,
+    pub(crate) right: Location,
+    pub(crate) trailing: Vec<TokenTree>,
 }
 
 impl<T: CSSParse> TokenExt for Function<T> {
     fn location(&self) -> Location {
-        self.name.location.start..self.paren.location.end
+        self.left.start..self.right.end
     }
 }
 
 impl<T> TokenGroupExt<T> for Function<T> {
+    fn left(&self) -> Location {
+        self.left.clone()
+    }
+
+    fn right(&self) -> Location {
+        self.right.clone()
+    }
+
     fn children(&self) -> &T {
-        &self.paren.children
+        &self.children
+    }
+
+    fn trailing(&self) -> &[TokenTree] {
+        &self.trailing
     }
 }
 
@@ -328,29 +352,44 @@ macro_rules! group_token {
         #[derive(Debug, Clone)]
         pub(crate) struct $t<T> {
             pub(crate) children: T,
-            pub(crate) location: Location,
+            pub(crate) left: Location,
+            pub(crate) right: Location,
             pub(crate) trailing: Vec<TokenTree>,
         }
 
-        impl<T> $t<T> {
-            pub(crate) fn new(children: T, location: Location, trailing: Vec<TokenTree>) -> Self {
+        impl<T: Default> $t<T> {
+            pub(crate) fn new_empty(left: Location) -> Self {
+                let right = left.clone();
                 Self {
-                    children,
-                    location,
-                    trailing,
+                    children: T::default(),
+                    left,
+                    right,
+                    trailing: vec![],
                 }
             }
         }
 
         impl<T: CSSParse> TokenExt for $t<T> {
             fn location(&self) -> Location {
-                self.location.clone()
+                self.left.start..self.right.end
             }
         }
 
         impl<T> TokenGroupExt<T> for $t<T> {
+            fn left(&self) -> Location {
+                self.left.clone()
+            }
+        
+            fn right(&self) -> Location {
+                self.right.clone()
+            }
+        
             fn children(&self) -> &T {
                 &self.children
+            }
+
+            fn trailing(&self) -> &[TokenTree] {
+                &self.trailing
             }
         }
 

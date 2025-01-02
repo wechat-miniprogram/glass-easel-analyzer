@@ -2,7 +2,7 @@ use super::*;
 
 pub(crate) struct StyleRule {
     pub(crate) selector: Repeat<Selector, Comma>,
-    pub(crate) brace: Option<BraceOrSemicolon<Vec<Rule>>>,
+    pub(crate) brace: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
 }
 
 impl CSSParse for StyleRule {

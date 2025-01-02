@@ -13,6 +13,7 @@ mod symbol;
 mod utils;
 mod wxml_utils;
 mod wxss;
+mod wxss_utils;
 
 fn server_capabilities() -> lsp_types::ServerCapabilities {
     lsp_types::ServerCapabilities {

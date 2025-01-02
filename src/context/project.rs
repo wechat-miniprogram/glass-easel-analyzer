@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
 use futures::StreamExt;
-use glass_easel_template_compiler::{parse::{tag::{ElementKind, StrName, TemplateDefinition, Value}, ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
+use glass_easel_template_compiler::{parse::{tag::{ElementKind, TemplateDefinition, Value}, ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -343,6 +343,11 @@ impl Project {
             self.cleanup_wxss(abs_path)?;
         }
         Ok(())
+    }
+
+    pub(crate) fn get_style_sheet(&self, abs_path: &Path) -> anyhow::Result<&StyleSheet> {
+        let tree = self.style_sheet_map.get(abs_path).ok_or_else(|| anyhow::Error::msg("no such style sheet"))?;
+        Ok(tree)
     }
 
     fn update_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {

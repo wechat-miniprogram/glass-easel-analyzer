@@ -100,7 +100,7 @@ pub(crate) async fn did_close(ctx: ServerContext, params: DidCloseTextDocumentPa
                 log_if_err(project.close_wxml(&abs_path));
             }
             Some("wxss") => {
-                log_if_err(project.close_wxml(&abs_path));
+                log_if_err(project.close_wxss(&abs_path));
             }
             _ => {}
         }

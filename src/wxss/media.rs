@@ -1,9 +1,9 @@
 use super::*;
 
 pub(crate) struct MediaRule {
-    at_media: AtKeyword,
-    list: MediaQueryList,
-    body: Option<BraceOrSemicolon<Vec<Rule>>>,
+    pub(crate) at_media: AtKeyword,
+    pub(crate) list: MediaQueryList,
+    pub(crate) body: Option<BraceOrSemicolon<Vec<Rule>>>,
 }
 
 impl CSSParse for MediaRule {
@@ -137,7 +137,7 @@ pub(crate) enum MediaAndKeyword {
 pub(crate) enum MediaOrKeyword {
     None,
     Or(Ident),
-    Comma(Ident),
+    Comma(Comma),
 }
 
 pub(crate) enum MediaType {
