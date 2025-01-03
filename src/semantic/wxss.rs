@@ -39,7 +39,12 @@ impl<'a> SemanticTokenRet<'a> {
         self.gen.push(self.content, location, ty, modifier)
     }
 
-    fn finish(self) -> Vec<SemanticToken> {
+    fn finish(mut self) -> Vec<SemanticToken> {
+        for next in self.comments {
+            if !self.gen.push(self.content, next.location.clone(), TokenType::Comment, 0) {
+                break;
+            }
+        }
         self.gen.finish()
     }
 }
@@ -135,7 +140,7 @@ fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
             }
             MediaQueryList::MediaType(x) => {
                 match x {
-                    MediaType::Unknown(x) => ret.push(x.location(), TokenType::Variable, 0),
+                    MediaType::Unknown(x) => ret.push(x.location(), TokenType::Type, 0),
                     MediaType::All(x)
                     | MediaType::Screen(x)
                     | MediaType::Print(x) => {
@@ -178,7 +183,7 @@ fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule)
     let KeyframesRule { at_keyframes, name, body } = keyframes;
     ret.push(at_keyframes.location(), TokenType::Keyword, 0)
         && find_in_maybe_unknown(ret, name, |ret, name| {
-            ret.push(name.location(), TokenType::Variable, 0)
+            ret.push(name.location(), TokenType::Type, 0)
         })
         && find_in_option_brace_or_semicolon(ret, body, |ret, list| {
             for keyframe in list {
@@ -209,11 +214,11 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
         let ret = match selector {
             Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
             Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::TagName(x) => ret.push(x.location(), TokenType::Variable, 0),
-            Selector::Id(x) => ret.push(x.location(), TokenType::Variable, 0),
+            Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
             Selector::Class(op, x) => {
                 ret.push(op.location(), TokenType::Operator, 0)
-                    && ret.push(x.location(), TokenType::Variable, 0)
+                    && ret.push(x.location(), TokenType::Type, 0)
             }
             Selector::Attribute(x) => {
                 find_in_children(ret, TokenType::Operator, x, |ret, children| {
@@ -245,7 +250,7 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
 
 fn find_in_name_or_function(ret: &mut SemanticTokenRet, name: &IdentOrFunction) -> bool {
     match name {
-        IdentOrFunction::Ident(x) => ret.push(x.location(), TokenType::Variable, 0),
+        IdentOrFunction::Ident(x) => ret.push(x.location(), TokenType::Type, 0),
         IdentOrFunction::Function(x) => {
             find_in_children(ret, TokenType::Function, x, |ret, children| {
                 find_in_token_tree_list(ret, &children)
@@ -339,7 +344,7 @@ fn find_in_token_tree_list(ret: &mut SemanticTokenRet, tt_list: &[TokenTree]) ->
 fn find_in_token_tree(ret: &mut SemanticTokenRet, tt: &TokenTree) -> bool {
     match tt {
         TokenTree::Ident(x) => {
-            ret.push(x.location(), TokenType::Variable, 0)
+            ret.push(x.location(), TokenType::Type, 0)
         }
         TokenTree::AtKeyword(x) => {
             ret.push(x.location(), TokenType::Keyword, 0)
@@ -348,7 +353,7 @@ fn find_in_token_tree(ret: &mut SemanticTokenRet, tt: &TokenTree) -> bool {
             ret.push(x.location(), TokenType::Number, 0)
         }
         TokenTree::IDHash(x) => {
-            ret.push(x.location(), TokenType::Variable, 0)
+            ret.push(x.location(), TokenType::Type, 0)
         }
         TokenTree::QuotedString(x) => {
             ret.push(x.location(), TokenType::String, 0)
@@ -402,6 +407,9 @@ fn find_in_token_tree(ret: &mut SemanticTokenRet, tt: &TokenTree) -> bool {
         }
         TokenTree::BadString(x) => {
             ret.push(x.location(), TokenType::String, 0)
+        }
+        TokenTree::BadOperator(x) => {
+            ret.push(x.location(), TokenType::Operator, 0)
         }
     }
 }

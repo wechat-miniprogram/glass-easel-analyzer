@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug, Clone)]
 pub(crate) struct KeyframesRule {
     pub(crate) at_keyframes: AtKeyword,
     pub(crate) name: MaybeUnknown<Ident>,
@@ -15,6 +16,7 @@ impl CSSParse for KeyframesRule {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum Keyframe {
     Named {
         progress: MaybeUnknown<Ident>,

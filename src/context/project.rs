@@ -83,7 +83,6 @@ pub(crate) struct JsonConfig {
 }
 
 pub(crate) struct Project {
-    need_load_wxss: bool,
     root: PathBuf,
     file_contents: HashMap<PathBuf, FileContentMetadata>,
     json_config_map: HashMap<PathBuf, JsonConfig>,
@@ -125,7 +124,6 @@ impl Project {
 
     pub(crate) fn new(root: &Path) -> Self {
         Self {
-            need_load_wxss: false, // TODO handling wxss
             root: root.to_path_buf(),
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
@@ -167,9 +165,7 @@ impl Project {
                         let _ = self.cleanup_wxml(abs_path);
                     }
                     Some("wxss") => {
-                        if self.need_load_wxss {
-                            let _ = self.cleanup_wxss(abs_path);
-                        }
+                        let _ = self.cleanup_wxss(abs_path);
                     }
                     Some("json") => {
                         let _ = self.cleanup_json(abs_path);
@@ -187,10 +183,8 @@ impl Project {
                 self.update_wxml(abs_path, content)?;
             }
             Some("wxss") => {
-                if self.need_load_wxss {
-                    let content = std::fs::read_to_string(abs_path)?;
-                    self.update_wxss(abs_path, content)?;
-                }
+                let content = std::fs::read_to_string(abs_path)?;
+                self.update_wxss(abs_path, content)?;
             }
             Some("json") => {
                 let content = std::fs::read_to_string(abs_path)?;
@@ -217,12 +211,7 @@ impl Project {
                     if ty.is_file() {
                         let Some(ext) = abs_path.extension().and_then(|x| x.to_str()) else { return };
                         match ext {
-                            "wxml" | "json" => {}
-                            "wxss" => {
-                                if !project.lock().await.need_load_wxss {
-                                    return;
-                                }
-                            }
+                            "wxml" | "wxss" | "json" => {}
                             _ => { return; }
                         }
                         let Ok(content) = tokio::fs::read_to_string(&abs_path).await else { return };
@@ -319,14 +308,12 @@ impl Project {
     }
 
     fn cleanup_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
-        if !self.need_load_wxss { return Ok(()); }
         self.json_config_map.remove(abs_path);
         self.file_contents.remove(abs_path);
         Ok(())
     }
 
     pub(crate) fn open_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
-        if !self.need_load_wxss { return Ok(vec![]); }
         let diagnostics = self.update_wxss(abs_path, content)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
@@ -335,7 +322,6 @@ impl Project {
     }
 
     pub(crate) fn close_wxss(&mut self, abs_path: &Path) -> anyhow::Result<()> {
-        if !self.need_load_wxss { return Ok(()); }
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.close();
         }

@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug, Clone)]
 pub(crate) struct MediaRule {
     pub(crate) at_media: AtKeyword,
     pub(crate) list: MediaQueryList,
@@ -19,6 +20,7 @@ impl CSSParse for MediaRule {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MediaQueryList {
     Unknown(Vec<TokenTree>),
     Sub(Paren<Box<MediaQueryList>>),
@@ -79,7 +81,7 @@ impl MediaQueryList {
             Self::parse_item(ps).map(|x| Self::Not(kw, Box::new(x)))
         } else if peek.is_keyword("only") {
             let kw = CSSParse::css_parse(ps)?;
-            Self::parse_item(ps).map(|x| Self::Not(kw, Box::new(x)))
+            Self::parse_item(ps).map(|x| Self::Only(kw, Box::new(x)))
         } else if peek.is_ident() {
             MediaType::css_parse(ps).map(|x| Self::MediaType(x))
         } else if let TokenTree::Paren(_) = peek {
@@ -103,6 +105,7 @@ impl MediaQueryList {
         if ret.len() == 0 {
             Some(next)
         } else {
+            ret.push((next, MediaAndKeyword::None));
             Some(Self::And(ret))
         }
     }
@@ -124,22 +127,26 @@ impl MediaQueryList {
         if ret.len() == 0 {
             Some(next)
         } else {
+            ret.push((next, MediaOrKeyword::None));
             Some(Self::Or(ret))
         }
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MediaAndKeyword {
     None,
     And(Ident),
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MediaOrKeyword {
     None,
     Or(Ident),
     Comma(Comma),
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MediaType {
     Unknown(Ident),
     All(Ident),
@@ -160,6 +167,7 @@ impl CSSParse for MediaType {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MediaFeature {
     Unknown(Vec<TokenTree>),
     Condition(Ident, Colon, Vec<TokenTree>),

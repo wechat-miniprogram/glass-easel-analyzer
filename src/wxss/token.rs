@@ -23,6 +23,7 @@ pub(crate) enum TokenTree {
     Brace(Brace<Vec<TokenTree>>),
     BadUrl(BadUrl),
     BadString(BadString),
+    BadOperator(Operator),
 }
 
 impl TokenTree {
@@ -42,7 +43,8 @@ impl TokenTree {
             | Self::Comma(..)
             | Self::Operator(..)
             | Self::BadUrl(..)
-            | Self::BadString(..) => None,
+            | Self::BadString(..)
+            | Self::BadOperator(..) => None,
             Self::Function(x) => Some(&x.children),
             Self::Paren(x) => Some(&x.children),
             Self::Bracket(x) => Some(&x.children),
@@ -81,14 +83,6 @@ impl TokenTree {
     pub(crate) fn is_colon(&self) -> bool {
         if let Self::Colon(_) = self {
             true
-        } else {
-            false
-        }
-    }
-
-    pub(crate) fn is_operator(&self, is: &str) -> bool {
-        if let Self::Operator(x) = self {
-            x.is(is)
         } else {
             false
         }
@@ -425,7 +419,7 @@ pub(crate) enum BraceOrSemicolon<T> {
 
 impl<T: CSSParse> CSSParse for BraceOrSemicolon<T> {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
-        let ret = match ps.next()? {
+        let ret = match ps.peek()? {
             TokenTree::Brace(_) => Self::Brace(CSSParse::css_parse(ps)?),
             TokenTree::Semicolon(_) => Self::Semicolon(CSSParse::css_parse(ps)?),
             _ => return None

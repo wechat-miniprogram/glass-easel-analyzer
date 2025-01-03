@@ -30,13 +30,11 @@ impl<C: CSSParse> CSSParse for Vec<C> {
         while let Some(c) = C::css_parse(ps) {
             items.push(c);
         }
-        if items.len() == 0 {
-            return None;
-        }
         Some(items)
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct StyleSheet {
     pub(crate) items: Vec<Rule>,
     pub(crate) comments: Vec<Comment>,
@@ -60,6 +58,7 @@ impl StyleSheet {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum RuleOrProperty {
     Rule(Rule),
     Property(property::Property),
@@ -76,6 +75,7 @@ impl CSSParse for RuleOrProperty {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum Rule {
     Unknown(Vec<TokenTree>),
     Style(rule::StyleRule),
@@ -136,6 +136,7 @@ impl CSSParse for Rule {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct Repeat<C, S> {
     pub(crate) items: Vec<(C, Option<S>)>,
 }
@@ -148,9 +149,6 @@ impl<C: CSSParse, S: TokenExt> CSSParse for Repeat<C, S> {
             let ended = s.is_none();
             items.push((c, s));
             if ended { break; }
-        }
-        if items.len() == 0 {
-            return None;
         }
         Some(Self { items })
     }
@@ -166,6 +164,7 @@ impl<C, S> Repeat<C, S> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum MaybeUnknown<T> {
     Unknown(Vec<TokenTree>),
     Normal(T, Vec<TokenTree>),
@@ -174,7 +173,7 @@ pub(crate) enum MaybeUnknown<T> {
 impl<T: CSSParse> MaybeUnknown<T> {
     fn parse_with_trailing(
         ps: &mut ParseState,
-        trailing_f: impl for<'a, 'b, 'c> FnOnce(&'a mut ParseState<'b, 'c>) -> Vec<TokenTree>,
+        trailing_f: impl for<'a, 'b, 'c, 'd> FnOnce(&'a mut ParseState<'b, 'c, 'd>) -> Vec<TokenTree>,
     ) -> Self {
         if let Some(t) = T::css_parse(ps) {
             let trailing = trailing_f(ps);
@@ -186,68 +185,39 @@ impl<T: CSSParse> MaybeUnknown<T> {
 }
 
 mod state {
-    use std::mem::ManuallyDrop;
-
     use compact_str::CompactString;
     use cssparser::{BasicParseErrorKind, Token as CSSToken};
 
     use super::*;
 
     pub(super) struct ParseStateOwned {
-        src: ManuallyDrop<String>,
-        input: ManuallyDrop<cssparser::ParserInput<'static>>,
-        parser: ManuallyDrop<cssparser::Parser<'static, 'static>>,
+        src: String,
         warnings: Vec<ParseError>,
         comments: Vec<Comment>,
     }
 
-    impl Drop for ParseStateOwned {
-        fn drop(&mut self) {
-            unsafe {
-                ManuallyDrop::drop(&mut self.parser);
-                ManuallyDrop::drop(&mut self.input);
-                ManuallyDrop::drop(&mut self.src);
-            }
-        }
-    }
-
     impl ParseStateOwned {
         pub(super) fn new(src: String) -> Self {
-            let src = ManuallyDrop::new(src);
-            let mut input = ManuallyDrop::new({
-                let src: &str = src.as_str();
-                let src_static: &'static str = unsafe { &*(src as *const _) };
-                cssparser::ParserInput::new(src_static)
-            });
-            let parser = ManuallyDrop::new({
-                let input: &mut cssparser::ParserInput = &mut input;
-                let input_static: &'static mut cssparser::ParserInput = unsafe { &mut *(input as *mut _) };
-                cssparser::Parser::new(input_static)
-            });
             Self {
                 src,
-                input,
-                parser,
                 warnings: vec![],
                 comments: vec![],
             }
         }
 
-        pub(super) fn run(&mut self, f: impl FnOnce(ParseState)) {
-            let Self { parser, warnings, comments, .. } = self;
+        pub(super) fn run<'s>(&'s mut self, f: impl for<'a, 'b, 'c> FnOnce(&mut ParseState<'a, 'b, 'c>)) {
+            let Self { src, warnings, comments, .. } = self;
+            let mut input = cssparser::ParserInput::new(src);
+            let mut parser = cssparser::Parser::<'s, '_>::new(&mut input);
             let _ = parser.parse_entirely::<_, _, ()>(|parser| {
-                let ps = ParseState {
+                let mut ps = ParseState {
                     parser,
                     warnings,
                     comments,
                 };
-                f(ps);
-                if !parser.is_exhausted() {
-                    let pos = parser_position(parser);
-                    warnings.push(ParseError { kind: ParseErrorKind::UnexpectedToken, location: pos..pos })
-                }
-                while !parser.is_exhausted() {
-                    let _ = parser.next();
+                f(&mut ps);
+                while ps.next().is_some() {
+                    // empty
                 }
                 Ok(())
             });
@@ -262,11 +232,11 @@ mod state {
         }
     }
 
-    fn parser_position(parser: &cssparser::Parser<'static, '_>) -> Position {
+    fn parser_position(parser: &cssparser::Parser<'_, '_>) -> Position {
         let p = parser.current_source_location();
         Position {
             line: p.line,
-            utf16_col: p.column,
+            utf16_col: p.column - 1,
         }
     }
 
@@ -353,21 +323,27 @@ mod state {
             CSSToken::CurlyBracketBlock => {
                 TokenTree::Brace(Brace::new_empty(location))
             }
+            CSSToken::CloseParenthesis => {
+                TokenTree::BadOperator(Operator::new(")", location))
+            }
+            CSSToken::CloseSquareBracket => {
+                TokenTree::BadOperator(Operator::new("]", location))
+            }
+            CSSToken::CloseCurlyBracket => {
+                TokenTree::BadOperator(Operator::new("}", location))
+            }
             CSSToken::WhiteSpace(..)
-            | CSSToken::Comment(..)
-            | CSSToken::CloseParenthesis
-            | CSSToken::CloseSquareBracket
-            | CSSToken::CloseCurlyBracket => unreachable!(),
+            | CSSToken::Comment(..) => unreachable!(),
         }
     }
 
-    pub(super) struct ParseState<'a, 'b> {
-        parser: &'a mut cssparser::Parser<'static, 'b>,
-        warnings: &'a mut Vec<ParseError>,
-        comments: &'a mut Vec<Comment>,
+    pub(super) struct ParseState<'a, 'b, 'c> {
+        parser: &'c mut cssparser::Parser<'a, 'b>,
+        warnings: &'c mut Vec<ParseError>,
+        comments: &'c mut Vec<Comment>,
     }
 
-    impl<'a, 'b> ParseState<'a, 'b> {
+    impl<'a, 'b, 'c> ParseState<'a, 'b, 'c> {
         pub(super) fn add_warning(&mut self, kind: ParseErrorKind, location: Location) {
             self.warnings.push(ParseError {
                 kind,
@@ -389,8 +365,8 @@ mod state {
         /// 
         /// It will collect comments and return the next `TokenTree` if not ended.
         pub(super) fn next(&mut self) -> Option<TokenTree> {
-            fn rec(
-                parser: &mut cssparser::Parser<'static, '_>,
+            fn rec<'a, 'b>(
+                parser: &mut cssparser::Parser<'a, 'b>,
                 warnings: &mut Vec<ParseError>,
                 comments: &mut Vec<Comment>,
             ) -> Option<TokenTree> {
@@ -420,22 +396,24 @@ mod state {
                                 CSSToken::WhiteSpace(_) => {
                                     continue;
                                 }
-                                CSSToken::CloseCurlyBracket | CSSToken::CloseParenthesis | CSSToken::CloseSquareBracket => {
-                                    todo!() // TODO
-                                }
                                 x => {
-                                    match &x {
-                                        CSSToken::BadString(_) => {
-                                            let location = location.clone();
+                                    let ret = convert_css_token(&x, location);
+                                    match &ret {
+                                        TokenTree::BadString(x) => {
+                                            let location = x.location();
                                             warnings.push(ParseError { kind: ParseErrorKind::BadString, location });
                                         }
-                                        CSSToken::BadUrl(_) => {
-                                            let location = location.clone();
+                                        TokenTree::BadUrl(x) => {
+                                            let location = x.location();
                                             warnings.push(ParseError { kind: ParseErrorKind::BadUrl, location });
+                                        }
+                                        TokenTree::BadOperator(x) => {
+                                            let location = x.location();
+                                            warnings.push(ParseError { kind: ParseErrorKind::UnexpectedToken, location });
                                         }
                                         _ => {}
                                     }
-                                    convert_css_token(&x, location)
+                                    ret
                                 },
                             };
                             if token.children().is_some() {
@@ -559,9 +537,12 @@ mod state {
             })
         }
 
-        fn parse_nested<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<(R, Vec<TokenTree>)> {
+        fn parse_nested<R>(
+            &mut self,
+            reset_state: cssparser::ParserState,
+            f: impl FnOnce(&mut ParseState) -> Option<R>,
+        ) -> Option<(R, Vec<TokenTree>, Location)> {
             let Self { parser, warnings, comments } = self;
-            let before = parser.state();
             let ret = parser.parse_nested_block::<_, _, ()>(|parser| {
                 let mut ps = ParseState {
                     parser,
@@ -569,19 +550,19 @@ mod state {
                     comments,
                 };
                 let Some(r) = f(&mut ps) else {
-                    return Ok(None);
+                    return Err(ps.parser.new_error_for_next_token());
                 };
                 let mut trailing = vec![];
                 while let Some(next) = ps.next() {
                     trailing.push(next);
                 }
-                Ok(Some((r, trailing)))
-            }).unwrap();
-            if ret.is_none() {
-                parser.reset(&before);
+                Ok((r, trailing, ps.position()))
+            });
+            let Ok((r, trailing, pos)) = ret else {
+                parser.reset(&reset_state);
                 return None;
-            }
-            ret
+            };
+            Some((r, trailing, pos..self.position()))
         }
 
         pub(super) fn parse_function<R>(&mut self, f: impl FnOnce(&mut ParseState) -> Option<R>) -> Option<Function<R>> {
@@ -589,20 +570,16 @@ mod state {
                 Some(TokenTree::Function(..)) => {}
                 _ => return None,
             }
+            let state = self.parser.state();
             let start_pos = self.position();
             let Ok(CSSToken::Function(name_str)) = self.parser.next().cloned() else { unreachable!() };
             let name_end_pos = self.position();
             let left = start_pos..name_end_pos;
             let name = CompactString::new(name_str);
-            let (children, trailing) = self.parse_nested(f)?;
-            let right_pos = self.position();
-            let end_pos = if let Ok(CSSToken::CloseParenthesis) = self.parser.next() {
-                self.position()
-            } else {
+            let (children, trailing, right) = self.parse_nested(state, f)?;
+            if right.is_empty() {
                 self.add_warning(ParseErrorKind::UnmatchedParenthesis, left.clone());
-                self.position()
-            };
-            let right = right_pos..end_pos;
+            }
             Some(Function { name, children, left, right, trailing })
         }
 
@@ -611,19 +588,15 @@ mod state {
                 Some(TokenTree::Paren(..)) => {}
                 _ => return None,
             }
+            let state = self.parser.state();
             let start_pos = self.position();
             let _ = self.parser.next();
             let name_end_pos = self.position();
             let left = start_pos..name_end_pos;
-            let (children, trailing) = self.parse_nested(f)?;
-            let right_pos = self.position();
-            let end_pos = if let Ok(CSSToken::CloseParenthesis) = self.parser.next() {
-                self.position()
-            } else {
+            let (children, trailing, right) = self.parse_nested(state, f)?;
+            if right.is_empty() {
                 self.add_warning(ParseErrorKind::UnmatchedParenthesis, left.clone());
-                self.position()
-            };
-            let right = right_pos..end_pos;
+            }
             Some(Paren { children, left, right, trailing })
         }
 
@@ -632,19 +605,15 @@ mod state {
                 Some(TokenTree::Bracket(..)) => {}
                 _ => return None,
             }
+            let state = self.parser.state();
             let start_pos = self.position();
             let _ = self.parser.next();
             let name_end_pos = self.position();
             let left = start_pos..name_end_pos;
-            let (children, trailing) = self.parse_nested(f)?;
-            let right_pos = self.position();
-            let end_pos = if let Ok(CSSToken::CloseSquareBracket) = self.parser.next() {
-                self.position()
-            } else {
+            let (children, trailing, right) = self.parse_nested(state, f)?;
+            if right.is_empty() {
                 self.add_warning(ParseErrorKind::UnmatchedBracket, left.clone());
-                self.position()
-            };
-            let right = right_pos..end_pos;
+            }
             Some(Bracket { children, left, right, trailing })
         }
 
@@ -653,19 +622,15 @@ mod state {
                 Some(TokenTree::Brace(..)) => {}
                 _ => return None,
             }
+            let state = self.parser.state();
             let start_pos = self.position();
             let _ = self.parser.next();
             let name_end_pos = self.position();
             let left = start_pos..name_end_pos;
-            let (children, trailing) = self.parse_nested(f)?;
-            let right_pos = self.position();
-            let end_pos = if let Ok(CSSToken::CloseCurlyBracket) = self.parser.next() {
-                self.position()
-            } else {
+            let (children, trailing, right) = self.parse_nested(state, f)?;
+            if right.is_empty() {
                 self.add_warning(ParseErrorKind::UnmatchedBrace, left.clone());
-                self.position()
-            };
-            let right = right_pos..end_pos;
+            }
             Some(Brace { children, left, right, trailing })
         }
     }

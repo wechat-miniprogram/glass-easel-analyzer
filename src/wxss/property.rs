@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug, Clone)]
 pub(crate) struct Property {
     pub(crate) name: Ident,
     pub(crate) colon: Colon,

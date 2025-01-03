@@ -1,0 +1,9 @@
+@keyframes ani {
+  from {
+    width: 10%;
+  }
+  50% {
+    width: 20%;
+  }
+  unknown;
+}

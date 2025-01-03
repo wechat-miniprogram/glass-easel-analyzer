@@ -1,5 +1,6 @@
 use super::{*, media::MediaQueryList};
 
+#[derive(Debug, Clone)]
 pub(crate) struct ImportRule {
     pub(crate) at_import: AtKeyword,
     pub(crate) url: MaybeUnknown<QuotedString>,

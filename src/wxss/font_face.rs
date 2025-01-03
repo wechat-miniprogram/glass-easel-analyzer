@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug, Clone)]
 pub(crate) struct FontFaceRule {
     pub(crate) at_font_face: AtKeyword,
     pub(crate) body: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,

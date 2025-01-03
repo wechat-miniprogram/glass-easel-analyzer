@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug, Clone)]
 pub(crate) struct StyleRule {
     pub(crate) selector: Repeat<Selector, Comma>,
     pub(crate) brace: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
@@ -13,6 +14,7 @@ impl CSSParse for StyleRule {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum Selector {
     Unknown(Vec<TokenTree>),
     Universal(Operator),
@@ -94,8 +96,6 @@ impl CSSParse for Selector {
                     } else {
                         Self::Unknown(vec![TokenTree::Colon(op)])
                     }
-                } else if x.is("::") {
-                    todo!()
                 } else {
                     return collect_unknown(ps)
                 }
@@ -109,6 +109,7 @@ impl CSSParse for Selector {
     }
 }
 
+#[derive(Debug, Clone)]
 pub(crate) enum IdentOrFunction {
     Ident(Ident),
     Function(Function<Vec<TokenTree>>),

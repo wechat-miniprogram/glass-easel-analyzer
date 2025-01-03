@@ -1,0 +1,13 @@
+@media (max-width: 10px) {
+  div {
+    font-size: 16px;
+  }
+}
+
+@media not (max-width: 10px) {}
+
+@media only screen and (max-width: 10px) {}
+
+@media print, (max-width: 10px) {}
+
+@media all or only (max-width >= 10px) {}
