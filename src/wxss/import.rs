@@ -23,4 +23,18 @@ impl CSSParse for ImportRule {
         let semicolon = CSSParse::css_parse(ps);
         Some(Self { at_import, url, condition, semicolon })
     }
+
+    fn location(&self) -> Location {
+        let start = self.at_import.location().start;
+        let end = match self.semicolon.as_ref() {
+            None => {
+                match self.condition.last() {
+                    None => self.url.location().unwrap_or(self.at_import.location()).end,
+                    Some(x) => x.location().end,
+                }
+            }
+            Some(x) => x.location().end,
+        };
+        start..end
+    }
 }

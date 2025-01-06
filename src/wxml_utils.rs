@@ -2,18 +2,7 @@ use std::ops::Range;
 
 use glass_easel_template_compiler::parse::{expr::Expression, tag::{ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value}, Position, Template};
 
-pub(crate) fn location_to_lsp_range(loc: &Range<Position>) -> lsp_types::Range {
-    lsp_types::Range {
-        start: lsp_types::Position { line: loc.start.line, character: loc.start.utf16_col },
-        end: lsp_types::Position { line: loc.end.line, character: loc.end.utf16_col },
-    }
-}
-
-pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Range<Position> {
-    let start = Position { line: loc.start.line, utf16_col: loc.start.character };
-    let end = Position { line: loc.end.line, utf16_col: loc.end.character };
-    start..end
-}
+use crate::utils::{exclusive_contains, inclusive_contains};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -100,14 +89,6 @@ impl<'a> ScopeKind<'a> {
             }
         }
     }
-}
-
-fn exclusive_contains(loc: &Range<Position>, pos: Position) -> bool {
-    loc.start < pos && pos < loc.end
-}
-
-fn inclusive_contains(loc: &Range<Position>, pos: Position) -> bool {
-    (loc.start..=loc.end).contains(&pos)
 }
 
 fn str_name_contains(x: &StrName, pos: Position) -> bool {

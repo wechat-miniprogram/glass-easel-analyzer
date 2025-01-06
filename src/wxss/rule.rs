@@ -3,7 +3,7 @@ use super::*;
 #[derive(Debug, Clone)]
 pub(crate) struct StyleRule {
     pub(crate) selector: Repeat<Selector, Comma>,
-    pub(crate) brace: Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
+    pub(crate) brace: Option<BraceOrSemicolon<List<RuleOrProperty>>>,
 }
 
 impl CSSParse for StyleRule {
@@ -12,16 +12,25 @@ impl CSSParse for StyleRule {
         let brace = CSSParse::css_parse(ps);
         Some(Self { selector, brace })
     }
+
+    fn location(&self) -> Location {
+        let start = self.selector.location().start;
+        let end = match self.brace.as_ref() {
+            None => self.selector.location().end,
+            Some(x) => x.location().end,
+        };
+        start..end
+    }
 }
 
 #[derive(Debug, Clone)]
 pub(crate) enum Selector {
-    Unknown(Vec<TokenTree>),
+    Unknown(List<TokenTree>),
     Universal(Operator),
     TagName(Ident),
     Id(IDHash),
     Class(Operator, Ident),
-    Attribute(Bracket<TokenTree>),
+    Attribute(Bracket<List<TokenTree>>),
     NextSibling(Operator),
     Child(Operator),
     Column(Operator, Operator),
@@ -45,7 +54,8 @@ impl CSSParse for Selector {
                     }
                 }
             }
-            Some(Selector::Unknown(v))
+            if v.is_empty() { return None; }
+            Some(Selector::Unknown(List::from_vec(v)))
         }
         let ret = match ps.peek()? {
             TokenTree::Semicolon(_)
@@ -58,7 +68,7 @@ impl CSSParse for Selector {
                     if let Some(TokenTree::Ident(..)) = ps.peek_with_whitespace() {
                         Self::Class(op, CSSParse::css_parse(ps)?)
                     } else {
-                        Self::Unknown(vec![TokenTree::Operator(op)])
+                        Self::Unknown(List::from_vec(vec![TokenTree::Operator(op)]))
                     }
                 } else if x.is("+") {
                     Self::NextSibling(CSSParse::css_parse(ps)?)
@@ -88,13 +98,13 @@ impl CSSParse for Selector {
                             if ps.peek_with_whitespace().is_some_and(|x| x.is_ident_or_function()) {
                                 Self::PseudoElement(op, op2, CSSParse::css_parse(ps)?)
                             } else {
-                                Self::Unknown(vec![TokenTree::Colon(op), TokenTree::Colon(op2)])
+                                Self::Unknown(List::from_vec(vec![TokenTree::Colon(op), TokenTree::Colon(op2)]))
                             }
                         } else {
-                            Self::Unknown(vec![TokenTree::Colon(op)])
+                            Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
                         }
                     } else {
-                        Self::Unknown(vec![TokenTree::Colon(op)])
+                        Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
                     }
                 } else {
                     return collect_unknown(ps)
@@ -106,6 +116,34 @@ impl CSSParse for Selector {
             _ => return collect_unknown(ps),
         };
         Some(ret)
+    }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Unknown(x) => {
+                let first = x.first();
+                let last = x.last();
+                first.location().start..last.location().end
+            }
+            Self::Universal(x) => x.location(),
+            Self::TagName(x) => x.location(),
+            Self::Id(x) => x.location(),
+            Self::Class(op, x) => {
+                op.location().start..x.location().end
+            }
+            Self::Attribute(x) => x.location(),
+            Self::NextSibling(x) => x.location(),
+            Self::Child(x) => x.location(),
+            Self::Column(x, y) => x.location().start..y.location().end,
+            Self::SubsequentSibling(x) => x.location(),
+            Self::Namespace(x) => x.location(),
+            Self::PseudoClass(op, x) => {
+                op.location().start..x.location().end
+            }
+            Self::PseudoElement(op, _, x) => {
+                op.location().start..x.location().end
+            }
+        }
     }
 }
 
@@ -119,9 +157,16 @@ impl CSSParse for IdentOrFunction {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let ret = match ps.peek()? {
             TokenTree::Ident(_) => Self::Ident(CSSParse::css_parse(ps)?),
-            TokenTree::Function(_) => Self::Function(CSSParse::css_parse(ps)?),
+            TokenTree::Function(_) => Self::Function(ps.parse_function(|ps| Some(ps.skip_to_end()))?),
             _ => return None,
         };
         Some(ret)
+    }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Ident(x) => x.location(),
+            Self::Function(x) => x.location(),
+        }
     }
 }

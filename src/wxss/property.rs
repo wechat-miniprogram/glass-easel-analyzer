@@ -16,4 +16,16 @@ impl CSSParse for Property {
         let semicolon = CSSParse::css_parse(ps);
         Some(Self { name, colon, value, semicolon })
     }
+
+    fn location(&self) -> Location {
+        let start = self.name.location().start;
+        let end = match self.semicolon.as_ref() {
+            None => match self.value.last() {
+                None => self.colon.location().end,
+                Some(x) => x.location().end,
+            },
+            Some(x) => x.location().end,
+        };
+        start..end
+    }
 }

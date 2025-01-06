@@ -52,7 +52,7 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
 mod wxml {
     use glass_easel_template_compiler::parse::{tag::{ElementKind, Ident, Node, StaticAttribute}, Position, TemplateStructure};
 
-    use crate::{utils::add_file_extension, wxml_utils::{for_each_scope_ref, for_each_scope_ref_in_subtree, for_each_slot, insert_element_scopes, location_to_lsp_range, ScopeKind, Token}};
+    use crate::{utils::{add_file_extension, location_to_lsp_range}, wxml_utils::{for_each_scope_ref, for_each_scope_ref_in_subtree, for_each_slot, insert_element_scopes, ScopeKind, Token}};
 
     use super::*;
 

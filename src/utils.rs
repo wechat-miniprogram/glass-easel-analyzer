@@ -1,5 +1,7 @@
 use std::{borrow::Cow, path::{Path, PathBuf}};
 
+use crate::wxss::{Location, Position};
+
 pub(crate) fn log_if_err<T>(r: anyhow::Result<T>) {
     if let Err(err) = r {
         log::error!("{}", err);
@@ -49,4 +51,25 @@ pub(crate) fn ensure_file_extension<'a>(p: &'a Path, ext: &str) -> Option<Cow<'a
     } else {
         Some(Cow::Borrowed(p))
     }
+}
+
+pub(crate) fn location_to_lsp_range(loc: &Location) -> lsp_types::Range {
+    lsp_types::Range {
+        start: lsp_types::Position { line: loc.start.line, character: loc.start.utf16_col },
+        end: lsp_types::Position { line: loc.end.line, character: loc.end.utf16_col },
+    }
+}
+
+pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Location {
+    let start = Position { line: loc.start.line, utf16_col: loc.start.character };
+    let end = Position { line: loc.end.line, utf16_col: loc.end.character };
+    start..end
+}
+
+pub(crate) fn exclusive_contains(loc: &Location, pos: Position) -> bool {
+    loc.start < pos && pos < loc.end
+}
+
+pub(crate) fn inclusive_contains(loc: &Location, pos: Position) -> bool {
+    (loc.start..=loc.end).contains(&pos)
 }

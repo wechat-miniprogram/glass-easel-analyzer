@@ -1,4 +1,4 @@
-use crate::wxss::{font_face::FontFaceRule, import::ImportRule, keyframe::{Keyframe, KeyframesRule}, media::{MediaAndKeyword, MediaFeature, MediaOrKeyword, MediaQueryList, MediaRule, MediaType}, property::Property, rule::{IdentOrFunction, Selector, StyleRule}, token::*, MaybeUnknown, Rule, RuleOrProperty, StyleSheet};
+use crate::wxss::{font_face::FontFaceRule, import::ImportRule, keyframe::{Keyframe, KeyframesRule}, media::{MediaAndKeyword, MediaFeature, MediaOrKeyword, MediaQueryList, MediaRule, MediaType}, property::Property, rule::{IdentOrFunction, Selector, StyleRule}, token::*, CSSParse, List, MaybeUnknown, Rule, RuleOrProperty, StyleSheet};
 
 use super::*;
 
@@ -162,9 +162,11 @@ fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
             }
         }
     }
-    find_in_media_query_list(ret, list);
+    if let Some(list) = list {
+        find_in_media_query_list(ret, list);
+    }
     find_in_option_brace_or_semicolon(ret, body, |ret, rules| {
-        for rule in rules {
+        for rule in rules.iter() {
             if !find_in_rule(ret, rule) {
                 return false;
             }
@@ -186,7 +188,7 @@ fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule)
             ret.push(name.location(), TokenType::Type, 0)
         })
         && find_in_option_brace_or_semicolon(ret, body, |ret, list| {
-            for keyframe in list {
+            for keyframe in list.iter() {
                 let r = match keyframe {
                     Keyframe::Named { progress, body } => {
                         find_in_maybe_unknown(ret, progress, |ret, x| {
@@ -222,7 +224,7 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
             }
             Selector::Attribute(x) => {
                 find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                    find_in_token_tree(ret, children)
+                    find_in_token_tree_list(ret, children)
                 })
             }
             Selector::NextSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
@@ -288,17 +290,18 @@ fn find_in_option_brace_or_semicolon<T>(
     find_in_option(ret, x, |ret, x| {
         match x {
             BraceOrSemicolon::Semicolon(x) => ret.push(x.location(), TokenType::Operator, 0),
-            BraceOrSemicolon::Brace(x) => find_in_children(ret, TokenType::Operator, x, f)
+            BraceOrSemicolon::Brace(x) => find_in_children(ret, TokenType::Operator, x, f),
+            BraceOrSemicolon::UnknownBrace(x) => find_in_children(ret, TokenType::Operator, x, |_, _| true),
         }
     })
 }
 
 fn find_in_option_brace_or_semicolon_property(
     ret: &mut SemanticTokenRet,
-    x: &Option<BraceOrSemicolon<Vec<RuleOrProperty>>>,
+    x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>,
 ) -> bool {
     find_in_option_brace_or_semicolon(ret, x, |ret, rules| {
-        for rp in rules {
+        for rp in rules.iter() {
             let r = match rp {
                 RuleOrProperty::Rule(x) => find_in_rule(ret, x),
                 RuleOrProperty::Property(x) => find_in_property(ret, x),

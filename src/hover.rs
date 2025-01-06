@@ -3,7 +3,7 @@ use std::path::Path;
 use glass_easel_template_compiler::parse::{tag::ElementKind, Position};
 use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind};
 
-use crate::{context::{backend_configuration::{AttributeConfig, ComponentConfig, ElementConfig, EventConfig, PropertyConfig}, project::Project}, wxml_utils::{location_to_lsp_range, ScopeKind, Token}, BackendConfig, ServerContext};
+use crate::{context::{backend_configuration::{AttributeConfig, ComponentConfig, ElementConfig, EventConfig, PropertyConfig}, project::Project}, utils::location_to_lsp_range, wxml_utils::{ScopeKind, Token}, BackendConfig, ServerContext};
 
 pub(crate) async fn hover(ctx: ServerContext, params: HoverParams) -> anyhow::Result<Option<Hover>> {
     let backend_config = ctx.backend_config();

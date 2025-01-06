@@ -22,15 +22,17 @@ pub(crate) trait CSSParse: Sized {
     /// Otherwise, try parse as many tokens as possible,
     /// and generates warnings and collect comments if any.
     fn css_parse(ps: &mut ParseState) -> Option<Self>;
+
+    fn location(&self) -> Location;
 }
 
-impl<C: CSSParse> CSSParse for Vec<C> {
+impl<C: CSSParse> CSSParse for Box<C> {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
-        let mut items = vec![];
-        while let Some(c) = C::css_parse(ps) {
-            items.push(c);
-        }
-        Some(items)
+        C::css_parse(ps).map(|x| Box::new(x))
+    }
+
+    fn location(&self) -> Location {
+        (**self).location()
     }
 }
 
@@ -64,6 +66,15 @@ pub(crate) enum RuleOrProperty {
     Property(property::Property),
 }
 
+impl RuleOrProperty {
+    pub(crate) fn location(&self) -> Location {
+        match self {
+            Self::Rule(x) => x.location(),
+            Self::Property(x) => x.location(),
+        }
+    }
+}
+
 impl CSSParse for RuleOrProperty {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         if let Some((TokenTree::Ident(..), TokenTree::Colon(..))) = ps.peek2() {
@@ -73,17 +84,24 @@ impl CSSParse for RuleOrProperty {
         }
         CSSParse::css_parse(ps).map(|x| Self::Rule(x))
     }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Rule(x) => x.location(),
+            Self::Property(x) => x.location(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub(crate) enum Rule {
-    Unknown(Vec<TokenTree>),
+    Unknown(List<TokenTree>),
     Style(rule::StyleRule),
     Import(import::ImportRule),
     Media(media::MediaRule),
     FontFace(font_face::FontFaceRule),
     Keyframes(keyframe::KeyframesRule),
-    UnknownAtRule(AtKeyword, Vec<TokenTree>),
+    UnknownAtRule(AtKeyword, List<TokenTree>),
 }
 
 impl CSSParse for Rule {
@@ -106,7 +124,7 @@ impl CSSParse for Rule {
                             tt.push(next);
                             if ended { break };
                         }
-                        Self::UnknownAtRule(at_keyword, tt)
+                        Self::UnknownAtRule(at_keyword, List::from_vec(tt))
                     }
                 }
             }
@@ -129,10 +147,24 @@ impl CSSParse for Rule {
                     tt.push(next);
                     if ended { break };
                 }
-                Self::Unknown(tt)
+                Self::Unknown(List::from_vec(tt))
             }
         };
         Some(ret)
+    }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Unknown(x) => x.location(),
+            Self::Style(x) => x.location(),
+            Self::Import(x) => x.location(),
+            Self::Media(x) => x.location(),
+            Self::FontFace(x) => x.location(),
+            Self::Keyframes(x) => x.location(),
+            Self::UnknownAtRule(kw, x) => {
+                kw.location().start..x.last().location().end
+            }
+        }
     }
 }
 
@@ -150,7 +182,62 @@ impl<C: CSSParse, S: TokenExt> CSSParse for Repeat<C, S> {
             items.push((c, s));
             if ended { break; }
         }
+        if items.len() == 0 { return None; }
         Some(Self { items })
+    }
+
+    fn location(&self) -> Location {
+        let start = self.items.first().unwrap().0.location().start;
+        let end = {
+            let last = self.items.last().unwrap();
+            last.1.as_ref().map(|x| x.location()).unwrap_or(last.0.location()).end
+        };
+        start..end
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct List<C> {
+    pub(crate) items: Vec<C>,
+}
+
+impl<C> List<C> {
+    pub(crate) fn from_vec(items: Vec<C>) -> Self {
+        assert!(items.len() > 0);
+        Self { items }
+    }
+
+    pub(crate) fn first(&self) -> &C {
+        self.items.first().unwrap()
+    }
+
+    pub(crate) fn last(&self) -> &C {
+        self.items.last().unwrap()
+    }
+}
+
+impl<C> std::ops::Deref for List<C> {
+    type Target = [C];
+
+    fn deref(&self) -> &Self::Target {
+        self.items.as_slice()
+    }
+}
+
+impl<C: CSSParse> CSSParse for List<C> {
+    fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        let mut items = vec![];
+        while let Some(c) = C::css_parse(ps) {
+            items.push(c);
+        }
+        if items.len() == 0 { return None; }
+        Some(Self { items })
+    }
+
+    fn location(&self) -> Location {
+        let first = self.items.first().unwrap();
+        let last = self.items.last().unwrap();
+        first.location().start..last.location().end
     }
 }
 
@@ -180,6 +267,17 @@ impl<T: CSSParse> MaybeUnknown<T> {
             Self::Normal(t, trailing)
         } else {
             Self::Unknown(trailing_f(ps))
+        }
+    }
+
+    fn location(&self) -> Option<Location> {
+        match self {
+            Self::Unknown(x) => x.last().map(|x| x.location()),
+            Self::Normal(x, trailing) => {
+                let start = x.location().start;
+                let end = trailing.last().map(|x| x.location().end).unwrap_or_else(|| x.location().end);
+                Some(start..end)
+            }
         }
     }
 }
@@ -517,6 +615,10 @@ mod state {
                 ret.push(self.next().unwrap());
             }
             ret
+        }
+
+        pub(super) fn skip_to_end(&mut self) -> Vec<TokenTree> {
+            self.skip_until_before(|_| true)
         }
 
         pub(super) fn skip_until_before_semicolon(&mut self) -> Vec<TokenTree> {

@@ -89,15 +89,40 @@ impl TokenTree {
     }
 }
 
+impl TokenExt for TokenTree {}
+
 impl CSSParse for TokenTree {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         ps.next()
     }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Ident(x) => x.location(),
+            Self::AtKeyword(x) => x.location(),
+            Self::Hash(x) => x.location(),
+            Self::IDHash(x) => x.location(),
+            Self::QuotedString(x) => x.location(),
+            Self::UnquotedUrl(x) => x.location(),
+            Self::Number(x) => x.location(),
+            Self::Percentage(x) => x.location(),
+            Self::Dimension(x) => x.location(),
+            Self::Colon(x) => x.location(),
+            Self::Semicolon(x) => x.location(),
+            Self::Comma(x) => x.location(),
+            Self::Operator(x) => x.location(),
+            Self::Function(x) => x.location(),
+            Self::Paren(x) => x.location(),
+            Self::Bracket(x) => x.location(),
+            Self::Brace(x) => x.location(),
+            Self::BadUrl(x) => x.location(),
+            Self::BadString(x) => x.location(),
+            Self::BadOperator(x) => x.location(),
+        }
+    }
 }
 
-pub(crate) trait TokenExt: CSSParse {
-    fn location(&self) -> Location;
-}
+pub(crate) trait TokenExt: CSSParse {}
 
 macro_rules! basic_token {
     ($t:ident) => {
@@ -107,11 +132,7 @@ macro_rules! basic_token {
             pub(crate) location: Location,
         }
 
-        impl TokenExt for $t {
-            fn location(&self) -> Location {
-                self.location.clone()
-            }
-        }
+        impl TokenExt for $t {}
 
         impl CSSParse for $t {
             fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -121,6 +142,10 @@ macro_rules! basic_token {
                 } else {
                     None
                 }
+            }
+
+            fn location(&self) -> Location {
+                self.location.clone()
             }
         }
     };
@@ -142,11 +167,7 @@ macro_rules! core_delim_token {
             pub(crate) location: Location,
         }
 
-        impl TokenExt for $t {
-            fn location(&self) -> Location {
-                self.location.clone()
-            }
-        }
+        impl TokenExt for $t {}
 
         impl CSSParse for $t {
             fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -156,6 +177,10 @@ macro_rules! core_delim_token {
                 } else {
                     None
                 }
+            }
+
+            fn location(&self) -> Location {
+                self.location.clone()
             }
         }
     };
@@ -196,11 +221,7 @@ impl Operator {
     }
 }
 
-impl TokenExt for Operator {
-    fn location(&self) -> Location {
-        self.location.clone()
-    }
-}
+impl TokenExt for Operator {}
 
 impl CSSParse for Operator {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -210,6 +231,10 @@ impl CSSParse for Operator {
         } else {
             None
         }
+    }
+
+    fn location(&self) -> Location {
+        self.location.clone()
     }
 }
 
@@ -221,11 +246,7 @@ pub(crate) struct Number {
     pub(crate) location: Location,
 }
 
-impl TokenExt for Number {
-    fn location(&self) -> Location {
-        self.location.clone()
-    }
-}
+impl TokenExt for Number {}
 
 impl CSSParse for Number {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -235,6 +256,10 @@ impl CSSParse for Number {
         } else {
             None
         }
+    }
+
+    fn location(&self) -> Location {
+        self.location.clone()
     }
 }
 
@@ -246,11 +271,7 @@ pub(crate) struct Percentage {
     pub(crate) location: Location,
 }
 
-impl TokenExt for Percentage {
-    fn location(&self) -> Location {
-        self.location.clone()
-    }
-}
+impl TokenExt for Percentage {}
 
 impl CSSParse for Percentage {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -260,6 +281,10 @@ impl CSSParse for Percentage {
         } else {
             None
         }
+    }
+
+    fn location(&self) -> Location {
+        self.location.clone()
     }
 }
 
@@ -272,11 +297,7 @@ pub(crate) struct Dimension {
     pub(crate) location: Location,
 }
 
-impl TokenExt for Dimension {
-    fn location(&self) -> Location {
-        self.location.clone()
-    }
-}
+impl TokenExt for Dimension {}
 
 impl CSSParse for Dimension {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
@@ -286,6 +307,10 @@ impl CSSParse for Dimension {
         } else {
             None
         }
+    }
+
+    fn location(&self) -> Location {
+        self.location.clone()
     }
 }
 
@@ -305,11 +330,13 @@ pub(crate) struct Function<T> {
     pub(crate) trailing: Vec<TokenTree>,
 }
 
-impl<T: CSSParse> TokenExt for Function<T> {
-    fn location(&self) -> Location {
+impl<T> Function<T> {
+    pub(crate) fn location(&self) -> Location {
         self.left.start..self.right.end
     }
 }
+
+impl<T: CSSParse> TokenExt for Function<T> {}
 
 impl<T> TokenGroupExt<T> for Function<T> {
     fn left(&self) -> Location {
@@ -339,6 +366,10 @@ impl<T: CSSParse> CSSParse for Function<T> {
             None
         }
     }
+
+    fn location(&self) -> Location {
+        self.left.start..self.right.end
+    }
 }
 
 macro_rules! group_token {
@@ -349,6 +380,12 @@ macro_rules! group_token {
             pub(crate) left: Location,
             pub(crate) right: Location,
             pub(crate) trailing: Vec<TokenTree>,
+        }
+
+        impl<T> $t<T> {
+            pub(crate) fn location(&self) -> Location {
+                self.left.start..self.right.end
+            }
         }
 
         impl<T: Default> $t<T> {
@@ -363,11 +400,7 @@ macro_rules! group_token {
             }
         }
 
-        impl<T: CSSParse> TokenExt for $t<T> {
-            fn location(&self) -> Location {
-                self.left.start..self.right.end
-            }
-        }
+        impl<T: CSSParse> TokenExt for $t<T> {}
 
         impl<T> TokenGroupExt<T> for $t<T> {
             fn left(&self) -> Location {
@@ -397,6 +430,10 @@ macro_rules! group_token {
                     None
                 }
             }
+
+            fn location(&self) -> Location {
+                self.left.start..self.right.end
+            }
         }
     };
 }
@@ -414,16 +451,30 @@ pub(crate) struct Comment {
 #[derive(Debug, Clone)]
 pub(crate) enum BraceOrSemicolon<T> {
     Brace(Brace<T>),
+    UnknownBrace(Brace<()>),
     Semicolon(Semicolon),
 }
 
 impl<T: CSSParse> CSSParse for BraceOrSemicolon<T> {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         let ret = match ps.peek()? {
-            TokenTree::Brace(_) => Self::Brace(CSSParse::css_parse(ps)?),
+            TokenTree::Brace(_) => {
+                match Brace::<T>::css_parse(ps) {
+                    None => Self::UnknownBrace(ps.parse_brace(|_| Some(())).unwrap()),
+                    Some(x) => Self::Brace(x),
+                }
+            },
             TokenTree::Semicolon(_) => Self::Semicolon(CSSParse::css_parse(ps)?),
             _ => return None
         };
         Some(ret)
+    }
+
+    fn location(&self) -> Location {
+        match self {
+            Self::Brace(x) => x.location(),
+            Self::UnknownBrace(x) => x.location(),
+            Self::Semicolon(x) => x.location(),
+        }
     }
 }
