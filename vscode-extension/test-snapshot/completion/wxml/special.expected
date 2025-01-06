@@ -1,135 +1,90 @@
 // ====== SNAPSHOT 0 ======
-xa {
+Object {
   "isIncomplete": false,
   "items": Array [
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "anchor>$0</anchor>",
       },
       "kind": "Class",
       "label": "anchor",
-      "preselect": undefined,
       "sortText": "anchor",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "block>$0</block>",
       },
       "kind": "Keyword",
       "label": "block",
-      "preselect": undefined,
       "sortText": "block",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "div>$0</div>",
       },
       "kind": "Class",
       "label": "div",
-      "preselect": undefined,
       "sortText": "div",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "import src=\"$0\" />",
       },
       "kind": "Keyword",
       "label": "import",
-      "preselect": undefined,
       "sortText": "import",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "include src=\"$0\" />",
       },
       "kind": "Keyword",
       "label": "include",
-      "preselect": undefined,
       "sortText": "include",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "slot>$0</slot>",
       },
       "kind": "Keyword",
       "label": "slot",
-      "preselect": undefined,
       "sortText": "slot",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "template name=\"$1\">$0</template>",
       },
       "kind": "Keyword",
       "label": "template name",
-      "preselect": undefined,
       "sortText": "template name",
-      "textEdit": undefined,
     },
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
-      "insertText": no {
+      "insertText": Object {
         "e": 1,
         "value": "view>$0</view>",
       },
       "kind": "Class",
       "label": "view",
-      "preselect": undefined,
       "sortText": "view",
-      "textEdit": undefined,
     },
   ],
 }
 // ====== SNAPSHOT 1 ======
-xa {
+Object {
   "isIncomplete": false,
   "items": Array [
     Object {
-      "detail": undefined,
-      "documentation": undefined,
-      "filterText": undefined,
       "insertText": "view>",
       "kind": "Class",
       "label": "view>",
-      "preselect": undefined,
       "sortText": "view>",
-      "textEdit": undefined,
     },
   ],
 }

@@ -1,10 +1,8 @@
 // ====== SNAPSHOT 0 ======
 Array [
-  Vd {
-    "canDecreaseVerbosity": undefined,
-    "canIncreaseVerbosity": undefined,
+  Object {
     "contents": Array [
-      Q1 {},
+      Object {},
     ],
     "range": Array [
       Object {
@@ -20,11 +18,9 @@ Array [
 ]
 // ====== SNAPSHOT 1 ======
 Array [
-  Vd {
-    "canDecreaseVerbosity": undefined,
-    "canIncreaseVerbosity": undefined,
+  Object {
     "contents": Array [
-      Q1 {},
+      Object {},
     ],
     "range": Array [
       Object {

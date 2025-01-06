@@ -23,4 +23,24 @@ suite('semantic tokens', function () {
       expect.snapshot(ret)
     })
   })
+
+  test('wxss (full)', async function () {
+    await env.forEachWxssCase(this, async (uri, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      const ret = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', uri)
+      expect.snapshot(ret)
+    })
+  })
+
+  test('wxss (range)', async function () {
+    await env.forEachWxssCase(this, async (uri, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      const ret = await vscode.commands.executeCommand(
+        'vscode.provideDocumentRangeSemanticTokens',
+        uri,
+        new vscode.Range(new vscode.Position(1, 2), new vscode.Position(2, 1)),
+      )
+      expect.snapshot(ret)
+    })
+  })
 })

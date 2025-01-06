@@ -15,7 +15,7 @@ pub(crate) mod property;
 pub(crate) mod rule;
 pub(crate) mod token;
 
-trait CSSParse: Sized {
+pub(crate) trait CSSParse: Sized {
     /// Do real parsing.
     /// 
     /// Returns `None` if it cannot be parsed at all.
@@ -116,7 +116,7 @@ impl CSSParse for Rule {
             | TokenTree::Bracket(..) => {
                 Self::Style(CSSParse::css_parse(ps)?)
             }
-            TokenTree::Operator(op) if op.is(".") => {
+            TokenTree::Operator(op) if op.is(".") || op.is(":") || op.is("*") || op.is("&") => {
                 Self::Style(CSSParse::css_parse(ps)?)
             }
             _ => {
@@ -337,7 +337,7 @@ mod state {
         }
     }
 
-    pub(super) struct ParseState<'a, 'b, 'c> {
+    pub(crate) struct ParseState<'a, 'b, 'c> {
         parser: &'c mut cssparser::Parser<'a, 'b>,
         warnings: &'c mut Vec<ParseError>,
         comments: &'c mut Vec<Comment>,

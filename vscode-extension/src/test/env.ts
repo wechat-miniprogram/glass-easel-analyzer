@@ -19,6 +19,17 @@ const wxmlCases = [
   'wxs',
 ]
 
+const wxssCases = [
+  'style-rule',
+  'comment',
+  'global',
+  'media',
+  'import',
+  'font-face',
+  'keyframes',
+  'unknown-at-rule',
+]
+
 const EXTENSION_DIR = path.resolve(__dirname, '..', '..')
 const TEST_FIXTURE_DIR = path.resolve(EXTENSION_DIR, 'test-fixture')
 const SNAPSHOT_DIR = path.resolve(EXTENSION_DIR, 'test-snapshot')
@@ -64,12 +75,18 @@ export class Env {
     return expect.failureCount
   }
 
-  async forEachWxmlCase(ctx: Mocha.Context, f: (uri: vscode.Uri, expect: Expect) => Promise<void>) {
+  async forEachCase(
+    ctx: Mocha.Context,
+    sub: string,
+    cases: string[],
+    extName: string,
+    f: (uri: vscode.Uri, expect: Expect) => Promise<void>,
+  ) {
     const testName = ctx.test?.title || '(unnamed test)'
     const testId = normalizeTitle(testName)
     let snapshotFails = 0
-    for (const name of wxmlCases) {
-      const absPath = path.resolve(TEST_FIXTURE_DIR, 'wxml', `${name}.wxml`)
+    for (const name of cases) {
+      const absPath = path.resolve(TEST_FIXTURE_DIR, sub, `${name}.${extName}`)
       const uri = vscode.Uri.file(absPath)
       snapshotFails += await this.wrapExpect(
         `${this.namespace}/${testId}/${name}`,
@@ -83,9 +100,19 @@ export class Env {
     }
   }
 
-  async wxmlCasesWith<T>(
+  async forEachWxmlCase(ctx: Mocha.Context, f: (uri: vscode.Uri, expect: Expect) => Promise<void>) {
+    await this.forEachCase(ctx, 'wxml', wxmlCases, 'wxml', f)
+  }
+
+  async forEachWxssCase(ctx: Mocha.Context, f: (uri: vscode.Uri, expect: Expect) => Promise<void>) {
+    await this.forEachCase(ctx, 'wxss', wxssCases, 'wxss', f)
+  }
+
+  async casesWith<T>(
     ctx: Mocha.Context,
+    sub: string,
     cases: { name: string; args: T }[],
+    extName: string,
     f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
   ) {
     const testName = ctx.test?.title || '(unnamed test)'
@@ -93,7 +120,7 @@ export class Env {
     let snapshotFails = 0
     // eslint-disable-next-line no-restricted-syntax
     for (const { name, args } of cases) {
-      const absPath = path.resolve(TEST_FIXTURE_DIR, 'wxml', `${name}.wxml`)
+      const absPath = path.resolve(TEST_FIXTURE_DIR, sub, `${name}.${extName}`)
       const uri = vscode.Uri.file(absPath)
       // eslint-disable-next-line no-await-in-loop
       snapshotFails += await this.wrapExpect(
@@ -106,6 +133,22 @@ export class Env {
     if (snapshotFails > 0) {
       throw new Error(`several snapshot(s) miss match`)
     }
+  }
+
+  async wxmlCasesWith<T>(
+    ctx: Mocha.Context,
+    cases: { name: string; args: T }[],
+    f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
+  ) {
+    await this.casesWith(ctx, 'wxml', cases, 'wxml', f)
+  }
+
+  async wxssCasesWith<T>(
+    ctx: Mocha.Context,
+    cases: { name: string; args: T }[],
+    f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
+  ) {
+    await this.casesWith(ctx, 'wxss', cases, 'wxss', f)
   }
 }
 
@@ -182,7 +225,8 @@ class Expect {
   }
 
   snapshot(actual: unknown) {
-    const actualStr = prettyFormat(actual, { printFunctionName: false })
+    const normalized = JSON.parse(JSON.stringify(actual ?? null)) as unknown
+    const actualStr = prettyFormat(normalized, { printFunctionName: false })
     this.actualOutput += `// ====== SNAPSHOT ${this.index} ======\n`
     this.actualOutput += actualStr
     this.actualOutput += '\n'

@@ -1,4 +1,4 @@
-use super::{*, media::MediaQueryList};
+use super::*;
 
 #[derive(Debug, Clone)]
 pub(crate) struct ImportRule {

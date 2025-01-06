@@ -2,7 +2,7 @@ div#a.b-c[attr="value"] {
   color: red;
   width: 14px;
 
-  &.d {
+  &:hover, ::before {
     border: 5em solid #123456;
   }
 }
