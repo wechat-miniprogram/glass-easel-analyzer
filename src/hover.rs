@@ -3,7 +3,7 @@ use std::path::Path;
 use glass_easel_template_compiler::parse::{tag::ElementKind, Position};
 use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind};
 
-use crate::{context::{backend_configuration::{AttributeConfig, ComponentConfig, ElementConfig, EventConfig, PropertyConfig}, project::Project}, utils::location_to_lsp_range, wxml_utils::{ScopeKind, Token}, BackendConfig, ServerContext};
+use crate::{context::{backend_configuration::{AttributeConfig, ComponentConfig, ElementConfig, EventConfig, PropertyConfig}, project::Project}, utils::location_to_lsp_range, wxml_utils::{ScopeKind, Token as WxmlToken}, wxss::CSSParse, wxss_utils::Token as WxssToken, BackendConfig, ServerContext};
 
 pub(crate) async fn hover(ctx: ServerContext, params: HoverParams) -> anyhow::Result<Option<Hover>> {
     let backend_config = ctx.backend_config();
@@ -12,6 +12,9 @@ pub(crate) async fn hover(ctx: ServerContext, params: HoverParams) -> anyhow::Re
             Some("wxml") => {
                 hover_wxml(project, &backend_config, &abs_path, params.text_document_position_params.position)
             }
+            Some("wxss") => {
+                hover_wxss(project, &backend_config, &abs_path, params.text_document_position_params.position)
+            }
             _ => None,
         };
         Ok(hover)
@@ -19,17 +22,19 @@ pub(crate) async fn hover(ctx: ServerContext, params: HoverParams) -> anyhow::Re
     Ok(ret)
 }
 
+fn plain_str_hover_contents(s: impl Into<String>) -> HoverContents {
+    HoverContents::Markup(MarkupContent { kind: MarkupKind::PlainText, value: s.into() })
+}
+
+fn md_str_hover_contents(s: impl Into<String>) -> HoverContents {
+    HoverContents::Markup(MarkupContent { kind: MarkupKind::Markdown, value: s.into() })
+}
+
 fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position) -> Option<Hover> {
     let template = project.get_wxml_tree(abs_path).ok()?;
     let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
-    fn plain_str_hover_contents(s: impl Into<String>) -> HoverContents {
-        HoverContents::Markup(MarkupContent { kind: MarkupKind::PlainText, value: s.into() })
-    }
-    fn md_str_hover_contents(s: impl Into<String>) -> HoverContents {
-        HoverContents::Markup(MarkupContent { kind: MarkupKind::Markdown, value: s.into() })
-    }
     match token {
-        Token::ScopeRef(loc, kind) => {
+        WxmlToken::ScopeRef(loc, kind) => {
             let contents = match kind {
                 ScopeKind::Script(_) => plain_str_hover_contents("wxs script"),
                 ScopeKind::ForScope(_, _) => plain_str_hover_contents("wx:for scope"),
@@ -37,7 +42,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&loc)) })
         }
-        Token::TagName(tag_name) => {
+        WxmlToken::TagName(tag_name) => {
             let contents = if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name) {
                 plain_str_hover_contents("custom component")
             } else if let Some(elem) = backend_config.search_component(&tag_name.name) {
@@ -61,7 +66,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&tag_name.location)) })
         }
-        Token::AttributeName(attr_name, elem) => {
+        WxmlToken::AttributeName(attr_name, elem) => {
             let tag_name = match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => Some(tag_name),
                 _ => None
@@ -98,7 +103,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&attr_name.location)) })
         }
-        Token::EventName(event_name, elem) => {
+        WxmlToken::EventName(event_name, elem) => {
             let tag_name = match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => Some(tag_name),
                 _ => None
@@ -130,7 +135,7 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             };
             Some(Hover { contents, range: Some(location_to_lsp_range(&event_name.location)) })
         }
-        Token::AttributeStaticValue(loc, value, name, elem) => {
+        WxmlToken::AttributeStaticValue(loc, value, name, elem) => {
             if let ElementKind::Normal { tag_name, .. } = &elem.kind {
                 let value_options1 = backend_config.search_property(&tag_name.name, &name.name).map(|x| (&x.value_option, &x.reference));
                 let value_options2 = backend_config.search_attribute(&tag_name.name, &name.name).map(|x| (&x.value_option, &x.reference));
@@ -156,6 +161,26 @@ fn hover_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &
         // Token::ScriptContent(..) => {
         //     // TODO pass to wxs ls
         // }
+        _ => None,
+    }
+}
+
+fn hover_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position) -> Option<Hover> {
+    let sheet = project.get_style_sheet(abs_path).ok()?;
+    let token = crate::wxss_utils::find_token_in_position(sheet, Position { line: pos.line, utf16_col: pos.character });
+    match token {
+        WxssToken::TagName(x) => {
+            let contents = md_str_hover_contents(format!(r#"Tag name selector `{s}`, matches `<{s} ...>`."#, s = x.content));
+            Some(Hover { contents, range: Some(location_to_lsp_range(&x.location())) })
+        }
+        WxssToken::Id(x) => {
+            let contents = md_str_hover_contents(format!(r#"ID selector `#{s}`, matches `<... id="{s}">`."#, s = x.content));
+            Some(Hover { contents, range: Some(location_to_lsp_range(&x.location())) })
+        }
+        WxssToken::Class(op, x) => {
+            let contents = md_str_hover_contents(format!(r#"Class selector `.{s}`, matches `<... class="{s}">`."#, s = x.content));
+            Some(Hover { contents, range: Some(location_to_lsp_range(&(op.location().start..x.location().end))) })
+        }
         _ => None,
     }
 }

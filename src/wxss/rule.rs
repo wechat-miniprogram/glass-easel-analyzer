@@ -112,7 +112,13 @@ impl CSSParse for Selector {
             }
             TokenTree::Ident(_) => Self::TagName(CSSParse::css_parse(ps)?),
             TokenTree::IDHash(_) => Self::Id(CSSParse::css_parse(ps)?),
-            TokenTree::Bracket(_) => Self::Attribute(CSSParse::css_parse(ps)?),
+            TokenTree::Bracket(_) => {
+                if let Some(x) = CSSParse::css_parse(ps) {
+                    Self::Attribute(x)
+                } else {
+                    Self::Unknown(List::from_vec(vec![ps.next().unwrap()]))
+                }
+            }
             _ => return collect_unknown(ps),
         };
         Some(ret)

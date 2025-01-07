@@ -1,4 +1,4 @@
-use std::{borrow::Cow, path::{Path, PathBuf}};
+use std::{borrow::Cow, cmp::Ordering, path::{Path, PathBuf}};
 
 use crate::wxss::{Location, Position};
 
@@ -60,7 +60,7 @@ pub(crate) fn location_to_lsp_range(loc: &Location) -> lsp_types::Range {
     }
 }
 
-pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Location {
+pub(crate) fn _lsp_range_to_location(loc: &lsp_types::Range) -> Location {
     let start = Position { line: loc.start.line, utf16_col: loc.start.character };
     let end = Position { line: loc.end.line, utf16_col: loc.end.character };
     start..end
@@ -72,4 +72,14 @@ pub(crate) fn exclusive_contains(loc: &Location, pos: Position) -> bool {
 
 pub(crate) fn inclusive_contains(loc: &Location, pos: Position) -> bool {
     (loc.start..=loc.end).contains(&pos)
+}
+
+pub(crate) fn exclusive_ordering(loc: &Location, pos: Position) -> Ordering {
+    if pos <= loc.start {
+        Ordering::Greater
+    } else if pos >= loc.end {
+        Ordering::Less
+    } else {
+        Ordering::Equal
+    }
 }

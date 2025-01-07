@@ -242,11 +242,11 @@ impl<C: CSSParse> CSSParse for List<C> {
 }
 
 impl<C, S> Repeat<C, S> {
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &C> {
+    pub(crate) fn iter(&self) -> impl DoubleEndedIterator<Item = &C> {
         self.items.iter().map(|(c, _)| c)
     }
 
-    pub(crate) fn iter_items(&self) -> impl Iterator<Item = (&C, Option<&S>)> {
+    pub(crate) fn iter_items(&self) -> impl DoubleEndedIterator<Item = (&C, Option<&S>)> {
         self.items.iter().map(|(c, s)| (c, s.as_ref()))
     }
 }
