@@ -188,7 +188,7 @@ pub(crate) struct MediaTypeConfig {
 pub(crate) struct MediaFeatureConfig {
     pub(crate) name: String,
     #[serde(default)]
-    pub(crate) ty: Option<MediaFeatureType>,
+    pub(crate) ty: MediaFeatureType,
     #[serde(default)]
     pub(crate) options: Vec<String>,
     #[serde(default)]
@@ -197,11 +197,17 @@ pub(crate) struct MediaFeatureConfig {
     pub(crate) reference: Option<Url>,
 }
 
-#[derive(Debug, Clone, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub(crate) enum MediaFeatureType {
     Any,
     Range,
+}
+
+impl Default for MediaFeatureType {
+    fn default() -> Self {
+        Self::Any
+    }
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]

@@ -20,6 +20,7 @@ pub(crate) enum Token<'a> {
     PseudoElement(&'a IdentOrFunction),
     PropertyName(&'a Ident),
     FontFacePropertyName(&'a Ident),
+    MediaType(&'a Ident),
     MediaFeatureName(&'a Ident),
     KeyframesName(&'a Ident),
     KeyframeProgressName(&'a Ident),
@@ -173,7 +174,7 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
                     MediaType::Screen(x) => x,
                     MediaType::Print(x) => x,
                 };
-                Some(Token::Keyword(kw))
+                Some(Token::MediaType(kw))
             } else {
                 None
             }

@@ -159,6 +159,15 @@ pub(crate) enum IdentOrFunction {
     Function(Function<Vec<TokenTree>>),
 }
 
+impl IdentOrFunction {
+    pub(crate) fn name(&self) -> &str {
+        match self {
+            Self::Ident(ident) => ident.content.as_str(),
+            Self::Function(x) => x.name.as_str(),
+        }
+    }
+}
+
 impl CSSParse for IdentOrFunction {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let ret = match ps.peek()? {
