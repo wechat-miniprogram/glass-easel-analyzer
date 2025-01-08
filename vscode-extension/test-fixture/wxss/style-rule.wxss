@@ -3,6 +3,6 @@ div#a.b-c[attr="value"] {
   width: 14px;
 
   &:hover, ::before {
-    border: 5em solid #123456;
+    color: #123456;
   }
 }

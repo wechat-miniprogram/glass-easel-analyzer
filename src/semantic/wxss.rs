@@ -152,6 +152,9 @@ fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
                 find_in_children(ret, TokenType::Operator, x, |ret, x| {
                     match x {
                         MediaFeature::Unknown(x) => find_in_token_tree_list(ret, x),
+                        MediaFeature::SingleCondition(x) => {
+                            ret.push(x.location(), TokenType::Property, 0)
+                        }
                         MediaFeature::Condition(x, colon, tt_list) => {
                             ret.push(x.location(), TokenType::Property, 0)
                                 && ret.push(colon.location(), TokenType::Operator, 0)

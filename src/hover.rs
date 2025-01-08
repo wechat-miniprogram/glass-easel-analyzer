@@ -154,7 +154,7 @@ fn hover_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &
             let contents = md_str_hover_contents(format!(r#"Class selector `.{s}`, matches `<... class="{s}">`."#, s = x.content));
             Some(Hover { contents, range: Some(location_to_lsp_range(&(op.location().start..x.location().end))) })
         }
-        WxssToken::PseudoClass(x) => {
+        WxssToken::PseudoClass(op, x) => {
             backend_config
                 .pseudo_class
                 .iter()
@@ -162,10 +162,11 @@ fn hover_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 .map(|config| {
                     let PseudoClassConfig { name, description, reference } = config;
                     let contents = md_str_hover_contents(format!("**{}** *pseudo class*\n\n{}{}", name, description, reference_args_str(reference)));
-                    Hover { contents, range: Some(location_to_lsp_range(&x.location())) }
+                    let loc = op.location().start..x.location().end;
+                    Hover { contents, range: Some(location_to_lsp_range(&loc)) }
                 })
         }
-        WxssToken::PseudoElement(x) => {
+        WxssToken::PseudoElement(op, _, x) => {
             backend_config
                 .pseudo_element
                 .iter()
@@ -173,7 +174,8 @@ fn hover_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 .map(|config| {
                     let PseudoElementConfig { name, description, reference } = config;
                     let contents = md_str_hover_contents(format!("**{}** *pseudo element*\n\n{}{}", name, description, reference_args_str(reference)));
-                    Hover { contents, range: Some(location_to_lsp_range(&x.location())) }
+                    let loc = op.location().start..x.location().end;
+                    Hover { contents, range: Some(location_to_lsp_range(&loc)) }
                 })
         }
         WxssToken::PropertyName(x) => {

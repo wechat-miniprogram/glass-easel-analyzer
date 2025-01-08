@@ -247,6 +247,7 @@ impl CSSParse for MediaType {
 #[derive(Debug, Clone)]
 pub(crate) enum MediaFeature {
     Unknown(List<TokenTree>),
+    SingleCondition(Ident),
     Condition(Ident, Colon, Vec<TokenTree>),
 }
 
@@ -258,6 +259,8 @@ impl CSSParse for MediaFeature {
             } else {
                 Self::Unknown(CSSParse::css_parse(ps)?)
             }
+        } else if let Some(ident) = Ident::css_parse(ps) {
+            Self::SingleCondition(ident)
         } else {
             Self::Unknown(CSSParse::css_parse(ps)?)
         };
@@ -268,6 +271,9 @@ impl CSSParse for MediaFeature {
         match self {
             Self::Unknown(x) => {
                 x.first().location().start..x.last().location().end
+            }
+            Self::SingleCondition(k) => {
+                k.location()
             }
             Self::Condition(k, colon, v) => {
                 let start = k.location().start;

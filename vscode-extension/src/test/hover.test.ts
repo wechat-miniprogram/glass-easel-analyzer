@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { Env } from './env'
 
-const defCases = [
+const defWxmlCases = [
   {
     name: 'attribute',
     args: [
@@ -30,11 +30,51 @@ const defCases = [
   },
 ]
 
+const defWxssCases = [
+  {
+    name: 'style-rule',
+    args: [
+      new vscode.Position(0, 1),
+      new vscode.Position(0, 4),
+      new vscode.Position(0, 6),
+      new vscode.Position(1, 7),
+      new vscode.Position(4, 3),
+      new vscode.Position(4, 12),
+      new vscode.Position(5, 4),
+    ],
+  },
+  {
+    name: 'media',
+    args: [
+      new vscode.Position(0, 9),
+      new vscode.Position(2, 5),
+      new vscode.Position(6, 12),
+      new vscode.Position(8, 14),
+      new vscode.Position(8, 29),
+      new vscode.Position(10, 18),
+    ],
+  },
+]
+
 suite('hover', function () {
   const env = new Env(this)
 
   test('wxml', async function () {
-    await env.wxmlCasesWith(this, defCases, async (uri, list, expect) => {
+    await env.wxmlCasesWith(this, defWxmlCases, async (uri, list, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      for (const position of list) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeHoverProvider',
+          uri,
+          position,
+        )
+        expect.snapshot(ret)
+      }
+    })
+  })
+
+  test('wxss', async function () {
+    await env.wxssCasesWith(this, defWxssCases, async (uri, list, expect) => {
       await vscode.commands.executeCommand('vscode.open', uri)
       for (const position of list) {
         const ret = await vscode.commands.executeCommand(

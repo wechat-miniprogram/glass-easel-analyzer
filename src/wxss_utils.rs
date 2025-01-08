@@ -16,8 +16,8 @@ pub(crate) enum Token<'a> {
     TagName(&'a Ident),
     Id(&'a IDHash),
     Class(&'a Operator, &'a Ident),
-    PseudoClass(&'a IdentOrFunction),
-    PseudoElement(&'a IdentOrFunction),
+    PseudoClass(&'a Colon, &'a IdentOrFunction),
+    PseudoElement(&'a Colon, &'a Colon, &'a IdentOrFunction),
     PropertyName(&'a Ident),
     FontFacePropertyName(&'a Ident),
     MediaType(&'a Ident),
@@ -183,6 +183,9 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
             find_in_children(x, pos, |x| {
                 match x {
                     MediaFeature::Unknown(x) => find_in_token_tree_list(x, pos),
+                    MediaFeature::SingleCondition(k) => {
+                        Some(Token::MediaFeatureName(k))
+                    }
                     MediaFeature::Condition(k, _, v) => {
                         if inclusive_contains(&k.location, pos) {
                             Some(Token::MediaFeatureName(k))
@@ -210,8 +213,8 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
                 find_in_token_tree_list(x, pos)
             })?
         },
-        Selector::PseudoClass(_, x) => Token::PseudoClass(x),
-        Selector::PseudoElement(_, _, x) => Token::PseudoElement(x),
+        Selector::PseudoClass(op, x) => Token::PseudoClass(op, x),
+        Selector::PseudoElement(op1, op2, x) => Token::PseudoElement(op1, op2, x),
         Selector::NextSibling(_)
         | Selector::Child(_)
         | Selector::Column(_, _)

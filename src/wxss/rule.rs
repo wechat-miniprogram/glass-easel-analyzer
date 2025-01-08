@@ -88,26 +88,29 @@ impl CSSParse for Selector {
                     } else {
                         Self::Namespace(CSSParse::css_parse(ps)?)
                     }
-                } else if x.is(":") {
-                    let op = CSSParse::css_parse(ps)?;
-                    if let Some(peek2) = ps.peek_with_whitespace() {
-                        if peek2.is_ident_or_function() {
-                            Self::PseudoClass(op, CSSParse::css_parse(ps)?)
-                        } else if let TokenTree::Colon(_) = peek2 {
-                            let op2 = CSSParse::css_parse(ps)?;
-                            if ps.peek_with_whitespace().is_some_and(|x| x.is_ident_or_function()) {
-                                Self::PseudoElement(op, op2, CSSParse::css_parse(ps)?)
-                            } else {
-                                Self::Unknown(List::from_vec(vec![TokenTree::Colon(op), TokenTree::Colon(op2)]))
-                            }
+                } else if x.is("&") {
+                    return Some(Selector::Unknown(List::from_vec(vec![ps.next()?])))
+                } else {
+                    return collect_unknown(ps)
+                }
+            }
+            TokenTree::Colon(_) => {
+                let op = CSSParse::css_parse(ps)?;
+                if let Some(peek2) = ps.peek_with_whitespace() {
+                    if peek2.is_ident_or_function() {
+                        Self::PseudoClass(op, CSSParse::css_parse(ps)?)
+                    } else if let TokenTree::Colon(_) = peek2 {
+                        let op2 = CSSParse::css_parse(ps)?;
+                        if ps.peek_with_whitespace().is_some_and(|x| x.is_ident_or_function()) {
+                            Self::PseudoElement(op, op2, CSSParse::css_parse(ps)?)
                         } else {
-                            Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
+                            Self::Unknown(List::from_vec(vec![TokenTree::Colon(op), TokenTree::Colon(op2)]))
                         }
                     } else {
                         Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
                     }
                 } else {
-                    return collect_unknown(ps)
+                    Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
                 }
             }
             TokenTree::Ident(_) => Self::TagName(CSSParse::css_parse(ps)?),

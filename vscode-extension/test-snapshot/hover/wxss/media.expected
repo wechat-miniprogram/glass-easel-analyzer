@@ -1,0 +1,108 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 8,
+        "line": 0,
+      },
+      Object {
+        "character": 17,
+        "line": 0,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 1 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 4,
+        "line": 2,
+      },
+      Object {
+        "character": 9,
+        "line": 2,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 2 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 12,
+        "line": 6,
+      },
+      Object {
+        "character": 21,
+        "line": 6,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 3 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 12,
+        "line": 8,
+      },
+      Object {
+        "character": 18,
+        "line": 8,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 4 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 24,
+        "line": 8,
+      },
+      Object {
+        "character": 29,
+        "line": 8,
+      },
+    ],
+  },
+]
+// ====== SNAPSHOT 5 ======
+Array [
+  Object {
+    "contents": Array [
+      Object {},
+    ],
+    "range": Array [
+      Object {
+        "character": 15,
+        "line": 10,
+      },
+      Object {
+        "character": 25,
+        "line": 10,
+      },
+    ],
+  },
+]
