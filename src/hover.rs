@@ -184,7 +184,7 @@ fn hover_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &
                 .iter()
                 .find(|config| config.name == x.content)
                 .map(|config| {
-                    let StylePropertyConfig { name, description, reference } = config;
+                    let StylePropertyConfig { name, options: _, description, reference } = config;
                     let contents = md_str_hover_contents(format!("**{}** *property*\n\n{}{}", name, description, reference_args_str(reference)));
                     Hover { contents, range: Some(location_to_lsp_range(&x.location())) }
                 })

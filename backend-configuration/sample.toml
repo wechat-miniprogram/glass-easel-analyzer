@@ -123,5 +123,6 @@ description = "The font color."
 reference = "https://example.com/property/color"
 
 [[style-property]]
-name = "font"
-description = "The font."
+name = "display"
+options = ["block", "inline", "inline-block", "flex", "none"]
+description = "The display mode."

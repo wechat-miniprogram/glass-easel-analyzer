@@ -697,7 +697,7 @@ pub(crate) fn for_each_template_node_in_subtree<'a>(
     }
 }
 
-pub(crate) fn for_each_template_node<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &[ScopeKind<'a>])) {
+pub(crate) fn _for_each_template_node<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &[ScopeKind<'a>])) {
     for_each_template_root(template, |node, scopes| {
         for_each_template_node_in_subtree(node, scopes, &mut f);
     });

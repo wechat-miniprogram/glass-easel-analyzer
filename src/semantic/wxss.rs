@@ -98,6 +98,7 @@ fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
     fn find_in_media_query_list(ret: &mut SemanticTokenRet, list: &MediaQueryList) -> bool {
         match list {
             MediaQueryList::Unknown(x) => find_in_token_tree_list(ret, x),
+            MediaQueryList::EmptyParen(x) => find_in_children(ret, TokenType::Operator, x, |_, _| true),
             MediaQueryList::Sub(x) => find_in_children(ret, TokenType::Operator, x, |ret, x| {
                 find_in_media_query_list(ret, x)
             }),
@@ -215,8 +216,8 @@ fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule)
 
 fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> bool {
     let StyleRule { selector, brace } = style_rule;
-    for selector in selector.iter() {
-        let ret = match selector {
+    for (selector, sep) in selector.iter_items() {
+        let r = match selector {
             Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
             Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
             Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
@@ -248,7 +249,12 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
                     && find_in_name_or_function(ret, name)
             }
         };
-        if !ret { return false; }
+        if !r { return false; }
+        if let Some(x) = sep {
+            if !ret.push(x.location(), TokenType::Operator, 0) {
+                return false;
+            }
+        }
     }
     find_in_option_brace_or_semicolon_property(ret, brace)
 }

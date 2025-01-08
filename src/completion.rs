@@ -4,7 +4,7 @@ use glass_easel_template_compiler::parse::{tag::{ClassAttribute, CommonElementAt
 use itertools::Itertools;
 use lsp_types::{CompletionItem, CompletionItemKind, CompletionList, CompletionParams, InsertTextFormat};
 
-use crate::{context::project::Project, wxml_utils::Token, BackendConfig, ServerContext};
+use crate::{context::{backend_configuration::MediaFeatureType, project::{FileContentMetadata, Project}}, wxml_utils::Token as WxmlToken, wxss_utils::Token as WxssToken, BackendConfig, ServerContext};
 
 pub(crate) async fn completion(ctx: ServerContext, params: CompletionParams) -> anyhow::Result<Option<CompletionList>> {
     let backend_config = ctx.backend_config();
@@ -14,6 +14,10 @@ pub(crate) async fn completion(ctx: ServerContext, params: CompletionParams) -> 
                 let trigger = params.context.as_ref().and_then(|x| x.trigger_character.as_ref().map(|x| x.as_str())).unwrap_or_default();
                 completion_wxml(project, &backend_config, &abs_path, params.text_document_position.position, trigger)
             }
+            Some("wxss") => {
+                let trigger = params.context.as_ref().and_then(|x| x.trigger_character.as_ref().map(|x| x.as_str())).unwrap_or_default();
+                completion_wxss(project, &backend_config, &abs_path, params.text_document_position.position, trigger)
+            }
             _ => None,
         };
         Ok(list)
@@ -21,34 +25,37 @@ pub(crate) async fn completion(ctx: ServerContext, params: CompletionParams) -> 
     Ok(ret)
 }
 
+fn simple_completion_item(s: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
+    CompletionItem {
+        label: s.into(),
+        kind: Some(kind),
+        insert_text_format: Some(InsertTextFormat::PLAIN_TEXT),
+        deprecated: if deprecated { Some(deprecated) } else { None },
+        ..Default::default()
+    }
+}
+
+fn snippet_completion_item(s: impl Into<String>, snippet: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
+    CompletionItem {
+        label: s.into(),
+        kind: Some(kind),
+        insert_text: Some(snippet.into()),
+        insert_text_format: Some(InsertTextFormat::SNIPPET),
+        deprecated: if deprecated { Some(deprecated) } else { None },
+        ..Default::default()
+    }
+}
+
+fn extract_str_before(file_content: &FileContentMetadata, loc: std::ops::Range<Position>, pos: lsp_types::Position) -> &str {
+    let start_index = file_content.content_index_for_line_utf16_col(loc.start.line, loc.start.utf16_col);
+    let index = file_content.content_index_for_line_utf16_col(pos.line, pos.character);
+    &file_content.content[start_index..index]
+}
+
 fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position, _trigger: &str) -> Option<CompletionList> {
     let template = project.get_wxml_tree(abs_path).ok()?;
     let file_content = project.cached_file_content(abs_path)?;
     let token = crate::wxml_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
-    fn simple_completion_item(s: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
-        CompletionItem {
-            label: s.into(),
-            kind: Some(kind),
-            insert_text_format: Some(InsertTextFormat::PLAIN_TEXT),
-            deprecated: if deprecated { Some(deprecated) } else { None },
-            ..Default::default()
-        }
-    }
-    fn snippet_completion_item(s: impl Into<String>, snippet: impl Into<String>, kind: CompletionItemKind, deprecated: bool) -> CompletionItem {
-        CompletionItem {
-            label: s.into(),
-            kind: Some(kind),
-            insert_text: Some(snippet.into()),
-            insert_text_format: Some(InsertTextFormat::SNIPPET),
-            deprecated: if deprecated { Some(deprecated) } else { None },
-            ..Default::default()
-        }
-    }
-    let extract_str_before = |loc: &std::ops::Range<Position>, pos: lsp_types::Position| {
-        let start_index = file_content.content_index_for_line_utf16_col(loc.start.line, loc.start.utf16_col);
-        let index = file_content.content_index_for_line_utf16_col(pos.line, pos.character);
-        &file_content.content[start_index..index]
-    };
     let handle_attr = |elem: &Element, has_prefix: bool| {
         let mut items: Vec<CompletionItem> = vec![];
         let common = match &elem.kind {
@@ -164,8 +171,8 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         Some(CompletionList { is_incomplete: false, items })
     };
     match token {
-        Token::StaticTextContent(loc, _s, _parent) => {
-            let s_before = extract_str_before(&loc, pos);
+        WxmlToken::StaticTextContent(loc, _s, _parent) => {
+            let s_before = extract_str_before(file_content, loc, pos);
             if s_before.ends_with("<") {
                 let mut items: Vec<CompletionItem> = vec![];
                 if let Some(config) = project.get_json_config(abs_path) {
@@ -201,7 +208,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 None
             }
         }
-        Token::EndTagBody(elem) => {
+        WxmlToken::EndTagBody(elem) => {
             match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => {
                     let mut items: Vec<CompletionItem> = vec![];
@@ -211,7 +218,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 _ => None
             }
         }
-        Token::TagName(_tag_name) => {
+        WxmlToken::TagName(_tag_name) => {
             let mut items: Vec<CompletionItem> = vec![];
             if let Some(config) = project.get_json_config(abs_path) {
                 for key in config.using_components.keys() {
@@ -228,22 +235,22 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             }
             Some(CompletionList { is_incomplete: false, items })
         }
-        Token::StartTagBody(elem) => {
+        WxmlToken::StartTagBody(elem) => {
             handle_attr(elem, false)
         }
-        Token::AttributeName(_attr_name, elem) => {
+        WxmlToken::AttributeName(_attr_name, elem) => {
             handle_attr(elem, false)
         }
-        Token::ModelAttributeName(_attr_name, elem) => {
+        WxmlToken::ModelAttributeName(_attr_name, elem) => {
             handle_attr(elem, true)
         }
-        Token::ChangeAttributeName(_attr_name, elem) => {
+        WxmlToken::ChangeAttributeName(_attr_name, elem) => {
             handle_attr(elem, true)
         }
-        Token::AttributeKeyword(_loc, elem) => {
+        WxmlToken::AttributeKeyword(_loc, elem) => {
             handle_attr(elem, false)
         }
-        Token::EventName(_event_name, elem) => {
+        WxmlToken::EventName(_event_name, elem) => {
             let mut items: Vec<CompletionItem> = vec![];
             let has_event = |common: &CommonElementAttributes, name: &str| common.event_bindings.iter().find(|x| x.name.name.as_str() == name).is_some();
             let common = match &elem.kind {
@@ -273,7 +280,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             }
             Some(CompletionList { is_incomplete: false, items })
         }
-        Token::AttributeStaticValue(_loc, _value, name, elem) => {
+        WxmlToken::AttributeStaticValue(_loc, _value, name, elem) => {
             if let ElementKind::Normal { tag_name, .. } = &elem.kind {
                 let value_options1 = backend_config.search_property(&tag_name.name, &name.name).map(|x| &x.value_option);
                 let value_options2 = backend_config.search_attribute(&tag_name.name, &name.name).map(|x| &x.value_option);
@@ -289,7 +296,7 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
                 None
             }
         }
-        Token::TemplateRef(_name, _loc) => {
+        WxmlToken::TemplateRef(_name, _loc) => {
             let mut items: Vec<CompletionItem> = vec![];
             if let Some(choices) = project.get_wxml_template_names(abs_path) {
                 if choices.len() > 0 {
@@ -302,6 +309,61 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         // Token::ScriptContent(..) => {
         //     // TODO pass to wxs ls
         // }
+        _ => None,
+    }
+}
+
+fn completion_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position, _trigger: &str) -> Option<CompletionList> {
+    let template = project.get_style_sheet(abs_path).ok()?;
+    let token = crate::wxss_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
+    dbg!(&token);
+    match token {
+        WxssToken::StyleRuleUnknownIdent(_) => {
+            let mut items: Vec<CompletionItem> = vec![];
+            for config in backend_config.style_property.iter() {
+                let name = config.name.as_str();
+                if config.options.len() > 0 {
+                    let options_str = config.options.join(",");
+                    items.push(snippet_completion_item(name, format!("{}: ${{1|{}|}};", name, options_str), CompletionItemKind::PROPERTY, false));
+                } else {
+                    items.push(snippet_completion_item(name, format!("{}: $0;", name), CompletionItemKind::PROPERTY, false));
+                }
+            }
+            Some(CompletionList { is_incomplete: false, items })
+        }
+        WxssToken::PropertyName(_) => {
+            let mut items: Vec<CompletionItem> = vec![];
+            for config in backend_config.style_property.iter() {
+                let name = config.name.as_str();
+                items.push(simple_completion_item(name, CompletionItemKind::PROPERTY, false));
+            }
+            Some(CompletionList { is_incomplete: false, items })
+        }
+        WxssToken::MediaQueryUnknownParen(_) | WxssToken::MediaFeatureName(_) => {
+            let mut items: Vec<CompletionItem> = vec![];
+            for config in backend_config.media_feature.iter() {
+                let mut handle_item = |name: &str, has_value: bool| {
+                    if config.options.len() > 0 {
+                        let options_str = config.options.join(",");
+                        items.push(snippet_completion_item(name, format!("{}: ${{1|{}|}}", name, options_str), CompletionItemKind::PROPERTY, false));
+                    } else if has_value {
+                        items.push(snippet_completion_item(name, format!("{}: $0", name), CompletionItemKind::PROPERTY, false));
+                    } else {
+                        items.push(simple_completion_item(name, CompletionItemKind::PROPERTY, false));
+                    }
+                };
+                let name = config.name.as_str();
+                if config.ty == MediaFeatureType::Range {
+                    handle_item(name, true);
+                    handle_item(&format!("min-{}", name), true);
+                    handle_item(&format!("max-{}", name), true);
+                } else {
+                    handle_item(name, false);
+                }
+            }
+            Some(CompletionList { is_incomplete: false, items })
+        }
+        // TODO wxml class auto completion
         _ => None,
     }
 }

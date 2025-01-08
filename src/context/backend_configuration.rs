@@ -235,6 +235,8 @@ pub(crate) struct PseudoElementConfig {
 pub(crate) struct StylePropertyConfig {
     pub(crate) name: String,
     #[serde(default)]
+    pub(crate) options: Vec<String>,
+    #[serde(default)]
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,

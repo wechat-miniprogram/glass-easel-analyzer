@@ -238,7 +238,7 @@ impl Project {
         rec(proj, &root).await
     }
 
-    pub(crate) fn file_content(&mut self, abs_path: &Path) -> Option<&FileContentMetadata> {
+    pub(crate) fn _file_content(&mut self, abs_path: &Path) -> Option<&FileContentMetadata> {
         if self.file_contents.contains_key(abs_path) {
             return self.file_contents.get(abs_path);
         }

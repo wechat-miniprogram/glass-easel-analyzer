@@ -1,0 +1,36 @@
+// ====== SNAPSHOT 0 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": "color",
+      "kind": "Property",
+      "label": "color",
+      "sortText": "color",
+    },
+    Object {
+      "insertText": "display",
+      "kind": "Property",
+      "label": "display",
+      "sortText": "display",
+    },
+  ],
+}
+// ====== SNAPSHOT 1 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": "color",
+      "kind": "Property",
+      "label": "color",
+      "sortText": "color",
+    },
+    Object {
+      "insertText": "display",
+      "kind": "Property",
+      "label": "display",
+      "sortText": "display",
+    },
+  ],
+}

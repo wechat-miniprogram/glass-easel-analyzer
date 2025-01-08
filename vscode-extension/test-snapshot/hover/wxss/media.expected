@@ -60,11 +60,11 @@ Array [
     ],
     "range": Array [
       Object {
-        "character": 12,
+        "character": 23,
         "line": 8,
       },
       Object {
-        "character": 18,
+        "character": 28,
         "line": 8,
       },
     ],
@@ -78,11 +78,11 @@ Array [
     ],
     "range": Array [
       Object {
-        "character": 24,
+        "character": 41,
         "line": 8,
       },
       Object {
-        "character": 29,
+        "character": 61,
         "line": 8,
       },
     ],
@@ -100,7 +100,7 @@ Array [
         "line": 10,
       },
       Object {
-        "character": 25,
+        "character": 15,
         "line": 10,
       },
     ],

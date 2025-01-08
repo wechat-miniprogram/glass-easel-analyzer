@@ -11,6 +11,10 @@ pub(crate) enum Token<'a> {
     IDHash(&'a IDHash),
     QuotedString(&'a QuotedString),
     UnquotedUrl(&'a UnquotedUrl),
+    Function(&'a Function<Vec<TokenTree>>),
+    Paren(&'a Paren<Vec<TokenTree>>),
+    Bracket(&'a Bracket<Vec<TokenTree>>),
+    Brace(&'a Brace<Vec<TokenTree>>),
     BadUrl(&'a BadUrl),
     BadString(&'a BadString),
     TagName(&'a Ident),
@@ -19,9 +23,11 @@ pub(crate) enum Token<'a> {
     PseudoClass(&'a Colon, &'a IdentOrFunction),
     PseudoElement(&'a Colon, &'a Colon, &'a IdentOrFunction),
     PropertyName(&'a Ident),
+    StyleRuleUnknownIdent(&'a Ident),
     FontFacePropertyName(&'a Ident),
     MediaType(&'a Ident),
     MediaFeatureName(&'a Ident),
+    MediaQueryUnknownParen(&'a Paren<()>),
     KeyframesName(&'a Ident),
     KeyframeProgressName(&'a Ident),
     KeyframeProgressPercentage(&'a Percentage),
@@ -34,11 +40,16 @@ pub(crate) fn find_token_in_position(sheet: &StyleSheet, pos: Position) -> Token
 
 fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
     match rule {
-        Rule::Unknown(x) => {
-            find_in_token_tree_list(&x, pos)
+        Rule::Unknown(tt_list) => {
+            match find_in_token_tree_list(&tt_list, pos) {
+                Some(Token::Ident(x)) if tt_list.first().location() == x.location() => {
+                    Some(Token::StyleRuleUnknownIdent(x))
+                }
+                x => x,
+            }
         }
         Rule::Style(style_rule) => {
-            style_rule.selector.iter().find_map(|x| find_in_selector(x, pos))
+            style_rule.selector.iter_values().find_map(|x| find_in_selector(x, pos))
                 .or_else(|| find_in_option_brace_or_semicolon_properties(&style_rule.brace, pos))
         }
         Rule::Import(import_rule) => {
@@ -127,6 +138,13 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
     }
     match x {
         MediaQueryList::Unknown(x) => find_in_token_tree_list(x, pos),
+        MediaQueryList::EmptyParen(x) => {
+            if exclusive_contains(&x.location(), pos) {
+                Some(Token::MediaQueryUnknownParen(x))
+            } else {
+                None
+            }
+        },
         MediaQueryList::Sub(x) => {
             find_in_children(x, pos, |x| {
                 find_in_media_query_list(x, pos)
@@ -332,21 +350,41 @@ fn find_in_token_tree(tt: &TokenTree, pos: Position) -> Option<Token> {
         TokenTree::Function(x) => {
             find_in_children(x, pos, |x| {
                 find_in_token_tree_list(x, pos)
+            }).or_else(|| {
+                if !tt.location().contains(&pos) {
+                    return None;
+                }
+                Some(Token::Function(x))
             })?
         }
         TokenTree::Paren(x) => {
             find_in_children(x, pos, |x| {
                 find_in_token_tree_list(x, pos)
+            }).or_else(|| {
+                if !exclusive_contains(&tt.location(), pos) {
+                    return None;
+                }
+                Some(Token::Paren(x))
             })?
         }
         TokenTree::Bracket(x) => {
             find_in_children(x, pos, |x| {
                 find_in_token_tree_list(x, pos)
+            }).or_else(|| {
+                if !exclusive_contains(&tt.location(), pos) {
+                    return None;
+                }
+                Some(Token::Bracket(x))
             })?
         }
         TokenTree::Brace(x) => {
             find_in_children(x, pos, |x| {
                 find_in_token_tree_list(x, pos)
+            }).or_else(|| {
+                if !exclusive_contains(&tt.location(), pos) {
+                    return None;
+                }
+                Some(Token::Brace(x))
             })?
         }
         TokenTree::BadUrl(x) => Token::BadUrl(x),

@@ -1,0 +1,240 @@
+// ====== SNAPSHOT 0 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "max-width: $0",
+      },
+      "kind": "Property",
+      "label": "max-width",
+      "sortText": "max-width",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "min-width: $0",
+      },
+      "kind": "Property",
+      "label": "min-width",
+      "sortText": "min-width",
+    },
+    Object {
+      "insertText": "monochrome",
+      "kind": "Property",
+      "label": "monochrome",
+      "sortText": "monochrome",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "prefers-color-scheme: ${1|light,dark|}",
+      },
+      "kind": "Property",
+      "label": "prefers-color-scheme",
+      "sortText": "prefers-color-scheme",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "width: $0",
+      },
+      "kind": "Property",
+      "label": "width",
+      "sortText": "width",
+    },
+  ],
+}
+// ====== SNAPSHOT 1 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "max-width: $0",
+      },
+      "kind": "Property",
+      "label": "max-width",
+      "sortText": "max-width",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "min-width: $0",
+      },
+      "kind": "Property",
+      "label": "min-width",
+      "sortText": "min-width",
+    },
+    Object {
+      "insertText": "monochrome",
+      "kind": "Property",
+      "label": "monochrome",
+      "sortText": "monochrome",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "prefers-color-scheme: ${1|light,dark|}",
+      },
+      "kind": "Property",
+      "label": "prefers-color-scheme",
+      "sortText": "prefers-color-scheme",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "width: $0",
+      },
+      "kind": "Property",
+      "label": "width",
+      "sortText": "width",
+    },
+  ],
+}
+// ====== SNAPSHOT 2 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "max-width: $0",
+      },
+      "kind": "Property",
+      "label": "max-width",
+      "sortText": "max-width",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "min-width: $0",
+      },
+      "kind": "Property",
+      "label": "min-width",
+      "sortText": "min-width",
+    },
+    Object {
+      "insertText": "monochrome",
+      "kind": "Property",
+      "label": "monochrome",
+      "sortText": "monochrome",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "prefers-color-scheme: ${1|light,dark|}",
+      },
+      "kind": "Property",
+      "label": "prefers-color-scheme",
+      "sortText": "prefers-color-scheme",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "width: $0",
+      },
+      "kind": "Property",
+      "label": "width",
+      "sortText": "width",
+    },
+  ],
+}
+// ====== SNAPSHOT 3 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "max-width: $0",
+      },
+      "kind": "Property",
+      "label": "max-width",
+      "sortText": "max-width",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "min-width: $0",
+      },
+      "kind": "Property",
+      "label": "min-width",
+      "sortText": "min-width",
+    },
+    Object {
+      "insertText": "monochrome",
+      "kind": "Property",
+      "label": "monochrome",
+      "sortText": "monochrome",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "prefers-color-scheme: ${1|light,dark|}",
+      },
+      "kind": "Property",
+      "label": "prefers-color-scheme",
+      "sortText": "prefers-color-scheme",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "width: $0",
+      },
+      "kind": "Property",
+      "label": "width",
+      "sortText": "width",
+    },
+  ],
+}
+// ====== SNAPSHOT 4 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "max-width: $0",
+      },
+      "kind": "Property",
+      "label": "max-width",
+      "sortText": "max-width",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "min-width: $0",
+      },
+      "kind": "Property",
+      "label": "min-width",
+      "sortText": "min-width",
+    },
+    Object {
+      "insertText": "monochrome",
+      "kind": "Property",
+      "label": "monochrome",
+      "sortText": "monochrome",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "prefers-color-scheme: ${1|light,dark|}",
+      },
+      "kind": "Property",
+      "label": "prefers-color-scheme",
+      "sortText": "prefers-color-scheme",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "width: $0",
+      },
+      "kind": "Property",
+      "label": "width",
+      "sortText": "width",
+    },
+  ],
+}

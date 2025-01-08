@@ -66,20 +66,16 @@ pub(crate) enum RuleOrProperty {
     Property(property::Property),
 }
 
-impl RuleOrProperty {
-    pub(crate) fn location(&self) -> Location {
-        match self {
-            Self::Rule(x) => x.location(),
-            Self::Property(x) => x.location(),
-        }
-    }
-}
-
 impl CSSParse for RuleOrProperty {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
-        if let Some((TokenTree::Ident(..), TokenTree::Colon(..))) = ps.peek2() {
-            if let Some(p) = property::Property::css_parse(ps) {
-                return Some(Self::Property(p))
+        if let (Some(TokenTree::Ident(..)), p2) = ps.peek2() {
+            if let Some(TokenTree::Colon(_)) = p2 {
+                if let Some(p) = property::Property::css_parse(ps) {
+                    return Some(Self::Property(p))
+                }
+            } else if p2.is_none() {
+                let rule = Rule::Unknown(List::from_vec(vec![CSSParse::css_parse(ps)?]));
+                return Some(RuleOrProperty::Rule(rule));
             }
         }
         CSSParse::css_parse(ps).map(|x| Self::Rule(x))
@@ -90,6 +86,21 @@ impl CSSParse for RuleOrProperty {
             Self::Rule(x) => x.location(),
             Self::Property(x) => x.location(),
         }
+    }
+}
+
+fn probably_style_rule_start(tt: &TokenTree) -> bool {
+    match tt {
+        TokenTree::Ident(..)
+        | TokenTree::IDHash(..)
+        | TokenTree::Colon(..)
+        | TokenTree::Bracket(..) => {
+            true
+        }
+        TokenTree::Operator(op) if op.is(".") || op.is(":") || op.is("*") || op.is("&") => {
+            true
+        }
+        _ => false,
     }
 }
 
@@ -128,13 +139,7 @@ impl CSSParse for Rule {
                     }
                 }
             }
-            TokenTree::Ident(..)
-            | TokenTree::IDHash(..)
-            | TokenTree::Colon(..)
-            | TokenTree::Bracket(..) => {
-                Self::Style(CSSParse::css_parse(ps)?)
-            }
-            TokenTree::Operator(op) if op.is(".") || op.is(":") || op.is("*") || op.is("&") => {
+            x if probably_style_rule_start(&x) => {
                 Self::Style(CSSParse::css_parse(ps)?)
             }
             _ => {
@@ -196,6 +201,16 @@ impl<C: CSSParse, S: TokenExt> CSSParse for Repeat<C, S> {
     }
 }
 
+impl<C, S> Repeat<C, S> {
+    pub(crate) fn iter_values(&self) -> impl DoubleEndedIterator<Item = &C> {
+        self.items.iter().map(|(c, _)| c)
+    }
+
+    pub(crate) fn iter_items(&self) -> impl DoubleEndedIterator<Item = (&C, Option<&S>)> {
+        self.items.iter().map(|(c, s)| (c, s.as_ref()))
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct List<C> {
     pub(crate) items: Vec<C>,
@@ -213,6 +228,10 @@ impl<C> List<C> {
 
     pub(crate) fn last(&self) -> &C {
         self.items.last().unwrap()
+    }
+
+    pub(crate) fn push(&mut self, c: C) {
+        self.items.push(c);
     }
 }
 
@@ -238,16 +257,6 @@ impl<C: CSSParse> CSSParse for List<C> {
         let first = self.items.first().unwrap();
         let last = self.items.last().unwrap();
         first.location().start..last.location().end
-    }
-}
-
-impl<C, S> Repeat<C, S> {
-    pub(crate) fn iter(&self) -> impl DoubleEndedIterator<Item = &C> {
-        self.items.iter().map(|(c, _)| c)
-    }
-
-    pub(crate) fn iter_items(&self) -> impl DoubleEndedIterator<Item = (&C, Option<&S>)> {
-        self.items.iter().map(|(c, s)| (c, s.as_ref()))
     }
 }
 
@@ -583,21 +592,21 @@ mod state {
             ret
         }
 
-        pub(super) fn peek2(&mut self) -> Option<(TokenTree, TokenTree)> {
+        pub(super) fn peek2(&mut self) -> (Option<TokenTree>, Option<TokenTree>) {
             let state = self.parser.state();
             let start_pos = parser_position(&self.parser);
             let next = self.parser.next();
             let ret = match next {
-                Err(_) => None,
+                Err(_) => (None, None),
                 Ok(next) => {
                     let ret1 = convert_css_token(next, start_pos..start_pos);
                     if ret1.children().is_some() {
-                        None
+                        (Some(ret1), None)
                     } else {
-                        let next = self.parser.next();
-                        match next {
-                            Err(_) => None,
-                            Ok(next) => Some((ret1, convert_css_token(next, start_pos..start_pos))),
+                        let next2 = self.parser.next();
+                        match next2 {
+                            Err(_) => (Some(ret1), None),
+                            Ok(next2) => (Some(ret1), Some(convert_css_token(next2, start_pos..start_pos))),
                         }
                     }
                 }

@@ -6,7 +6,7 @@
 
 @media not (min-width: 10px) {}
 
-@media only screen and (width: 10px) {}
+@media only screen or (width: 10px) and (prefers-color-scheme: dark) {}
 
 @media print, (monochrome) {}
 

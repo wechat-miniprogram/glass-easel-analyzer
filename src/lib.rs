@@ -29,7 +29,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         hover_provider: Some(lsp_types::HoverProviderCapability::Simple(true)),
         completion_provider: Some(lsp_types::CompletionOptions {
             resolve_provider: None,
-            trigger_characters: Some(vec![String::from("<"), String::from("/"), String::from(" ")]),
+            trigger_characters: Some(vec![String::from("<"), String::from("/"), String::from(" "), String::from("(")]),
             all_commit_characters: None,
             work_done_progress_options: lsp_types::WorkDoneProgressOptions { work_done_progress: None },
             completion_item: None,

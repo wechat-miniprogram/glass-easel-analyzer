@@ -2,7 +2,7 @@ use std::{future::Future, path::{Path, PathBuf}, pin::Pin, sync::{Arc, Mutex}};
 
 use lsp_server::{Message, Notification};
 use lsp_types::Url;
-use tokio::{fs, sync::mpsc};
+use tokio::sync::mpsc;
 
 pub(crate) mod backend_configuration;
 pub(crate) mod project;
