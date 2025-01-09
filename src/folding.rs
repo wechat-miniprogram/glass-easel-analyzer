@@ -1,7 +1,7 @@
 use glass_easel_template_compiler::parse::{tag::{ElementKind, Node, Script}, Position, Template};
 use lsp_types::{FoldingRange, FoldingRangeKind, FoldingRangeParams};
 
-use crate::ServerContext;
+use crate::{wxss::StyleSheet, ServerContext};
 
 pub(crate) async fn folding_range(ctx: ServerContext, params: FoldingRangeParams) -> anyhow::Result<Vec<FoldingRange>> {
     let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<Vec<FoldingRange>> {
@@ -10,6 +10,10 @@ pub(crate) async fn folding_range(ctx: ServerContext, params: FoldingRangeParams
                 let template = project.get_wxml_tree(&abs_path)?;
                 collect_wxml_folding_ranges(template)
             }
+            Some("wxss") => {
+                let template = project.get_style_sheet(&abs_path)?;
+                collect_wxss_folding_ranges(template)
+            }
             _ => vec![],
         };
         Ok(ranges)
@@ -17,18 +21,19 @@ pub(crate) async fn folding_range(ctx: ServerContext, params: FoldingRangeParams
     Ok(ret)
 }
 
+fn convert_folding_range(loc: std::ops::Range<Position>, kind: Option<FoldingRangeKind>) -> FoldingRange {
+    FoldingRange {
+        start_line: loc.start.line,
+        start_character: Some(loc.start.utf16_col),
+        end_line: loc.end.line,
+        end_character: Some(loc.end.utf16_col),
+        kind,
+        collapsed_text: None,
+    }
+}
+
 fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
     let mut ranges = vec![];
-    fn convert_folding_range(loc: std::ops::Range<Position>, kind: Option<FoldingRangeKind>) -> FoldingRange {
-        FoldingRange {
-            start_line: loc.start.line,
-            start_character: Some(loc.start.utf16_col),
-            end_line: loc.end.line,
-            end_character: Some(loc.end.utf16_col),
-            kind,
-            collapsed_text: None,
-        }
-    }
     fn collect_in_nodes(ranges: &mut Vec<FoldingRange>, nodes: &[Node]) {
         for node in nodes {
             match node {
@@ -87,5 +92,16 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
         collect_in_nodes(&mut ranges, &sub.content);
     }
     collect_in_nodes(&mut ranges, &template.content);
+    ranges
+}
+
+fn collect_wxss_folding_ranges(sheet: &StyleSheet) -> Vec<FoldingRange> {
+    let mut ranges = Vec::with_capacity(sheet.comments.len() + sheet.brace_locations.len());
+    for comment in sheet.comments.iter() {
+        ranges.push(convert_folding_range(comment.location.clone(), Some(FoldingRangeKind::Comment)));
+    }
+    for loc in sheet.brace_locations.iter() {
+        ranges.push(convert_folding_range(loc.clone(), None));
+    }
     ranges
 }

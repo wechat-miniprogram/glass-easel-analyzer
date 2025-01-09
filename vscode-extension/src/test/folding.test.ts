@@ -11,4 +11,12 @@ suite('folding range', function () {
       expect.snapshot(ret)
     })
   })
+
+  test('wxss', async function () {
+    await env.forEachWxssCase(this, async (uri, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      const ret = await vscode.commands.executeCommand('vscode.executeFoldingRangeProvider', uri)
+      expect.snapshot(ret)
+    })
+  })
 })
