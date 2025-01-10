@@ -1,0 +1,69 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 0,
+        },
+        Object {
+          "character": 10,
+          "line": 0,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@unknown",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 4,
+        },
+        Object {
+          "character": 9,
+          "line": 4,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@unknown",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Class",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 6,
+        },
+        Object {
+          "character": 6,
+          "line": 6,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "div",
+  },
+]

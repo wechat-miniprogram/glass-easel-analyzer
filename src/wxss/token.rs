@@ -2,6 +2,7 @@ use compact_str::CompactString;
 
 use super::{CSSParse, Location};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub(crate) enum TokenTree {
     Ident(Ident),
@@ -118,6 +119,7 @@ pub(crate) trait TokenExt: CSSParse {}
 
 macro_rules! basic_token {
     ($t:ident) => {
+        #[allow(dead_code)]
         #[derive(Debug, Clone)]
         pub(crate) struct $t {
             pub(crate) content: CompactString,
@@ -230,6 +232,7 @@ impl CSSParse for Operator {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub(crate) struct Number {
     pub(crate) has_sign: bool,
@@ -255,6 +258,7 @@ impl CSSParse for Number {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub(crate) struct Percentage {
     pub(crate) has_sign: bool,
@@ -280,6 +284,7 @@ impl CSSParse for Percentage {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub(crate) struct Dimension {
     pub(crate) has_sign: bool,
@@ -434,6 +439,7 @@ group_token!(Paren, parse_paren);
 group_token!(Bracket, parse_bracket);
 group_token!(Brace, parse_brace);
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub(crate) struct Comment {
     pub(crate) content: CompactString,

@@ -1,0 +1,25 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 0,
+        },
+        Object {
+          "character": 1,
+          "line": 2,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/font-face.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@font-face",
+  },
+]

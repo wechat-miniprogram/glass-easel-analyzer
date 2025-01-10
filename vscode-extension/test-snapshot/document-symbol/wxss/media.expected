@@ -1,0 +1,113 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 0,
+        },
+        Object {
+          "character": 1,
+          "line": 4,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@media (max-width: 10px)",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 6,
+        },
+        Object {
+          "character": 31,
+          "line": 6,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@media not (min-width: 10px)",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 8,
+        },
+        Object {
+          "character": 71,
+          "line": 8,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@media only screen or (width: 10px) and (prefers-color-scheme: dark)",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 10,
+        },
+        Object {
+          "character": 29,
+          "line": 10,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@media print, (monochrome)",
+  },
+  Object {
+    "containerName": "",
+    "kind": "Module",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 12,
+        },
+        Object {
+          "character": 41,
+          "line": 12,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@media all or only (max-width >= 10px)",
+  },
+]
