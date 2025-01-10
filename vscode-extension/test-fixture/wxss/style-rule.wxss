@@ -6,3 +6,9 @@ div#a.b-c[attr="value"] {
     color: #123456;
   }
 }
+
+div {}
+
+#a {}
+
+.b-c {}

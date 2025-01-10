@@ -5,6 +5,7 @@ use lsp_types::{GotoDefinitionParams, Location, LocationLink, ReferenceParams};
 use crate::{ServerContext, context::project::Project};
 
 mod wxml;
+mod wxss;
 
 pub(crate) async fn find_definition(ctx: ServerContext, params: GotoDefinitionParams) -> anyhow::Result<Vec<LocationLink>> {
     let uri = &params.text_document_position_params.text_document.uri;
@@ -13,6 +14,9 @@ pub(crate) async fn find_definition(ctx: ServerContext, params: GotoDefinitionPa
         let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {
                 wxml::find_declaration(project, &abs_path, position, true)?
+            }
+            Some("wxss") => {
+                wxss::find_declaration(project, &abs_path, position)?
             }
             _ => vec![],
         };
@@ -29,6 +33,9 @@ pub(crate) async fn find_declaration(ctx: ServerContext, params: GotoDefinitionP
             Some("wxml") => {
                 wxml::find_declaration(project, &abs_path, position, false)?
             }
+            Some("wxss") => {
+                wxss::find_declaration(project, &abs_path, position)?
+            }
             _ => vec![],
         };
         Ok(ranges)
@@ -43,6 +50,9 @@ pub(crate) async fn find_references(ctx: ServerContext, params: ReferenceParams)
         let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
             Some("wxml") => {
                 wxml::find_references(project, &abs_path, position)?
+            }
+            Some("wxss") => {
+                wxss::find_references(project, &abs_path, position)?
             }
             _ => vec![],
         };

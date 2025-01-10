@@ -408,3 +408,75 @@ fn find_in_token_tree(tt: &TokenTree, pos: Position) -> Option<Token> {
     };
     Some(ret)
 }
+
+pub(crate) fn for_each_rule_in_style_sheet(sheet: &StyleSheet, mut f: impl FnMut(&Rule)) {
+    fn rec_in_rule(rule: &Rule, f: &mut impl FnMut(&Rule)) {
+        f(rule);
+        match rule {
+            Rule::Unknown(_)
+            | Rule::UnknownAtRule(_, _)
+            | Rule::Import(_)
+            | Rule::FontFace(_) => {}
+            Rule::Style(x) => {
+                rec_in_option_brace(&x.brace, |x| {
+                    for x in x.iter() {
+                        rec_in_rule_or_property(x, f);
+                    }
+                });
+            }
+            Rule::Media(x) => {
+                rec_in_option_brace(&x.body, |x| {
+                    for x in x.iter() {
+                        rec_in_rule(x, f);
+                    }
+                });
+            }
+            Rule::Keyframes(x) => {
+                rec_in_option_brace(&x.body, |keyframes| {
+                    for keyframe in keyframes.iter() {
+                        match keyframe {
+                            Keyframe::Named { progress: _, body }
+                            | Keyframe::Percentage { progress: _, body } => {
+                                rec_in_option_brace(body, |x| {
+                                    for x in x.iter() {
+                                        rec_in_rule_or_property(x, f);
+                                    }
+                                });
+                            }
+                            Keyframe::Unknown(_) => {}
+                        }
+                    }
+                });
+            }
+        }
+    }
+    fn rec_in_rule_or_property(x: &RuleOrProperty, f: &mut impl FnMut(&Rule)) {
+        match x {
+            RuleOrProperty::Rule(x) => rec_in_rule(x, f),
+            RuleOrProperty::Property(_) => {}
+        }
+    }
+    fn rec_in_option_brace<T>(x: &Option<BraceOrSemicolon<T>>, f: impl FnOnce(&T)) {
+        match x {
+            None => {}
+            Some(BraceOrSemicolon::Brace(t)) => f(&t.children),
+            Some(BraceOrSemicolon::UnknownBrace(_)) => {}
+            Some(BraceOrSemicolon::Semicolon(_)) => {}
+        }
+    }
+    for rule in sheet.items.iter() {
+        rec_in_rule(rule, &mut f);
+    }
+}
+
+pub(crate) fn for_each_selector_in_style_sheet(sheet: &StyleSheet, mut f: impl FnMut(&Selector)) {
+    for_each_rule_in_style_sheet(sheet, |rule| {
+        if let Rule::Style(style_rule) = rule {
+            for list in style_rule.selector.iter_values() {
+                for sel in list.iter() {
+                    f(sel);
+                }
+            }
+        }
+    });
+}
