@@ -91,7 +91,7 @@ fn find_in_import_rule(ret: &mut SemanticTokenRet, import: &ImportRule) -> bool 
 }
 
 fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
-    let MediaRule { at_media, list, body } = media;
+    let MediaRule { at_media, list, list_str: _, body } = media;
     if !ret.push(at_media.location(), TokenType::Keyword, 0) {
         return false;
     }
@@ -215,40 +215,42 @@ fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule)
 }
 
 fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> bool {
-    let StyleRule { selector, brace } = style_rule;
-    for (selector, sep) in selector.iter_items() {
-        let r = match selector {
-            Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
-            Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
-            Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
-            Selector::Class(op, x) => {
-                ret.push(op.location(), TokenType::Operator, 0)
-                    && ret.push(x.location(), TokenType::Type, 0)
+    let StyleRule { selector, selector_str: _, brace } = style_rule;
+    for (selector_list, sep) in selector.iter_items() {
+        let r = selector_list.iter().all(|selector| {
+            match selector {
+                Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
+                Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
+                Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
+                Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
+                Selector::Class(op, x) => {
+                    ret.push(op.location(), TokenType::Operator, 0)
+                        && ret.push(x.location(), TokenType::Type, 0)
+                }
+                Selector::Attribute(x) => {
+                    find_in_children(ret, TokenType::Operator, x, |ret, children| {
+                        find_in_token_tree_list(ret, children)
+                    })
+                }
+                Selector::NextSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
+                Selector::Child(x) => ret.push(x.location(), TokenType::Operator, 0),
+                Selector::Column(x, y) => {
+                    ret.push(x.location(), TokenType::Operator, 0)
+                        && ret.push(y.location(), TokenType::Operator, 0)
+                }
+                Selector::SubsequentSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
+                Selector::Namespace(x) => ret.push(x.location(), TokenType::Operator, 0),
+                Selector::PseudoClass(x, name) => {
+                    ret.push(x.location(), TokenType::Operator, 0)
+                        && find_in_name_or_function(ret, name)
+                }
+                Selector::PseudoElement(x, y, name) => {
+                    ret.push(x.location(), TokenType::Operator, 0)
+                        && ret.push(y.location(), TokenType::Operator, 0)
+                        && find_in_name_or_function(ret, name)
+                }
             }
-            Selector::Attribute(x) => {
-                find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                    find_in_token_tree_list(ret, children)
-                })
-            }
-            Selector::NextSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::Child(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::Column(x, y) => {
-                ret.push(x.location(), TokenType::Operator, 0)
-                    && ret.push(y.location(), TokenType::Operator, 0)
-            }
-            Selector::SubsequentSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::Namespace(x) => ret.push(x.location(), TokenType::Operator, 0),
-            Selector::PseudoClass(x, name) => {
-                ret.push(x.location(), TokenType::Operator, 0)
-                    && find_in_name_or_function(ret, name)
-            }
-            Selector::PseudoElement(x, y, name) => {
-                ret.push(x.location(), TokenType::Operator, 0)
-                    && ret.push(y.location(), TokenType::Operator, 0)
-                    && find_in_name_or_function(ret, name)
-            }
-        };
+        });
         if !r { return false; }
         if let Some(x) = sep {
             if !ret.push(x.location(), TokenType::Operator, 0) {

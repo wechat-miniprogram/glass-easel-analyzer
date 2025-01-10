@@ -79,14 +79,6 @@ impl TokenTree {
     pub(crate) fn is_ident_or_function(&self) -> bool {
         self.is_ident() || self.is_function()
     }
-
-    pub(crate) fn is_colon(&self) -> bool {
-        if let Self::Colon(_) = self {
-            true
-        } else {
-            false
-        }
-    }
 }
 
 impl TokenExt for TokenTree {}

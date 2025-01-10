@@ -4,17 +4,28 @@ use super::*;
 pub(crate) struct MediaRule {
     pub(crate) at_media: AtKeyword,
     pub(crate) list: Option<MediaQueryList>,
+    pub(crate) list_str: String,
     pub(crate) body: Option<BraceOrSemicolon<List<Rule>>>,
 }
 
 impl CSSParse for MediaRule {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        ps.skip_comments();
         let at_media = CSSParse::css_parse(ps)?;
+        let list_pos_start = ps.byte_index();
         let list = CSSParse::css_parse(ps);
+        let list_pos_end = ps.byte_index();
+        let list_str = ps
+            .source_slice(list_pos_start..list_pos_end)
+            .trim()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
         let body = CSSParse::css_parse(ps);
         Some(Self {
             at_media,
             list,
+            list_str,
             body,
         })
     }

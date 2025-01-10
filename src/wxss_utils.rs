@@ -49,7 +49,10 @@ fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
             }
         }
         Rule::Style(style_rule) => {
-            style_rule.selector.iter_values().find_map(|x| find_in_selector(x, pos))
+            style_rule
+                .selector
+                .iter_values()
+                .find_map(|selector_list| selector_list.iter().find_map(|x| find_in_selector(x, pos)))
                 .or_else(|| find_in_option_brace_or_semicolon_properties(&style_rule.brace, pos))
         }
         Rule::Import(import_rule) => {

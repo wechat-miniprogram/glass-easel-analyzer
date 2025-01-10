@@ -316,7 +316,6 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
 fn completion_wxss(project: &mut Project, backend_config: &BackendConfig, abs_path: &Path, pos: lsp_types::Position, _trigger: &str) -> Option<CompletionList> {
     let template = project.get_style_sheet(abs_path).ok()?;
     let token = crate::wxss_utils::find_token_in_position(template, Position { line: pos.line, utf16_col: pos.character });
-    dbg!(&token);
     match token {
         WxssToken::StyleRuleUnknownIdent(_) => {
             let mut items: Vec<CompletionItem> = vec![];

@@ -2,15 +2,25 @@ use super::*;
 
 #[derive(Debug, Clone)]
 pub(crate) struct StyleRule {
-    pub(crate) selector: Repeat<Selector, Comma>,
+    pub(crate) selector: Repeat<List<Selector>, Comma>,
+    pub(crate) selector_str: String,
     pub(crate) brace: Option<BraceOrSemicolon<List<RuleOrProperty>>>,
 }
 
 impl CSSParse for StyleRule {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
+        ps.skip_comments();
+        let selector_pos_start = ps.byte_index();
         let selector = CSSParse::css_parse(ps)?;
+        let selector_pos_end = ps.byte_index();
+        let selector_str = ps
+            .source_slice(selector_pos_start..selector_pos_end)
+            .trim()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
         let brace = CSSParse::css_parse(ps);
-        Some(Self { selector, brace })
+        Some(Self { selector, selector_str, brace })
     }
 
     fn location(&self) -> Location {

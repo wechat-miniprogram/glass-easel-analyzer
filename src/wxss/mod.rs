@@ -268,6 +268,15 @@ pub(crate) enum MaybeUnknown<T> {
     Normal(T, Vec<TokenTree>),
 }
 
+impl<T> MaybeUnknown<T> {
+    pub(crate) fn known(&self) -> Option<&T> {
+        match self {
+            Self::Unknown(_) => None,
+            Self::Normal(t, _) => Some(t),
+        }
+    }
+}
+
 impl<T: CSSParse> MaybeUnknown<T> {
     fn parse_with_trailing(
         ps: &mut ParseState,
@@ -295,7 +304,7 @@ impl<T: CSSParse> MaybeUnknown<T> {
 
 mod state {
     use compact_str::CompactString;
-    use cssparser::{BasicParseErrorKind, Token as CSSToken};
+    use cssparser::{BasicParseErrorKind, SourcePosition, Token as CSSToken};
 
     use super::*;
 
@@ -474,8 +483,41 @@ mod state {
             self.add_warning(kind, pos..pos);
         }
 
+        pub(super) fn byte_index(&self) -> SourcePosition {
+            self.parser.state().position()
+        }
+
+        pub(super) fn source_slice(&self, range: Range<SourcePosition>) -> &str {
+            self.parser.slice(range)
+        }
+
         pub(super) fn position(&self) -> Position {
             parser_position(&self.parser)
+        }
+
+        pub(super) fn skip_comments(&mut self) {
+            let Self { parser, comments, .. } = self;
+            loop {
+                let state = parser.state();
+                let start_pos = parser_position(&parser);
+                let next = parser.next_including_whitespace_and_comments();
+                let content = match next {
+                    Err(_) => break,
+                    Ok(css_token) => {
+                        match css_token {
+                            CSSToken::Comment(s) => CompactString::new(s),
+                            CSSToken::WhiteSpace(_) => continue,
+                            _ => {
+                                parser.reset(&state);
+                                break;
+                            }
+                        }
+                    }
+                };
+                let end_pos = parser_position(&parser);
+                let location = start_pos..end_pos;
+                comments.push(Comment { content, location });
+            }
         }
 
         /// Get the next non-comment token and advance the cursor.
