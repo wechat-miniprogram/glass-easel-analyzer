@@ -1,0 +1,4 @@
+<div id="a" class="b-c {{ test }}b-c" />
+
+<import src="./global" />
+<include src="./global2" />

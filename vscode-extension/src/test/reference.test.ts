@@ -33,6 +33,10 @@ const defWxmlCases = [
       new vscode.Position(2, 26),
     ],
   },
+  {
+    name: 'core-attribute',
+    args: [new vscode.Position(0, 3), new vscode.Position(0, 11), new vscode.Position(0, 37)],
+  },
 ]
 
 const defWxssCases = [

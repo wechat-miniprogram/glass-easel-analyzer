@@ -26,11 +26,12 @@ pub(crate) enum Token<'a> {
     Comment(&'a Comment),
     UnknownMetaTag(&'a UnknownMetaTag),
     TagName(&'a Ident),
+    StaticId(Range<Position>, &'a str),
     AttributeStaticValue(Range<Position>, &'a str, &'a Ident, &'a Element),
     AttributeName(&'a Ident, &'a Element),
     ModelAttributeName(&'a Ident, &'a Element),
     ChangeAttributeName(&'a Ident, &'a Element),
-    ClassName(&'a Ident),
+    StaticClassName(Range<Position>, &'a str),
     StyleName(&'a Ident),
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
@@ -251,8 +252,15 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 if inclusive_contains(loc, pos) {
                                     return Token::AttributeKeyword(loc.clone(), &elem);
                                 }
-                                if let Some(ret) = find_in_value(v, pos, scopes) {
-                                    return ret;
+                                match v {
+                                    Value::Static { value, location, .. } => {
+                                        return Token::StaticId(location.clone(), &value);
+                                    },
+                                    _ => {
+                                        if let Some(ret) = find_in_value(v, pos, scopes) {
+                                            return ret;
+                                        }
+                                    }
                                 }
                             }
                             if let Some((loc, v)) = common.slot.as_ref() {
@@ -355,13 +363,16 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                                 return Token::AttributeKeyword(loc.clone(), &elem);
                                             }
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
-                                                return ret;
+                                                return match ret {
+                                                    Token::StaticValuePart(loc, name) => Token::StaticClassName(loc.clone(), name),
+                                                    x => x,
+                                                };
                                             }
                                         }
                                         ClassAttribute::Multiple(list) => {
                                             for (name, v) in list {
                                                 if ident_contains(name, pos) {
-                                                    return Token::ClassName(name);
+                                                    return Token::StaticClassName(name.location.clone(), &name.name);
                                                 }
                                                 if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;
@@ -888,4 +899,48 @@ pub(crate) fn for_each_tag_name<'a>(template: &'a Template, mut f: impl FnMut(&'
     for_each_template_root(&template, |node, scopes| {
         for_each_tag_name_in_subtree(node, scopes, &mut f);
     });
+}
+
+pub(crate) fn for_each_static_class_name_in_element<'a>(elem: &'a Element, mut f: impl FnMut(&'a str, Range<Position>)) {
+    if let ElementKind::Normal { class, .. } = &elem.kind {
+        match class {
+            ClassAttribute::String(_, value) => {
+                fn rec_expr<'a>(
+                    expr: &'a Expression,
+                    left_space: bool,
+                    right_space: bool,
+                    f: &mut impl FnMut(&'a str, &Range<Position>, bool, bool),
+                ) {
+                    match expr {
+                        Expression::Plus { left, right, .. } => {
+                            rec_expr(&left, left_space, false, f);
+                            rec_expr(&right, false, left_space, f);
+                        }
+                        Expression::LitStr { value, location, .. } => {
+                            f(&value, &location, left_space, right_space);
+                        }
+                        _ => {}
+                    }
+                }
+                let mut check_str = |s: &'a str, loc: &Range<Position>, left_space: bool, right_space: bool| {
+                    let s_end_ptr = s.as_ptr() as usize + s.len();
+                    for class_name in s.split_ascii_whitespace() {
+                        if !left_space && class_name.as_ptr() == s.as_ptr() { continue; }
+                        if !right_space && class_name.as_ptr() as usize + class_name.len() == s_end_ptr { continue; }
+                        f(class_name, loc.clone());
+                    }
+                };
+                match value {
+                    Value::Static { value, location, .. } => {
+                        check_str(&value, location, true, true);
+                    }
+                    Value::Dynamic { expression, .. } => {
+                        rec_expr(&expression, true, true, &mut check_str);
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
 }

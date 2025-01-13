@@ -1,8 +1,111 @@
-use glass_easel_template_compiler::parse::{tag::{ElementKind, Ident, Node, StaticAttribute}, Position, TemplateStructure};
+use std::collections::HashSet;
 
-use crate::{utils::{add_file_extension, location_to_lsp_range}, wxml_utils::{for_each_scope_ref, for_each_scope_ref_in_subtree, for_each_slot, insert_element_scopes, ScopeKind, Token}};
+use glass_easel_template_compiler::parse::{tag::{Element, ElementKind, Ident, Node, StaticAttribute, TemplateDefinition, Value}, Position, Template, TemplateStructure};
+
+use crate::{utils::{add_file_extension, location_to_lsp_range}, wxml_utils::{for_each_scope_ref, for_each_scope_ref_in_subtree, for_each_slot, for_each_static_class_name_in_element, for_each_template_element, insert_element_scopes, ScopeKind, Token}};
 
 use super::*;
+
+pub(super) fn rec_import_and_include_templates(
+    visited: &mut HashSet<PathBuf>,
+    project: &Project,
+    abs_path: &Path,
+    template: &Template,
+    f: &mut impl FnMut(&Path, &Template),
+) {
+    visited.insert(abs_path.to_path_buf());
+    let imp_iter = template.globals.imports.iter().map(|x| x.src.name.as_str());
+    let inc_iter = template.globals.includes.iter().map(|x| x.src.name.as_str());
+    for rel in imp_iter.chain(inc_iter) {
+        if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
+            if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
+                if let Ok(template) = project.get_wxml_tree(&imported_path) {
+                    rec_import_and_include_templates(visited, project, &imported_path, template, f);
+                }
+            }
+        }
+    }
+    f(abs_path, template);
+}
+
+pub(super) fn rec_import_and_include_elements(
+    project: &Project,
+    abs_path: &Path,
+    template: &Template,
+    mut f: impl FnMut(&Path, &Element),
+) {
+    rec_import_and_include_templates(&mut HashSet::new(), project, abs_path, template, &mut |abs_path, template| {
+        for_each_template_element(template, |elem, _| f(abs_path, elem));
+    });
+}
+
+pub(super) fn find_elements_matching_tag_name(
+    project: &Project,
+    abs_path: &Path,
+    template: &Template,
+    name: &str,
+) -> Vec<Location> {
+    let mut ret = vec![];
+    rec_import_and_include_elements(project, abs_path, template, |abs_path, elem| {
+        if let ElementKind::Normal { tag_name, .. } = &elem.kind {
+            if name == tag_name.name {
+                ret.push(Location {
+                    uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                    range: location_to_lsp_range(&tag_name.location),
+                });
+            }
+        }
+    });
+    ret
+}
+
+pub(super) fn find_elements_matching_id(
+    project: &Project,
+    abs_path: &Path,
+    template: &Template,
+    name: &str,
+) -> Vec<Location> {
+    let mut ret = vec![];
+    rec_import_and_include_elements(project, abs_path, template, |abs_path, elem| {
+        if let ElementKind::Normal { common, .. } = &elem.kind {
+            let elem_id_loc = common.id.as_ref().and_then(|x| {
+                match &x.1 {
+                    Value::Static { value, location, .. } => Some((value.as_str(), location)),
+                    _ => None,
+                }
+            });
+            if let Some((id, loc)) = elem_id_loc {
+                if name == id.trim() {
+                    ret.push(Location {
+                        uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                        range: location_to_lsp_range(loc),
+                    });
+                }
+            }
+        }
+    });
+    ret
+}
+
+pub(super) fn find_elements_matching_class(
+    project: &Project,
+    abs_path: &Path,
+    template: &Template,
+    name: &str,
+) -> Vec<Location> {
+    let mut ret = vec![];
+    rec_import_and_include_elements(project, abs_path, template, |abs_path, elem| {
+        for_each_static_class_name_in_element(elem, |class_name, loc| {
+            if name == class_name {
+                ret.push(Location {
+                    uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                    range: location_to_lsp_range(&loc),
+                });
+            }
+        });
+    });
+    ret
+}
 
 fn find_slot_matching<'a>(
     project: &'a Project,
@@ -27,6 +130,56 @@ fn find_slot_matching<'a>(
     Some((target_wxml_path, ret))
 }
 
+fn get_target_template_path<'a>(
+    project: &'a Project,
+    abs_path: &Path,
+    source_tamplate: &Template,
+    is: &str,
+) -> Option<(PathBuf, &'a TemplateDefinition)> {
+    for import in source_tamplate.globals.imports.iter().rev() {
+        if let Ok(p) = project.find_rel_path_for_file(abs_path, &import.src.name) {
+            let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") else {
+                continue;
+            };
+            if let Ok(imported_template) = project.get_wxml_tree(&imported_path) {
+                if let Some(x) = imported_template.globals.sub_templates.iter().rfind(|x| x.name.is(is)) {
+                    return Some((imported_path.to_path_buf(), x));
+                }
+            }
+        }
+    }
+    None
+}
+
+fn search_wxml_template_usages(
+    project: &Project,
+    abs_path: &Path,
+    is: &str,
+    mut f: impl FnMut(&Path, std::ops::Range<glass_easel_template_compiler::parse::Position>),
+) {
+    for (source_p, tree) in project.list_wxml_trees() {
+        let Ok(source_p) = crate::utils::join_unix_rel_path(project.root(), source_p, project.root()) else { continue };
+        if let Some((p, _)) = get_target_template_path(project, &source_p, tree, is) {
+            if p.as_path() != abs_path { continue };
+            crate::wxml_utils::for_each_template_element(tree, |elem, _| {
+                match &elem.kind {
+                    ElementKind::TemplateRef { target, .. } => {
+                        match &target.1 {
+                            Value::Static { value, location, .. } => {
+                                if value.as_str() == is {
+                                    f(&source_p, location.clone());
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+            });
+        }
+    }
+}
+
 pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_types::Position, to_definition: bool) -> anyhow::Result<Vec<LocationLink>> {
     let mut ret = vec![];
     if let Ok(template) = project.get_wxml_tree(abs_path) {
@@ -47,6 +200,14 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
                         });
                     }
                 }
+            }
+            Token::StaticId(loc, _) | Token::StaticClassName(loc, _) => {
+                ret.push(LocationLink {
+                    origin_selection_range: Some(location_to_lsp_range(&loc)),
+                    target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                    target_range: location_to_lsp_range(&loc),
+                    target_selection_range: location_to_lsp_range(&loc),
+                });
             }
             Token::ScopeRef(loc, kind) => {
                 match kind {
@@ -172,7 +333,7 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
                         target_selection_range: location_to_lsp_range(&x.name.location()),
                     });
                 } else {
-                    if let Some((imported_path, def)) = project.get_target_template_path(abs_path, template, is) {
+                    if let Some((imported_path, def)) = get_target_template_path(project, abs_path, template, is) {
                         ret.push(LocationLink {
                             origin_selection_range: Some(location_to_lsp_range(&loc)),
                             target_uri: lsp_types::Url::from_file_path(imported_path).unwrap(),
@@ -245,6 +406,31 @@ pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_t
                         }
                     });
                 });
+                let mut x = find_elements_matching_tag_name(project, abs_path, template, &ident.name);
+                ret.append(&mut x);
+                let wxss_path = abs_path.with_extension("wxss");
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+                    let mut x = wxss::find_tag_name_selectors(project, &wxss_path, sheet, &ident.name);
+                    ret.append(&mut x);
+                }
+            }
+            Token::StaticId(_, id) => {
+                let mut x = find_elements_matching_id(project, abs_path, template, id);
+                ret.append(&mut x);
+                let wxss_path = abs_path.with_extension("wxss");
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+                    let mut x = wxss::find_id_selectors(project, &wxss_path, sheet, id);
+                    ret.append(&mut x);
+                }
+            }
+            Token::StaticClassName(_, class_name) => {
+                let mut x = find_elements_matching_class(project, abs_path, template, class_name);
+                ret.append(&mut x);
+                let wxss_path = abs_path.with_extension("wxss");
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+                    let mut x = wxss::find_class_selectors(project, &wxss_path, sheet, class_name);
+                    ret.append(&mut x);
+                }
             }
             Token::ScriptModule(name) => {
                 for_each_scope_ref(template, |loc, kind| {
@@ -322,7 +508,7 @@ pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_t
                 }
             }
             Token::TemplateName(name) => {
-                project.search_wxml_template_usages(abs_path, &name.name, |target_wxml, loc| {
+                search_wxml_template_usages(project, abs_path, &name.name, |target_wxml, loc| {
                     ret.push(Location {
                         uri: lsp_types::Url::from_file_path(&target_wxml).unwrap(),
                         range: location_to_lsp_range(&loc),
@@ -330,8 +516,8 @@ pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_t
                 });
             }
             Token::TemplateRef(is, _) => {
-                if let Some((abs_path, _)) = project.get_target_template_path(abs_path, template, is) {
-                    project.search_wxml_template_usages(&abs_path, is, |target_wxml, loc| {
+                if let Some((abs_path, _)) = get_target_template_path(project, abs_path, template, is) {
+                    search_wxml_template_usages(project, &abs_path, is, |target_wxml, loc| {
                         ret.push(Location {
                             uri: lsp_types::Url::from_file_path(&target_wxml).unwrap(),
                             range: location_to_lsp_range(&loc),
