@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { Env } from './env'
 
-const defCases = [
+const defWxmlCases = [
   {
     name: 'core-attribute',
     args: [new vscode.Position(4, 3)],
@@ -35,11 +35,43 @@ const defCases = [
   },
 ]
 
+const defWxssCases = [
+  {
+    name: 'import',
+    args: [new vscode.Position(2, 2)],
+  },
+  {
+    name: 'style-rule',
+    args: [
+      new vscode.Position(0, 3),
+      new vscode.Position(0, 4),
+      new vscode.Position(0, 6),
+      new vscode.Position(9, 0),
+      new vscode.Position(11, 0),
+      new vscode.Position(13, 0),
+    ],
+  },
+]
+
 suite('go to declaration', function () {
   const env = new Env(this)
 
   test('wxml', async function () {
-    await env.wxmlCasesWith(this, defCases, async (uri, list, expect) => {
+    await env.wxmlCasesWith(this, defWxmlCases, async (uri, list, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      for (const position of list) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeDeclarationProvider',
+          uri,
+          position,
+        )
+        expect.snapshot(ret)
+      }
+    })
+  })
+
+  test('wxss', async function () {
+    await env.wxssCasesWith(this, defWxssCases, async (uri, list, expect) => {
       await vscode.commands.executeCommand('vscode.open', uri)
       for (const position of list) {
         const ret = await vscode.commands.executeCommand(
@@ -57,7 +89,21 @@ suite('go to definition', function () {
   const env = new Env(this)
 
   test('wxml', async function () {
-    await env.wxmlCasesWith(this, defCases, async (uri, list, expect) => {
+    await env.wxmlCasesWith(this, defWxmlCases, async (uri, list, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      for (const position of list) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeDefinitionProvider',
+          uri,
+          position,
+        )
+        expect.snapshot(ret)
+      }
+    })
+  })
+
+  test('wxss', async function () {
+    await env.wxssCasesWith(this, defWxssCases, async (uri, list, expect) => {
       await vscode.commands.executeCommand('vscode.open', uri)
       for (const position of list) {
         const ret = await vscode.commands.executeCommand(
@@ -75,11 +121,25 @@ suite('find references', function () {
   const env = new Env(this)
 
   test('wxml', async function () {
-    await env.wxmlCasesWith(this, defCases, async (uri, list, expect) => {
+    await env.wxmlCasesWith(this, defWxmlCases, async (uri, list, expect) => {
       await vscode.commands.executeCommand('vscode.open', uri)
       for (const position of list) {
         const ret = await vscode.commands.executeCommand(
-          'vscode.executeDefinitionProvider',
+          'vscode.executeReferenceProvider',
+          uri,
+          position,
+        )
+        expect.snapshot(ret)
+      }
+    })
+  })
+
+  test('wxss', async function () {
+    await env.wxssCasesWith(this, defWxssCases, async (uri, list, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      for (const position of list) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeReferenceProvider',
           uri,
           position,
         )

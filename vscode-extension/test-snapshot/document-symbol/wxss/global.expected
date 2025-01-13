@@ -22,4 +22,26 @@ Array [
     },
     "name": "*",
   },
+  Object {
+    "containerName": "",
+    "kind": "Interface",
+    "location": Object {
+      "range": Array [
+        Object {
+          "character": 0,
+          "line": 4,
+        },
+        Object {
+          "character": 19,
+          "line": 4,
+        },
+      ],
+      "uri": Object {
+        "$mid": 1,
+        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss",
+        "scheme": "file",
+      },
+    },
+    "name": "@import",
+  },
 ]

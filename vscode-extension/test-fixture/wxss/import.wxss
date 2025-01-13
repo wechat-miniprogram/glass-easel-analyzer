@@ -1,1 +1,3 @@
 @import './global.wxss';
+
+div {}

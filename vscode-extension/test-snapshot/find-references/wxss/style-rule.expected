@@ -1,0 +1,234 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+      Object {
+        "character": 3,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 9,
+      },
+      Object {
+        "character": 3,
+        "line": 9,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 1 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 3,
+        "line": 0,
+      },
+      Object {
+        "character": 5,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 11,
+      },
+      Object {
+        "character": 2,
+        "line": 11,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 2 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 5,
+        "line": 0,
+      },
+      Object {
+        "character": 9,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 13,
+      },
+      Object {
+        "character": 4,
+        "line": 13,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 3 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+      Object {
+        "character": 3,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 9,
+      },
+      Object {
+        "character": 3,
+        "line": 9,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 4 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 3,
+        "line": 0,
+      },
+      Object {
+        "character": 5,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 11,
+      },
+      Object {
+        "character": 2,
+        "line": 11,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]
+// ====== SNAPSHOT 5 ======
+Array [
+  Object {
+    "range": Array [
+      Object {
+        "character": 5,
+        "line": 0,
+      },
+      Object {
+        "character": 9,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
+      Object {
+        "character": 0,
+        "line": 13,
+      },
+      Object {
+        "character": 4,
+        "line": 13,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
+      "scheme": "file",
+    },
+  },
+]

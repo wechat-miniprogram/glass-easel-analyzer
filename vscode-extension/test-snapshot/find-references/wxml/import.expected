@@ -1,87 +1,29 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 13,
-        "line": 0,
-      },
-      Object {
-        "character": 19,
-        "line": 0,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global.wxml",
-      "scheme": "file",
-    },
-  },
-]
+Array []
 // ====== SNAPSHOT 1 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 14,
-        "line": 5,
-      },
-      Object {
-        "character": 20,
-        "line": 5,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global.wxml",
-      "scheme": "file",
-    },
-  },
-]
+Array []
 // ====== SNAPSHOT 2 ======
 Array [
   Object {
-    "originSelectionRange": Array [
+    "range": Array [
+      Object {
+        "character": 16,
+        "line": 0,
+      },
+      Object {
+        "character": 31,
+        "line": 0,
+      },
+    ],
+    "uri": Object {
+      "$mid": 1,
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
+      "scheme": "file",
+    },
+  },
+  Object {
+    "range": Array [
       Object {
         "character": 14,
         "line": 3,
@@ -91,29 +33,10 @@ Array [
         "line": 3,
       },
     ],
-    "targetRange": Array [
-      Object {
-        "character": 16,
-        "line": 0,
-      },
-      Object {
-        "character": 31,
-        "line": 0,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 16,
-        "line": 0,
-      },
-      Object {
-        "character": 31,
-        "line": 0,
-      },
-    ],
-    "targetUri": Object {
+    "uri": Object {
       "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
+      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/import.wxml",
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/import.wxml",
       "scheme": "file",
     },
   },

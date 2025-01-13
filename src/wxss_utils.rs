@@ -480,3 +480,19 @@ pub(crate) fn for_each_selector_in_style_sheet(sheet: &StyleSheet, mut f: impl F
         }
     });
 }
+
+pub(crate) fn for_each_import_in_style_sheet(sheet: &StyleSheet, mut f: impl FnMut(&str)) {
+    for_each_rule_in_style_sheet(sheet, |rule| {
+        match rule {
+            Rule::Import(x) => {
+                match &x.url {
+                    MaybeUnknown::Normal(url, _) => {
+                        f(url.content.as_str());
+                    }
+                    MaybeUnknown::Unknown(_) => {}
+                }
+            }
+            _ => {}
+        }
+    });
+}
