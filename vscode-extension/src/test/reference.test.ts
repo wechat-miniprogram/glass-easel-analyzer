@@ -4,7 +4,12 @@ import { Env } from './env'
 const defWxmlCases = [
   {
     name: 'core-attribute',
-    args: [new vscode.Position(4, 3)],
+    args: [
+      new vscode.Position(0, 3),
+      new vscode.Position(0, 11),
+      new vscode.Position(0, 37),
+      new vscode.Position(4, 3),
+    ],
   },
   {
     name: 'import',
@@ -32,10 +37,6 @@ const defWxmlCases = [
       new vscode.Position(2, 23),
       new vscode.Position(2, 26),
     ],
-  },
-  {
-    name: 'core-attribute',
-    args: [new vscode.Position(0, 3), new vscode.Position(0, 11), new vscode.Position(0, 37)],
   },
 ]
 

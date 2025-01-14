@@ -1,5 +1,5 @@
 @unknown {
-
+  color: rgba(127, 127, 127, 0.5);
 }
 
 @unknown;

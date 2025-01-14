@@ -1,6 +1,6 @@
 @media (max-width: 10px) {
   div {
-    color: blue;
+    color: hsl(120, 50%, 50%);
   }
 }
 

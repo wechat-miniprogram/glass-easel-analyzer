@@ -86,6 +86,7 @@ impl TokenExt for TokenTree {}
 
 impl CSSParse for TokenTree {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
+        ps.check_color();
         ps.next()
     }
 

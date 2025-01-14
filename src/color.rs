@@ -51,11 +51,11 @@ fn convert_css_color(color: &Color) -> Option<(f32, f32, f32, f32)> {
             Some((r, g, b, x.alpha))
         }
         Color::Hsl(x) => {
-            let (r, g, b) = cssparser_color::hsl_to_rgb(x.hue?, x.saturation?, x.lightness?);
+            let (r, g, b) = cssparser_color::hsl_to_rgb(x.hue? / 360., x.saturation?, x.lightness?);
             Some((r, g, b, 1.))
         }
         Color::Hwb(x) => {
-            let (r, g, b) = cssparser_color::hwb_to_rgb(x.hue?, x.whiteness?, x.blackness?);
+            let (r, g, b) = cssparser_color::hwb_to_rgb(x.hue? / 360., x.whiteness?, x.blackness?);
             Some((r, g, b, 1.))
         }
         _ => None,

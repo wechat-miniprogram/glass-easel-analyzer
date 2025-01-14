@@ -1,0 +1,39 @@
+// ====== SNAPSHOT 0 ======
+Array [
+  Object {
+    "color": Object {
+      "alpha": 1,
+      "blue": 0.25,
+      "green": 0.75,
+      "red": 0.25,
+    },
+    "range": Array [
+      Object {
+        "character": 11,
+        "line": 2,
+      },
+      Object {
+        "character": 27,
+        "line": 2,
+      },
+    ],
+  },
+  Object {
+    "color": Object {
+      "alpha": 1,
+      "blue": 0.5,
+      "green": 0.5,
+      "red": 0.5,
+    },
+    "range": Array [
+      Object {
+        "character": 11,
+        "line": 5,
+      },
+      Object {
+        "character": 30,
+        "line": 5,
+      },
+    ],
+  },
+]

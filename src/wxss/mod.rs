@@ -134,16 +134,11 @@ impl CSSParse for Rule {
                     "keyframes" => Self::Keyframes(CSSParse::css_parse(ps)?),
                     _ => {
                         let Some(TokenTree::AtKeyword(at_keyword)) = ps.next() else { unreachable!() };
-                        let mut tt = vec![];
-                        while let Some(next) = ps.next() {
-                            let ended = match &next {
-                                TokenTree::Semicolon(..) | TokenTree::Brace(..) => true,
-                                _ => false,
-                            };
-                            tt.push(next);
-                            if ended { break };
+                        let mut tt_list = ps.skip_until_before_brace_or_semicolon();
+                        if let Some(tt) = ps.next() {
+                            tt_list.push(tt);
                         }
-                        Self::UnknownAtRule(at_keyword, List::from_vec(tt))
+                        Self::UnknownAtRule(at_keyword, List::from_vec(tt_list))
                     }
                 }
             }
@@ -526,6 +521,19 @@ mod state {
             }
         }
 
+        // try parse color, and then revert to corrent position
+        pub(super) fn check_color(&mut self) {
+            let Self { parser, special_locations, .. } = self;
+            parser.skip_whitespace();
+            let state = parser.state();
+            let start_pos = parser_position(&parser);
+            if let Ok(color) = cssparser_color::Color::parse(parser) {
+                let location = start_pos..parser_position(&parser);
+                special_locations.colors.push((color, location));
+            }
+            parser.reset(&state);
+        }
+
         /// Get the next non-comment token and advance the cursor.
         /// 
         /// It will collect comments and return the next `TokenTree` if not ended.
@@ -538,18 +546,6 @@ mod state {
             ) -> Option<TokenTree> {
                 loop {
                     let start_pos = parser_position(&parser);
-                    {
-                        // try parse color, and then revert to corrent position
-                        let state = parser.state();
-                        parser.skip_whitespace();
-                        if parser.position().byte_index() == state.position().byte_index() {
-                            if let Ok(color) = cssparser_color::Color::parse(parser) {
-                                let location = start_pos..parser_position(&parser);
-                                special_locations.colors.push((color, location));
-                            }
-                        }
-                        parser.reset(&state);
-                    }
                     let next = parser.next_including_whitespace_and_comments().cloned();
                     let end_pos = parser_position(&parser);
                     let location = start_pos..end_pos;
@@ -595,13 +591,15 @@ mod state {
                                 },
                             };
                             if token.children().is_some() {
-                                let mut children = vec![];
-                                let _ = parser.parse_nested_block::<_, _, ()>(|parser| {
-                                    while let Some(token) = rec(parser, warnings, comments, special_locations) {
-                                        children.push(token);
-                                    }
-                                    Ok(())
-                                });
+                                let children = parser.parse_nested_block::<_, _, ()>(|parser| {
+                                    let mut ps = ParseState {
+                                        parser,
+                                        warnings,
+                                        comments,
+                                        special_locations,
+                                    };
+                                    Ok(ps.skip_to_end())
+                                }).unwrap();
                                 let right_pos = parser_position(&parser);
                                 let location = right_pos..end_pos;
                                 match &mut token {
@@ -693,7 +691,7 @@ mod state {
                 if !f(&peek) {
                     break
                 }
-                ret.push(self.next().unwrap());
+                ret.push(TokenTree::css_parse(self).unwrap());
             }
             ret
         }

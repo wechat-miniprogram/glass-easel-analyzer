@@ -1,9 +1,9 @@
 @keyframes ani {
   from {
-    width: 10%;
+    color: hwb(120 25% 25%);
   }
   50% {
-    width: 20%;
+    color: hwb(240deg 75% 75%);
   }
   unknown;
 }
