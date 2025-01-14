@@ -12,6 +12,19 @@ const hasDeprecatedSign = (content: string) => {
   return false
 }
 
+// utils: extract the first normal line content
+const firstNormalLine = (fullContent: string): string | null => {
+  for (const line of fullContent.split('\n')) {
+    const s = line.trim()
+    if (!s) continue
+    if (s.startsWith('> ')) continue
+    if (s.startsWith('- ')) continue
+    if (s.startsWith('* ')) continue
+    return s
+  }
+  return null
+}
+
 // utils: extract string content between two signs (excluded)
 const extractContentBetween = (
   fullContent: string,
@@ -431,10 +444,11 @@ extractMediaTypes()
 fs.writeSync(outFile, `\n`)
 const mediaDir = path.join(mdnDir, 'files/en-us/web/css/@media')
 const extractMediaFeatures = (mediaFeatureName: string, content: string) => {
-  const description =
-    extractContentBetween(content, '\n{{CSSRef}}\n\n', '\n') ??
-    extractContentBetween(content, '\n{{CSSRef}} {{deprecated_header}}\n\n', '\n') ??
-    extractContentBetween(content, '\n{{CSSRef}}{{SeeCompatTable}}\n\n', '\n')
+  const descriptionSection =
+    extractContentBetween(content, '\n{{CSSRef}}\n\n', '\n\n#') ??
+    extractContentBetween(content, '\n{{CSSRef}} {{deprecated_header}}\n\n', '\n\n#') ??
+    extractContentBetween(content, '\n{{CSSRef}}{{SeeCompatTable}}\n\n', '\n\n#')
+  const description = descriptionSection && firstNormalLine(descriptionSection)
   if (description === null) {
     console.error(`Cannot find proper description for media feature "${mediaFeatureName}".`)
     return
@@ -467,6 +481,8 @@ fs.readdirSync(mediaDir).forEach((mediaFeatureName) => {
   const content = fs.readFileSync(mediaFeaturePath, { encoding: 'utf8' })
   extractMediaFeatures(mediaFeatureName, content)
 })
+
+// TODO extract pseudo and properties
 
 // finish
 fs.closeSync(outFile)

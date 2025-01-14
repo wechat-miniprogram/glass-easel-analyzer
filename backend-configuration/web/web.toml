@@ -4875,19 +4875,19 @@ reference = "https://developer.mozilla.org/en-US/web/css/@media/color-index"
 [[media-feature]]
 name = "device-aspect-ratio"
 ty = "range"
-description = '''> [!NOTE]'''
+description = '''The **`device-aspect-ratio`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the width-to-height [aspect ratio](https://developer.mozilla.org/en-US/docs/Glossary/aspect_ratio) of an output device.'''
 reference = "https://developer.mozilla.org/en-US/web/css/@media/device-aspect-ratio"
 
 [[media-feature]]
 name = "device-height"
 ty = "range"
-description = '''> [!NOTE]'''
+description = '''The **`device-height`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the height of an output device's rendering surface.'''
 reference = "https://developer.mozilla.org/en-US/web/css/@media/device-height"
 
 [[media-feature]]
 name = "device-width"
 ty = "range"
-description = '''> [!NOTE]'''
+description = '''The **`device-width`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the width of an output device's rendering surface.'''
 reference = "https://developer.mozilla.org/en-US/web/css/@media/device-width"
 
 [[media-feature]]
@@ -4987,14 +4987,14 @@ reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-contrast
 name = "prefers-reduced-data"
 ty = "any"
 options = ["no-preference", "reduce"]
-description = '''> [!NOTE]'''
+description = '''The **`prefers-reduced-data`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to detect if the user has requested the web content that consumes less internet traffic.'''
 reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-reduced-data"
 
 [[media-feature]]
 name = "prefers-reduced-motion"
 ty = "any"
 options = ["no-preference", "reduce"]
-description = '''> [!WARNING]'''
+description = '''The **`prefers-reduced-motion`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to detect if a user has enabled a setting on their device to minimize the amount of non-essential motion. The setting is used to convey to the browser on the device that the user prefers an interface that removes, reduces, or replaces motion-based animations.'''
 reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-reduced-motion"
 
 [[media-feature]]
