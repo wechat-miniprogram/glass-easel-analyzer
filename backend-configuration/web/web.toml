@@ -4810,3 +4810,244 @@ description = '''## Summary'''
 reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/xmp"
 deprecated = true
 
+
+[[media-type]]
+name = "all"
+description = '''Suitable for all devices.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media"
+
+[[media-type]]
+name = "print"
+description = '''Intended for paged material and documents viewed on a screen in print preview mode. (Please see [paged media](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_paged_media) for information about formatting issues that are specific to these formats.)'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media"
+
+[[media-type]]
+name = "screen"
+description = '''Intended primarily for screens.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media"
+
+
+[[media-feature]]
+name = "any-hover"
+ty = "any"
+options = ["none", "hover"]
+description = '''The **`any-hover`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test whether _any_ available input mechanism can hover over elements.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/any-hover"
+
+[[media-feature]]
+name = "any-pointer"
+ty = "any"
+options = ["none", "coarse", "fine"]
+description = '''The **`any-pointer`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) tests whether the user has _any_ pointing device (such as a mouse), and if so, how accurate it is.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/any-pointer"
+
+[[media-feature]]
+name = "aspect-ratio"
+ty = "range"
+description = '''The **`aspect-ratio`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the [aspect ratio](https://developer.mozilla.org/en-US/docs/Glossary/aspect_ratio) of the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/viewport).'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/aspect-ratio"
+
+[[media-feature]]
+name = "aural"
+ty = "any"
+description = '''The `aural` [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media type](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_types) is used for devices that have speech output capabilities.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/aural"
+
+[[media-feature]]
+name = "color"
+ty = "range"
+description = '''The **`color`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the number of bits per color component (red, green, blue) of the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/color"
+
+[[media-feature]]
+name = "color-gamut"
+ty = "any"
+options = ["srgb", "p3", "rec2020"]
+description = '''The **`color-gamut`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to apply CSS styles based on the approximate range of color [gamut](https://developer.mozilla.org/en-US/docs/Glossary/gamut) supported by the [user agent](https://developer.mozilla.org/en-US/docs/Glossary/user_agent) and the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/color-gamut"
+
+[[media-feature]]
+name = "color-index"
+ty = "range"
+description = '''The **`color-index`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the number of entries in the output device's color lookup table.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/color-index"
+
+[[media-feature]]
+name = "device-aspect-ratio"
+ty = "range"
+description = '''> [!NOTE]'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/device-aspect-ratio"
+
+[[media-feature]]
+name = "device-height"
+ty = "range"
+description = '''> [!NOTE]'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/device-height"
+
+[[media-feature]]
+name = "device-width"
+ty = "range"
+description = '''> [!NOTE]'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/device-width"
+
+[[media-feature]]
+name = "display-mode"
+ty = "any"
+options = ["browser", "fullscreen", "minimal-ui", "picture-in-picture", "standalone", "window-controls-overlay"]
+description = '''The **`display-mode`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test whether a web app is being displayed in a normal browser tab or in some alternative way, such as a standalone app or fullscreen mode.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/display-mode"
+
+[[media-feature]]
+name = "dynamic-range"
+ty = "any"
+options = ["standard", "high"]
+description = '''The **`dynamic-range`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the combination of brightness, contrast ratio, and color depth that are supported by the [user agent](https://developer.mozilla.org/en-US/docs/Glossary/user_agent) and the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/dynamic-range"
+
+[[media-feature]]
+name = "forced-colors"
+ty = "any"
+description = '''The **`forced-colors`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to detect if the [user agent](https://developer.mozilla.org/en-US/docs/Glossary/user_agent) has enabled a forced colors mode where it enforces a user-chosen limited color palette on the page. An example of a forced colors mode is Windows High Contrast mode.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/forced-colors"
+
+[[media-feature]]
+name = "grid"
+ty = "any"
+description = '''The **`grid`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test whether the output device uses a grid-based screen.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/grid"
+
+[[media-feature]]
+name = "height"
+ty = "range"
+description = '''The **`height`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to apply styles based on the height of the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/viewport) (or the page box, for [paged media](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_paged_media)).'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/height"
+
+[[media-feature]]
+name = "hover"
+ty = "any"
+options = ["none", "hover"]
+description = '''The **`hover`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test whether the user's _primary_ input mechanism can hover over elements.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/hover"
+
+[[media-feature]]
+name = "inverted-colors"
+ty = "any"
+options = ["none", "inverted"]
+description = '''The **`inverted-colors`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to test if the [user agent](https://developer.mozilla.org/en-US/docs/Glossary/user_agent) or the underlying operating system has inverted all colors.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/inverted-colors"
+
+[[media-feature]]
+name = "monochrome"
+ty = "range"
+description = '''The **`monochrome`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the number of bits per pixel in the monochrome frame buffer of the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/monochrome"
+
+[[media-feature]]
+name = "orientation"
+ty = "any"
+description = '''The **`orientation`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the orientation of the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/viewport) (or the page box, for [paged media](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_paged_media)).'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/orientation"
+
+[[media-feature]]
+name = "overflow-block"
+ty = "any"
+options = ["none", "scroll", "optional-paged", "paged"]
+description = '''The **`overflow-block`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test how the output device handles content that overflows the initial [containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block) along the block axis.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/overflow-block"
+
+[[media-feature]]
+name = "overflow-inline"
+ty = "any"
+options = ["none", "scroll"]
+description = '''The **`overflow-inline`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test how the output device handles content that overflows the initial [containing block](https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block) along the inline axis.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/overflow-inline"
+
+[[media-feature]]
+name = "pointer"
+ty = "any"
+options = ["none", "coarse", "fine"]
+description = '''The **`pointer`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) tests whether the user has a pointing device (such as a mouse), and if so, how accurate the _primary_ pointing device is.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/pointer"
+
+[[media-feature]]
+name = "prefers-color-scheme"
+ty = "any"
+options = ["light", "dark"]
+description = '''The **`prefers-color-scheme`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries#targeting_media_features) is used to detect if a user has requested light or dark color themes.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-color-scheme"
+
+[[media-feature]]
+name = "prefers-contrast"
+ty = "any"
+options = ["no-preference", "more", "less", "custom"]
+description = '''The **`prefers-contrast`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to detect whether the user has requested the web content to be presented with a lower or higher contrast.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-contrast"
+
+[[media-feature]]
+name = "prefers-reduced-data"
+ty = "any"
+options = ["no-preference", "reduce"]
+description = '''> [!NOTE]'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-reduced-data"
+
+[[media-feature]]
+name = "prefers-reduced-motion"
+ty = "any"
+options = ["no-preference", "reduce"]
+description = '''> [!WARNING]'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-reduced-motion"
+
+[[media-feature]]
+name = "prefers-reduced-transparency"
+ty = "any"
+options = ["no-preference", "reduce"]
+description = '''The **`prefers-reduced-transparency`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to detect if a user has enabled a setting on their device to reduce the transparent or translucent layer effects used on the device. Switching on such a setting can help improve contrast and readability for some users.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/prefers-reduced-transparency"
+
+[[media-feature]]
+name = "resolution"
+ty = "range"
+description = '''The **`resolution`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the pixel density of the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/resolution"
+
+[[media-feature]]
+name = "scan"
+ty = "any"
+options = ["interlace", "progressive"]
+description = '''The **`scan`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) is used to apply CSS styles based on the scanning process of the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/scan"
+
+[[media-feature]]
+name = "scripting"
+ty = "any"
+options = ["none", "initial-only", "enabled"]
+description = '''The **`scripting`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test whether scripting (such as JavaScript) is available.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/scripting"
+
+[[media-feature]]
+name = "shape"
+ty = "any"
+options = ["rect", "round"]
+description = '''The `shape` [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the shape of the device to distinguish rectangular and round displays.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/shape"
+
+[[media-feature]]
+name = "update"
+ty = "any"
+options = ["none", "slow", "fast"]
+description = '''The **`update`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test how frequently (if at all) the output device is able to modify the appearance of content once rendered.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/update"
+
+[[media-feature]]
+name = "video-dynamic-range"
+ty = "any"
+options = ["standard", "high"]
+description = '''The **`video-dynamic-range`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the combination of brightness, contrast ratio, and color depth that are supported by the video plane of the [user agent](https://developer.mozilla.org/en-US/docs/Glossary/user_agent) and the output device.'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/video-dynamic-range"
+
+[[media-feature]]
+name = "width"
+ty = "range"
+description = '''The **`width`** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) [media feature](https://developer.mozilla.org/en-US/docs/Web/CSS/@media#media_features) can be used to test the width of the [viewport](https://developer.mozilla.org/en-US/docs/Glossary/viewport) (or the page box, for [paged media](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_paged_media)).'''
+reference = "https://developer.mozilla.org/en-US/web/css/@media/width"
+

@@ -4,13 +4,15 @@ import path from 'node:path'
 
 const mdnDir = path.join(__dirname, 'mdn')
 
-// utils
+// utils: check if the content contains any deprecated sign
 const hasDeprecatedSign = (content: string) => {
   if (content.includes('{{Deprecated_Inline}}')) return true
   if (content.includes('{{deprecated_inline}}')) return true
   if (content.includes('{{Deprecated_inline}}')) return true
   return false
 }
+
+// utils: extract string content between two signs (excluded)
 const extractContentBetween = (
   fullContent: string,
   startSign: string,
@@ -23,6 +25,8 @@ const extractContentBetween = (
   if (end < 0) return null
   return fullContent.slice(start, end)
 }
+
+// utils: extract markdown cascade list (`- ...`), dropping lines that are not in the list
 type CascadeListItem = {
   content: string
   children: CascadeListItem[]
@@ -392,6 +396,76 @@ fs.readdirSync(elementDir).forEach((tagName) => {
   } else {
     extractElementFromContent(tagName, content)
   }
+})
+
+// extract media types
+fs.writeSync(outFile, `\n`)
+const extractMediaTypes = () => {
+  const reference = 'https://developer.mozilla.org/en-US/web/css/@media'
+  const mediaIntroFile = path.join(mdnDir, 'files/en-us/web/css/@media/index.md')
+  const mediaIntro = fs.readFileSync(mediaIntroFile, { encoding: 'utf8' })
+  const mediaTypeSection = extractContentBetween(mediaIntro, '\n### Media types\n\n', '\n\n#')
+  if (mediaTypeSection === null) {
+    console.error(`Cannot find proper media types section in file "${mediaIntroFile}".`)
+    return
+  }
+  for (const item of extractCascadeLists(mediaTypeSection)) {
+    const typeName = extractContentBetween(item.content, '`', '`')
+    const typeDescLine = item.children[0]
+    if (!typeDescLine || !typeDescLine.content.startsWith(': ')) {
+      console.error(`Cannot find a proper media type content for media type "${typeName}".`)
+      return
+    }
+    const description = typeDescLine.content.slice(2)
+    console.info(`Media Type: ${typeName}`)
+    fs.writeSync(outFile, '[[media-type]]\n')
+    fs.writeSync(outFile, `name = "${typeName}"\n`)
+    writeDescriptionLine(description)
+    fs.writeSync(outFile, `reference = "${reference}"\n`)
+    fs.writeSync(outFile, `\n`)
+  }
+}
+extractMediaTypes()
+
+// extract media features
+fs.writeSync(outFile, `\n`)
+const mediaDir = path.join(mdnDir, 'files/en-us/web/css/@media')
+const extractMediaFeatures = (mediaFeatureName: string, content: string) => {
+  const description =
+    extractContentBetween(content, '\n{{CSSRef}}\n\n', '\n') ??
+    extractContentBetween(content, '\n{{CSSRef}} {{deprecated_header}}\n\n', '\n') ??
+    extractContentBetween(content, '\n{{CSSRef}}{{SeeCompatTable}}\n\n', '\n')
+  if (description === null) {
+    console.error(`Cannot find proper description for media feature "${mediaFeatureName}".`)
+    return
+  }
+  const reference = `https://developer.mozilla.org/en-US/web/css/@media/${mediaFeatureName}`
+  const ty = content.indexOf(`min-${mediaFeatureName}`) >= 0 ? 'range' : 'any'
+  const syntaxSection = extractContentBetween(content, '\n## Syntax\n\n', '\n\n#')
+  if (syntaxSection === null) {
+    console.error(`Cannot find syntax section for media feature "${mediaFeatureName}".`)
+    return
+  }
+  const options: string[] = []
+  for (const item of extractCascadeLists(syntaxSection)) {
+    const valueName = extractContentBetween(item.content, '`', '`')
+    if (valueName) options.push(valueName)
+  }
+  console.info(`Media Feature: ${mediaFeatureName}`)
+  fs.writeSync(outFile, '[[media-feature]]\n')
+  fs.writeSync(outFile, `name = "${mediaFeatureName}"\n`)
+  fs.writeSync(outFile, `ty = "${ty}"\n`)
+  if (options.length) fs.writeSync(outFile, `options = ["${options.join('", "')}"]\n`)
+  writeDescriptionLine(description)
+  fs.writeSync(outFile, `reference = "${reference}"\n`)
+  fs.writeSync(outFile, `\n`)
+}
+fs.readdirSync(mediaDir).forEach((mediaFeatureName) => {
+  if (mediaFeatureName.indexOf('.') >= 0) return
+  if (mediaFeatureName.startsWith('-')) return
+  const mediaFeaturePath = path.join(mediaDir, mediaFeatureName, 'index.md')
+  const content = fs.readFileSync(mediaFeaturePath, { encoding: 'utf8' })
+  extractMediaFeatures(mediaFeatureName, content)
 })
 
 // finish

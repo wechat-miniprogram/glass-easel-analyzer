@@ -89,6 +89,7 @@ reference = "https://example.com/media-feature/width"
 
 [[media-feature]]
 name = "prefers-color-scheme"
+ty = "any"
 options = ["light", "dark"]
 description = "The current color scheme."
 
