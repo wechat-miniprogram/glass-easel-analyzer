@@ -1,6 +1,7 @@
 use context::{backend_configuration::BackendConfig, project::Project, ServerContext};
 use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response, ResponseError};
 
+mod color;
 mod completion;
 mod context;
 mod file;
@@ -46,6 +47,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
         references_provider: Some(lsp_types::OneOf::Left(true)),
         // document_highlight_provider: Some(lsp_types::OneOf::Left(true)),
         document_symbol_provider: Some(lsp_types::OneOf::Left(true)),
+        color_provider: Some(lsp_types::ColorProviderCapability::Simple(true)),
         folding_range_provider: Some(lsp_types::FoldingRangeProviderCapability::Simple(true)),
         semantic_tokens_provider: Some(
             lsp_types::SemanticTokensServerCapabilities::SemanticTokensOptions(lsp_types::SemanticTokensOptions {
@@ -92,6 +94,8 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     handler!("textDocument/documentSymbol", symbol::document_symbol);
     handler!("textDocument/hover", hover::hover);
     handler!("textDocument/completion", completion::completion);
+    handler!("textDocument/documentColor", color::color);
+    handler!("textDocument/colorPresentation", color::color_presentation);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);

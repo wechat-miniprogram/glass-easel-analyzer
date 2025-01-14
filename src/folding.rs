@@ -96,11 +96,11 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
 }
 
 fn collect_wxss_folding_ranges(sheet: &StyleSheet) -> Vec<FoldingRange> {
-    let mut ranges = Vec::with_capacity(sheet.comments.len() + sheet.brace_locations.len());
+    let mut ranges = Vec::with_capacity(sheet.comments.len() + sheet.special_locations.braces.len());
     for comment in sheet.comments.iter() {
         ranges.push(convert_folding_range(comment.location.clone(), Some(FoldingRangeKind::Comment)));
     }
-    for loc in sheet.brace_locations.iter() {
+    for loc in sheet.special_locations.braces.iter() {
         ranges.push(convert_folding_range(loc.clone(), None));
     }
     ranges

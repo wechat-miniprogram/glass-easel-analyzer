@@ -40,7 +40,13 @@ impl<C: CSSParse> CSSParse for Box<C> {
 pub(crate) struct StyleSheet {
     pub(crate) items: Vec<Rule>,
     pub(crate) comments: Vec<Comment>,
-    pub(crate) brace_locations: Vec<Location>,
+    pub(crate) special_locations: StyleSheetSpecialLocations,
+}
+
+#[derive(Debug, Clone, Default)]
+pub(crate) struct StyleSheetSpecialLocations {
+    pub(crate) braces: Vec<Location>,
+    pub(crate) colors: Vec<(cssparser_color::Color, Location)>,
 }
 
 impl StyleSheet {
@@ -55,7 +61,7 @@ impl StyleSheet {
         let ret = Self {
             items,
             comments: pso.extract_comments(),
-            brace_locations: pso.extract_brace_locations(),
+            special_locations: pso.extract_special_locations(),
         };
         let warnings = pso.extract_warnings();
         (ret, warnings)
@@ -312,7 +318,7 @@ mod state {
         src: String,
         warnings: Vec<ParseError>,
         comments: Vec<Comment>,
-        brace_locations: Vec<Location>,
+        special_locations: StyleSheetSpecialLocations,
     }
 
     impl ParseStateOwned {
@@ -321,12 +327,12 @@ mod state {
                 src,
                 warnings: vec![],
                 comments: vec![],
-                brace_locations: vec![],
+                special_locations: Default::default(),
             }
         }
 
         pub(super) fn run<'s>(&'s mut self, f: impl for<'a, 'b, 'c> FnOnce(&mut ParseState<'a, 'b, 'c>)) {
-            let Self { src, warnings, comments, brace_locations, .. } = self;
+            let Self { src, warnings, comments, special_locations, .. } = self;
             let mut input = cssparser::ParserInput::new(src);
             let mut parser = cssparser::Parser::<'s, '_>::new(&mut input);
             let _ = parser.parse_entirely::<_, _, ()>(|parser| {
@@ -334,7 +340,7 @@ mod state {
                     parser,
                     warnings,
                     comments,
-                    brace_locations,
+                    special_locations,
                 };
                 f(&mut ps);
                 while ps.next().is_some() {
@@ -352,8 +358,8 @@ mod state {
             std::mem::replace(&mut self.comments, vec![])
         }
 
-        pub(super) fn extract_brace_locations(&mut self) -> Vec<Location> {
-            std::mem::replace(&mut self.brace_locations, vec![])
+        pub(super) fn extract_special_locations(&mut self) -> StyleSheetSpecialLocations {
+            std::mem::replace(&mut self.special_locations, Default::default())
         }
     }
 
@@ -466,7 +472,7 @@ mod state {
         parser: &'c mut cssparser::Parser<'a, 'b>,
         warnings: &'c mut Vec<ParseError>,
         comments: &'c mut Vec<Comment>,
-        brace_locations: &'c mut Vec<Location>,
+        special_locations: &'c mut StyleSheetSpecialLocations,
     }
 
     impl<'a, 'b, 'c> ParseState<'a, 'b, 'c> {
@@ -528,10 +534,22 @@ mod state {
                 parser: &mut cssparser::Parser<'a, 'b>,
                 warnings: &mut Vec<ParseError>,
                 comments: &mut Vec<Comment>,
-                brace_locations: &mut Vec<Location>,
+                special_locations: &mut StyleSheetSpecialLocations,
             ) -> Option<TokenTree> {
                 loop {
                     let start_pos = parser_position(&parser);
+                    {
+                        // try parse color, and then revert to corrent position
+                        let state = parser.state();
+                        parser.skip_whitespace();
+                        if parser.position().byte_index() == state.position().byte_index() {
+                            if let Ok(color) = cssparser_color::Color::parse(parser) {
+                                let location = start_pos..parser_position(&parser);
+                                special_locations.colors.push((color, location));
+                            }
+                        }
+                        parser.reset(&state);
+                    }
                     let next = parser.next_including_whitespace_and_comments().cloned();
                     let end_pos = parser_position(&parser);
                     let location = start_pos..end_pos;
@@ -579,7 +597,7 @@ mod state {
                             if token.children().is_some() {
                                 let mut children = vec![];
                                 let _ = parser.parse_nested_block::<_, _, ()>(|parser| {
-                                    while let Some(token) = rec(parser, warnings, comments, brace_locations) {
+                                    while let Some(token) = rec(parser, warnings, comments, special_locations) {
                                         children.push(token);
                                     }
                                     Ok(())
@@ -602,7 +620,7 @@ mod state {
                                     TokenTree::Brace(x) => {
                                         x.children = children;
                                         x.right = location;
-                                        brace_locations.push(x.left.end..x.right.start);
+                                        special_locations.braces.push(x.left.end..x.right.start);
                                     }
                                     _ => unreachable!(),
                                 }
@@ -612,7 +630,7 @@ mod state {
                     }
                 }
             }
-            rec(&mut self.parser, &mut self.warnings, &mut self.comments, &mut self.brace_locations)
+            rec(&mut self.parser, &mut self.warnings, &mut self.comments, &mut self.special_locations)
         }
 
         /// Get the next non-comment token.
@@ -707,13 +725,13 @@ mod state {
             reset_state: cssparser::ParserState,
             f: impl FnOnce(&mut ParseState) -> Option<R>,
         ) -> Option<(R, Vec<TokenTree>, Location)> {
-            let Self { parser, warnings, comments, brace_locations } = self;
+            let Self { parser, warnings, comments, special_locations } = self;
             let ret = parser.parse_nested_block::<_, _, ()>(|parser| {
                 let mut ps = ParseState {
                     parser,
                     warnings,
                     comments,
-                    brace_locations,
+                    special_locations,
                 };
                 let Some(r) = f(&mut ps) else {
                     return Err(ps.parser.new_error_for_next_token());
@@ -797,7 +815,7 @@ mod state {
             if right.is_empty() {
                 self.add_warning(ParseErrorKind::UnmatchedBrace, left.clone());
             }
-            self.brace_locations.push(left.end..right.start);
+            self.special_locations.braces.push(left.end..right.start);
             Some(Brace { children, left, right, trailing })
         }
     }
