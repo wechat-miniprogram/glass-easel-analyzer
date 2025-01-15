@@ -289,7 +289,7 @@ const extractEventList = (content: string): EventDesc[] => {
       ret.push({
         name: evName,
         description,
-        reference: `https://developer.mozilla.org/en-US/docs/Web/API/${relPath}`,
+        reference: `https://developer.mozilla.org/en-US/docs/Web/API/${relPath.replace('.', '/')}`,
         deprecated: hasDeprecatedSign(seg.content),
       })
     })

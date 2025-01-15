@@ -3885,7 +3885,7 @@ reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot#attr
 [[element.event]]
 name = "slotchange"
 description = '''Fired on an `HTMLSlotElement` instance ([`<slot>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot) element) when the node(s) contained in that slot change.'''
-reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement.slotchange_event"
+reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement/slotchange_event"
 
 
 [[element]]
@@ -4633,7 +4633,7 @@ reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/track#att
 [[element.event]]
 name = "cuechange"
 description = '''Sent when the underlying [TextTrack](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack) has changed the currently-presented cues. This event is always sent to the `TextTrack` but is _also_ sent to the `HTMLTrackElement` if one is associated with the track.'''
-reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLTrackElement.cuechange_event"
+reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLTrackElement/cuechange_event"
 
 
 [[element]]
@@ -4783,17 +4783,17 @@ reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video#att
 [[element.event]]
 name = "enterpictureinpicture"
 description = '''Fired when the `HTMLVideoElement` enters picture-in-picture mode successfully.'''
-reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement.enterpictureinpicture_event"
+reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/enterpictureinpicture_event"
 
 [[element.event]]
 name = "leavepictureinpicture"
 description = '''Fired when the `HTMLVideoElement` leaves picture-in-picture mode successfully.'''
-reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement.leavepictureinpicture_event"
+reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/leavepictureinpicture_event"
 
 [[element.event]]
 name = "resize"
 description = '''Fires when one or both of the [videoWidth](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement.videoWidth) and [videoHeight](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement.videoHeight) properties have just been updated.'''
-reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement.resize_event"
+reference = "https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/resize_event"
 
 
 [[element]]
