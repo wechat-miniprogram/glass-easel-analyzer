@@ -9,6 +9,9 @@ const hasDeprecatedSign = (content: string) => {
   if (content.includes('{{Deprecated_Inline}}')) return true
   if (content.includes('{{deprecated_inline}}')) return true
   if (content.includes('{{Deprecated_inline}}')) return true
+  if (content.includes('{{Deprecated_Header}}')) return true
+  if (content.includes('{{deprecated_header}}')) return true
+  if (content.includes('{{Deprecated_header}}')) return true
   return false
 }
 
@@ -20,9 +23,21 @@ const firstNormalLine = (fullContent: string): string | null => {
     if (s.startsWith('> ')) continue
     if (s.startsWith('- ')) continue
     if (s.startsWith('* ')) continue
+    if (s.startsWith('{{')) continue
     return s
   }
   return null
+}
+
+// utils: extract the first description line for the file
+const extractFirstDescriptionLine = (fullContent: string) => {
+  const descriptionSection = extractContentBetween(fullContent, '---\n\n', '\n\n#')
+  if (!descriptionSection) return null
+  const first = firstNormalLine(descriptionSection)
+  if (first) return first
+  const descriptionSection2 = extractContentBetween(fullContent, '## Summary\n\n', '\n\n#')
+  if (!descriptionSection2) return null
+  return firstNormalLine(descriptionSection2)
 }
 
 // utils: extract string content between two signs (excluded)
@@ -119,6 +134,14 @@ const writeDescriptionLine = (content: string) => {
         }
         if (cmd === 'httpmethod') {
           const url = `https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'svgelement') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/SVG/Element/${pathSeg}`
+          return `[${title}](${url})`
+        }
+        if (cmd === 'svgattr') {
+          const url = `https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/${pathSeg}`
           return `[${title}](${url})`
         }
       }
@@ -305,23 +328,10 @@ fs.writeSync(outFile, `\n`)
 const elementDir = path.join(mdnDir, 'files/en-us/web/html/element')
 const extractElementFromContent = (tagName: string, content: string) => {
   // extract basic information
-  let deprecated = false
-  let description =
-    extractContentBetween(content, '{{HTMLSidebar}}\n\n', '\n\n') ??
-    extractContentBetween(content, '{{HTMLSidebar}}{{SeeCompatTable}}\n\n', '\n\n')
-  // extractContentBetween(content, '{{HTMLSidebar}}\n\n', '\n\n## ') ??
-  // extractContentBetween(content, '{{HTMLSidebar}}\n\n', '\n\n{{EmbedInteractiveExample(') ??
-  // extractContentBetween(content, '{{HTMLSidebar}}{{SeeCompatTable}}\n\n', '\n\n## ')
+  const description = extractFirstDescriptionLine(content)
   if (description === null) {
-    description =
-      extractContentBetween(content, '{{HTMLSidebar}}{{deprecated_header}}\n\n', '\n\n') ??
-      extractContentBetween(content, '{{HTMLSidebar}}{{Deprecated_header}}\n\n', '\n\n') ??
-      extractContentBetween(content, '{{HTMLSidebar}}{{Deprecated_Header}}\n\n', '\n\n')
-    if (description === null) {
-      console.error(`Cannot find description for tag "${tagName}". Skipped this tag.`)
-      return
-    }
-    deprecated = true
+    console.error(`Cannot find description for tag "${tagName}". Skipped this tag.`)
+    return
   }
   const reference = `https://developer.mozilla.org/en-US/docs/Web/HTML/Element/${tagName}`
   console.info(`Element: ${tagName}`)
@@ -329,7 +339,7 @@ const extractElementFromContent = (tagName: string, content: string) => {
   fs.writeSync(outFile, `tag-name = "${tagName}"\n`)
   writeDescriptionLine(description)
   fs.writeSync(outFile, `reference = "${reference}"\n`)
-  if (deprecated) {
+  if (hasDeprecatedSign(extractContentBetween(content, '---\n\n', '\n\n#')!)) {
     fs.writeSync(outFile, `deprecated = true\n`)
   }
   fs.writeSync(outFile, `\n`)
@@ -444,11 +454,7 @@ extractMediaTypes()
 fs.writeSync(outFile, `\n`)
 const mediaDir = path.join(mdnDir, 'files/en-us/web/css/@media')
 const extractMediaFeatures = (mediaFeatureName: string, content: string) => {
-  const descriptionSection =
-    extractContentBetween(content, '\n{{CSSRef}}\n\n', '\n\n#') ??
-    extractContentBetween(content, '\n{{CSSRef}} {{deprecated_header}}\n\n', '\n\n#') ??
-    extractContentBetween(content, '\n{{CSSRef}}{{SeeCompatTable}}\n\n', '\n\n#')
-  const description = descriptionSection && firstNormalLine(descriptionSection)
+  const description = extractFirstDescriptionLine(content)
   if (description === null) {
     console.error(`Cannot find proper description for media feature "${mediaFeatureName}".`)
     return
@@ -482,7 +488,89 @@ fs.readdirSync(mediaDir).forEach((mediaFeatureName) => {
   extractMediaFeatures(mediaFeatureName, content)
 })
 
-// TODO extract pseudo and properties
+// extract pseudo classes and elements
+fs.writeSync(outFile, `\n`)
+const cssDir = path.join(mdnDir, 'files/en-us/web/css')
+const extractPseudoClass = (pseudoClassName: string, content: string) => {
+  const description = extractFirstDescriptionLine(content)
+  if (description === null) {
+    console.error(`Cannot find description for pseudo class "${pseudoClassName}".`)
+    return
+  }
+  const reference = `https://developer.mozilla.org/en-US/web/css/:${pseudoClassName}`
+  console.info(`Pseudo Class: ${pseudoClassName}`)
+  fs.writeSync(outFile, '[[pseudo-class]]\n')
+  fs.writeSync(outFile, `name = "${pseudoClassName}"\n`)
+  writeDescriptionLine(description)
+  fs.writeSync(outFile, `reference = "${reference}"\n`)
+  fs.writeSync(outFile, `\n`)
+}
+const extractPseudoElement = (pseudoElementName: string, content: string) => {
+  const description = extractFirstDescriptionLine(content)
+  if (description === null) {
+    console.error(`Cannot find description for pseudo element "${pseudoElementName}".`)
+    return
+  }
+  const reference = `https://developer.mozilla.org/en-US/web/css/::${pseudoElementName}`
+  console.info(`Pseudo Class: ${pseudoElementName}`)
+  fs.writeSync(outFile, '[[pseudo-element]]\n')
+  fs.writeSync(outFile, `name = "${pseudoElementName}"\n`)
+  writeDescriptionLine(description)
+  fs.writeSync(outFile, `reference = "${reference}"\n`)
+  fs.writeSync(outFile, `\n`)
+}
+fs.readdirSync(cssDir).forEach((fileName) => {
+  if (fileName.startsWith('_colon_')) {
+    const pseudoName = fileName.slice('_colon_'.length)
+    if (pseudoName.startsWith('-')) return
+    const pseudoPath = path.join(cssDir, fileName, 'index.md')
+    const content = fs.readFileSync(pseudoPath, { encoding: 'utf8' })
+    extractPseudoClass(pseudoName, content)
+  }
+  if (fileName.startsWith('_doublecolon_')) {
+    const pseudoName = fileName.slice('_doublecolon_'.length)
+    if (pseudoName.startsWith('-')) return
+    const pseudoPath = path.join(cssDir, fileName, 'index.md')
+    const content = fs.readFileSync(pseudoPath, { encoding: 'utf8' })
+    extractPseudoElement(pseudoName, content)
+  }
+})
+
+// extract style properties
+fs.writeSync(outFile, `\n`)
+const extractStyleProperty = (propName: string, content: string) => {
+  const description = extractFirstDescriptionLine(content)
+  if (description === null) {
+    console.error(`Cannot find description for pseudo class "${propName}".`)
+    return
+  }
+  const reference = `https://developer.mozilla.org/en-US/web/css/${propName}`
+  const options: string[] = []
+  const valuesSection = extractContentBetween(content, '\n### Values\n\n', '\n\n#')
+  if (valuesSection) {
+    for (const item of extractCascadeLists(valuesSection)) {
+      const valueName = extractContentBetween(item.content, '`', '`')
+      if (valueName && /^[-a-zA-Z0-9]+$/.test(valueName)) options.push(valueName)
+    }
+  }
+  console.info(`Style Property: ${propName}`)
+  fs.writeSync(outFile, '[[style-property]]\n')
+  fs.writeSync(outFile, `name = "${propName}"\n`)
+  if (options.length) fs.writeSync(outFile, `options = ["${options.join('", "')}"]\n`)
+  writeDescriptionLine(description)
+  fs.writeSync(outFile, `reference = "${reference}"\n`)
+  fs.writeSync(outFile, `\n`)
+}
+fs.readdirSync(cssDir).forEach((fileName) => {
+  if (fileName.includes('.')) return
+  if (fileName.startsWith('_')) return
+  const pseudoPath = path.join(cssDir, fileName, 'index.md')
+  const content = fs.readFileSync(pseudoPath, { encoding: 'utf8' })
+  const ty = extractContentBetween(content, '\npage-type: ', '\n')
+  if (ty === 'css-property' || ty === 'css-shorthand-property') {
+    extractStyleProperty(fileName, content)
+  }
+})
 
 // finish
 fs.closeSync(outFile)
