@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
+use std::{collections::{HashMap, HashSet}, path::{Path, PathBuf}, sync::Arc};
 
 use futures::StreamExt;
 use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
@@ -431,6 +431,54 @@ impl Project {
             }
         }
         Some(names)
+    }
+
+    pub(crate) fn import_and_include_templates(&self, abs_path: &Path, template: &Template, mut f: impl FnMut(&Path, &Template)) {
+        fn rec_import_and_include_templates(
+            visited: &mut HashSet<PathBuf>,
+            project: &Project,
+            abs_path: &Path,
+            template: &Template,
+            f: &mut impl FnMut(&Path, &Template),
+        ) {
+            visited.insert(abs_path.to_path_buf());
+            let imp_iter = template.globals.imports.iter().map(|x| x.src.name.as_str());
+            let inc_iter = template.globals.includes.iter().map(|x| x.src.name.as_str());
+            for rel in imp_iter.chain(inc_iter) {
+                if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
+                    if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
+                        if let Ok(template) = project.get_wxml_tree(&imported_path) {
+                            rec_import_and_include_templates(visited, project, &imported_path, template, f);
+                        }
+                    }
+                }
+            }
+            f(abs_path, template);
+        }
+        rec_import_and_include_templates(&mut HashSet::new(), self, abs_path, template, &mut f);
+    }
+
+    pub(crate) fn import_style_sheets(&self, abs_path: &Path, sheet: &StyleSheet, mut f: impl FnMut(&Path, &StyleSheet)) {
+        fn rec_import_style_sheets(
+            visited: &mut HashSet<PathBuf>,
+            project: &Project,
+            abs_path: &Path,
+            sheet: &StyleSheet,
+            f: &mut impl FnMut(&Path, &StyleSheet),
+        ) {
+            visited.insert(abs_path.to_path_buf());
+            crate::wxss_utils::for_each_import_in_style_sheet(sheet, |rel| {
+                if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
+                    if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
+                        if let Ok(sheet) = project.get_style_sheet(&imported_path) {
+                            rec_import_style_sheets(visited, project, &imported_path, sheet, f);
+                        }
+                    }
+                }
+            });
+            f(abs_path, sheet);
+        }
+        rec_import_style_sheets(&mut HashSet::new(), self, abs_path, sheet, &mut f);
     }
 }
 

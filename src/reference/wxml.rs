@@ -1,32 +1,8 @@
-use std::collections::HashSet;
-
 use glass_easel_template_compiler::parse::{tag::{Element, ElementKind, Ident, Node, StaticAttribute, TemplateDefinition, Value}, Position, Template, TemplateStructure};
 
 use crate::{utils::{add_file_extension, location_to_lsp_range}, wxml_utils::{for_each_scope_ref, for_each_scope_ref_in_subtree, for_each_slot, for_each_static_class_name_in_element, for_each_template_element, insert_element_scopes, ScopeKind, Token}};
 
 use super::*;
-
-pub(super) fn rec_import_and_include_templates(
-    visited: &mut HashSet<PathBuf>,
-    project: &Project,
-    abs_path: &Path,
-    template: &Template,
-    f: &mut impl FnMut(&Path, &Template),
-) {
-    visited.insert(abs_path.to_path_buf());
-    let imp_iter = template.globals.imports.iter().map(|x| x.src.name.as_str());
-    let inc_iter = template.globals.includes.iter().map(|x| x.src.name.as_str());
-    for rel in imp_iter.chain(inc_iter) {
-        if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
-            if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
-                if let Ok(template) = project.get_wxml_tree(&imported_path) {
-                    rec_import_and_include_templates(visited, project, &imported_path, template, f);
-                }
-            }
-        }
-    }
-    f(abs_path, template);
-}
 
 pub(super) fn rec_import_and_include_elements(
     project: &Project,
@@ -34,7 +10,7 @@ pub(super) fn rec_import_and_include_elements(
     template: &Template,
     mut f: impl FnMut(&Path, &Element),
 ) {
-    rec_import_and_include_templates(&mut HashSet::new(), project, abs_path, template, &mut |abs_path, template| {
+    project.import_and_include_templates(abs_path, template, |abs_path, template| {
         for_each_template_element(template, |elem, _| f(abs_path, elem));
     });
 }

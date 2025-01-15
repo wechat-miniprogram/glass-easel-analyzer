@@ -223,10 +223,12 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
                 Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
                 Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
                 Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
+                Selector::IncompleteId(x) => ret.push(x.location(), TokenType::Type, 0),
                 Selector::Class(op, x) => {
                     ret.push(op.location(), TokenType::Operator, 0)
                         && ret.push(x.location(), TokenType::Type, 0)
                 }
+                Selector::IncompleteClass(x) => ret.push(x.location(), TokenType::Type, 0),
                 Selector::Attribute(x) => {
                     find_in_children(ret, TokenType::Operator, x, |ret, children| {
                         find_in_token_tree_list(ret, children)

@@ -105,7 +105,7 @@ fn probably_style_rule_start(tt: &TokenTree) -> bool {
         | TokenTree::Bracket(..) => {
             true
         }
-        TokenTree::Operator(op) if op.is(".") || op.is(":") || op.is("*") || op.is("&") => {
+        TokenTree::Operator(op) if op.is(".") || op.is(":") || op.is("*") || op.is("&") || op.is("#") => {
             true
         }
         _ => false,
@@ -649,13 +649,15 @@ mod state {
 
         /// Get the next token, returning `None` if it is whitespace or comment.
         /// 
+        /// If the next content is whitespace or a comment, `None` is returned.
         /// Note that it will not parse any child inside paren, brackets, brace, and function.
         pub(super) fn peek_with_whitespace(&mut self) -> Option<TokenTree> {
             let state = self.parser.state();
             let start_pos = parser_position(&self.parser);
-            let next = self.parser.next();
+            let next = self.parser.next_including_whitespace_and_comments();
             let ret = match next {
                 Err(_) => None,
+                Ok(CSSToken::WhiteSpace(_) | CSSToken::Comment(_)) => None,
                 Ok(next) => Some(convert_css_token(next, start_pos..start_pos)),
             };
             self.parser.reset(&state);

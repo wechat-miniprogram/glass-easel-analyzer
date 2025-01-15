@@ -34,3 +34,27 @@ Object {
     },
   ],
 }
+// ====== SNAPSHOT 2 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": "a",
+      "kind": "Variable",
+      "label": "a",
+      "sortText": "a",
+    },
+  ],
+}
+// ====== SNAPSHOT 3 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": "b-c",
+      "kind": "Variable",
+      "label": "b-c",
+      "sortText": "b-c",
+    },
+  ],
+}

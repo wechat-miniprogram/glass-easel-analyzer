@@ -1,10 +1,72 @@
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
-use glass_easel_template_compiler::parse::{tag::{ClassAttribute, CommonElementAttributes, Element, ElementKind, Ident, StyleAttribute}, Position};
+use glass_easel_template_compiler::parse::{tag::{ClassAttribute, CommonElementAttributes, Element, ElementKind, Ident, StyleAttribute, Value}, Position};
 use itertools::Itertools;
 use lsp_types::{CompletionItem, CompletionItemKind, CompletionList, CompletionParams, InsertTextFormat};
 
-use crate::{context::{backend_configuration::MediaFeatureType, project::{FileContentMetadata, Project}}, wxml_utils::Token as WxmlToken, wxss_utils::Token as WxssToken, BackendConfig, ServerContext};
+use crate::{context::{backend_configuration::MediaFeatureType, project::{FileContentMetadata, Project}}, wxml_utils::{for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken}, wxss::rule::Selector, wxss_utils::{for_each_selector_in_style_sheet, Token as WxssToken}, BackendConfig, ServerContext};
+
+fn collect_ids_in_wxml(project: &Project, abs_path: &Path) -> HashSet<String> {
+    let mut item_set = HashSet::new();
+    let wxml_path = abs_path.with_extension("wxml");
+    if let Ok(template) = project.get_wxml_tree(&wxml_path) {
+        project.import_and_include_templates(abs_path, template, |_, template| {
+            for_each_template_element(template, |elem, _| {
+                if let ElementKind::Normal { common, .. } = &elem.kind {
+                    if let Some((_, Value::Static { value, .. })) = common.id.as_ref() {
+                        item_set.insert(value.to_string());
+                    }
+                }
+            });
+        });
+    }
+    item_set
+}
+
+fn collect_classes_in_wxml(project: &Project, abs_path: &Path) -> HashSet<String> {
+    let mut item_set = HashSet::new();
+    let wxml_path = abs_path.with_extension("wxml");
+    if let Ok(template) = project.get_wxml_tree(&wxml_path) {
+        project.import_and_include_templates(abs_path, template, |_, template| {
+            for_each_template_element(template, |elem, _| {
+                for_each_static_class_name_in_element(elem, |class_name, _| {
+                    item_set.insert(class_name.to_string());
+                });
+            });
+        });
+    }
+    item_set
+}
+
+fn collect_ids_in_wxss(project: &Project, abs_path: &Path) -> HashSet<String> {
+    let mut item_set = HashSet::new();
+    let wxss_path = abs_path.with_extension("wxss");
+    if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+        project.import_style_sheets(abs_path, sheet, |_, sheet| {
+            for_each_selector_in_style_sheet(sheet, |sel| {
+                if let Selector::Id(x) = sel {
+                    item_set.insert(x.content.to_string());
+                }
+            });
+        });
+    }
+    item_set
+}
+
+fn collect_classes_in_wxss(project: &Project, abs_path: &Path) -> HashSet<String> {
+    let mut item_set = HashSet::new();
+    let wxss_path = abs_path.with_extension("wxss");
+    if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+        project.import_style_sheets(abs_path, sheet, |_, sheet| {
+            for_each_selector_in_style_sheet(sheet, |sel| {
+                if let Selector::Class(_, x) = sel {
+                    item_set.insert(x.content.to_string());
+                }
+            });
+        });
+    }
+    item_set
+}
 
 pub(crate) async fn completion(ctx: ServerContext, params: CompletionParams) -> anyhow::Result<Option<CompletionList>> {
     let backend_config = ctx.backend_config();
@@ -107,7 +169,13 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
             }
             if let ClassAttribute::None = class {
                 let name = "class";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
+                let item_set = collect_classes_in_wxss(project, abs_path);
+                if item_set.is_empty() {
+                    items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
+                } else {
+                    let choices = item_set.into_iter().join(",");
+                    items.push(snippet_completion_item(name, format!("{}=\"${{1|{}|}}\"$0", name, choices), CompletionItemKind::KEYWORD, false));
+                }
             }
             if let StyleAttribute::None = style {
                 let name = "style";
@@ -158,7 +226,13 @@ fn completion_wxml(project: &mut Project, backend_config: &BackendConfig, abs_pa
         if let Some(common) = common {
             if common.id.is_none() {
                 let name = "id";
-                items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
+                let item_set = collect_ids_in_wxss(project, abs_path);
+                if item_set.is_empty() {
+                    items.push(snippet_completion_item(name, format!("{}=\"$0\"", name), CompletionItemKind::KEYWORD, false));
+                } else {
+                    let choices = item_set.into_iter().join(",");
+                    items.push(snippet_completion_item(name, format!("{}=\"${{1|{}|}}\"$0", name, choices), CompletionItemKind::KEYWORD, false));
+                }
             }
             if common.slot.is_none() {
                 let name = "slot";
@@ -362,7 +436,28 @@ fn completion_wxss(project: &mut Project, backend_config: &BackendConfig, abs_pa
             }
             Some(CompletionList { is_incomplete: false, items })
         }
-        // TODO wxml class auto completion
+        WxssToken::IncompleteId(_) | WxssToken::Id(_) => {
+            let item_set = collect_ids_in_wxml(project, abs_path);
+            if item_set.is_empty() {
+                None
+            } else {
+                let items = item_set.into_iter().map(|x| {
+                    simple_completion_item(x, CompletionItemKind::VARIABLE, false)
+                }).collect();
+                Some(CompletionList { is_incomplete: false, items })
+            }
+        }
+        WxssToken::IncompleteClass(_) | WxssToken::Class(_, _) => {
+            let item_set = collect_classes_in_wxml(project, abs_path);
+            if item_set.is_empty() {
+                None
+            } else {
+                let items = item_set.into_iter().map(|x| {
+                    simple_completion_item(x, CompletionItemKind::VARIABLE, false)
+                }).collect();
+                Some(CompletionList { is_incomplete: false, items })
+            }
+        }
         _ => None,
     }
 }

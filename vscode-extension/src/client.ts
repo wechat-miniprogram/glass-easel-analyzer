@@ -9,7 +9,7 @@ import {
 export type ClientOptions = {
   serverPath: string
   backendConfigPath: string
-  ignorePaths: string[] // TODO support ignore
+  ignorePaths: string[]
 }
 
 export class Client {

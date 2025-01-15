@@ -2,7 +2,7 @@
   "name": "glass-easel-analyzer",
   "displayName": "glass-easel-analyzer",
   "description": "glass-easel development tools for Visual Studio Code",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.94.0"
   },

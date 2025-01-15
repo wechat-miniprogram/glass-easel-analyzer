@@ -1,28 +1,6 @@
-use std::collections::HashSet;
-
-use crate::{utils::location_to_lsp_range, wxss::{rule::Selector, Position, StyleSheet}, wxss_utils::{find_token_in_position, for_each_import_in_style_sheet, for_each_selector_in_style_sheet, Token}};
+use crate::{utils::location_to_lsp_range, wxss::{rule::Selector, Position, StyleSheet}, wxss_utils::{find_token_in_position, for_each_selector_in_style_sheet, Token}};
 
 use super::*;
-
-pub(super) fn rec_import_style_sheets(
-    visited: &mut HashSet<PathBuf>,
-    project: &Project,
-    abs_path: &Path,
-    sheet: &StyleSheet,
-    f: &mut impl FnMut(&Path, &StyleSheet),
-) {
-    visited.insert(abs_path.to_path_buf());
-    for_each_import_in_style_sheet(sheet, |rel| {
-        if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
-            if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
-                if let Ok(sheet) = project.get_style_sheet(&imported_path) {
-                    rec_import_style_sheets(visited, project, &imported_path, sheet, f);
-                }
-            }
-        }
-    });
-    f(abs_path, sheet);
-}
 
 pub(super) fn rec_import_selectors(
     project: &Project,
@@ -30,7 +8,7 @@ pub(super) fn rec_import_selectors(
     sheet: &StyleSheet,
     mut f: impl FnMut(&Path, &Selector),
 ) {
-    rec_import_style_sheets(&mut HashSet::new(), project, abs_path, sheet, &mut |abs_path, sheet| {
+    project.import_style_sheets(abs_path, sheet, |abs_path, sheet| {
         for_each_selector_in_style_sheet(sheet, |sel| f(abs_path, sel));
     });
 }

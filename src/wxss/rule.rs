@@ -41,6 +41,8 @@ pub(crate) enum Selector {
     Id(IDHash),
     Class(Operator, Ident),
     Attribute(Bracket<List<TokenTree>>),
+    IncompleteId(Operator),
+    IncompleteClass(Operator),
     NextSibling(Operator),
     Child(Operator),
     Column(Operator, Operator),
@@ -78,8 +80,10 @@ impl CSSParse for Selector {
                     if let Some(TokenTree::Ident(..)) = ps.peek_with_whitespace() {
                         Self::Class(op, CSSParse::css_parse(ps)?)
                     } else {
-                        Self::Unknown(List::from_vec(vec![TokenTree::Operator(op)]))
+                        Self::IncompleteClass(op)
                     }
+                } else if x.is("#") {
+                    Self::IncompleteId(CSSParse::css_parse(ps)?)
                 } else if x.is("+") {
                     Self::NextSibling(CSSParse::css_parse(ps)?)
                 } else if x.is(">") {
@@ -151,6 +155,8 @@ impl CSSParse for Selector {
                 op.location().start..x.location().end
             }
             Self::Attribute(x) => x.location(),
+            Self::IncompleteId(x) => x.location(),
+            Self::IncompleteClass(x) => x.location(),
             Self::NextSibling(x) => x.location(),
             Self::Child(x) => x.location(),
             Self::Column(x, y) => x.location().start..y.location().end,

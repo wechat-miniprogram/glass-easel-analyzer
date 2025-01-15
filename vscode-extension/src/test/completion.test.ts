@@ -22,6 +22,10 @@ const defWxmlCases = [
     ],
   },
   {
+    name: 'core-attribute',
+    args: [new vscode.Position(4, 6)],
+  },
+  {
     name: 'import',
     args: [new vscode.Position(3, 14)],
   },
@@ -42,7 +46,12 @@ const defWxmlCases = [
 const defWxssCases = [
   {
     name: 'style-rule',
-    args: [new vscode.Position(1, 7), new vscode.Position(5, 4)],
+    args: [
+      new vscode.Position(1, 7),
+      new vscode.Position(5, 4),
+      new vscode.Position(11, 1),
+      new vscode.Position(13, 1),
+    ],
   },
   {
     name: 'media',

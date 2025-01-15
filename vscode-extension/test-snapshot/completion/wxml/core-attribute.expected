@@ -1,0 +1,141 @@
+// ====== SNAPSHOT 0 ======
+Object {
+  "isIncomplete": false,
+  "items": Array [
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "class=\"${1|hello-class,hello-class-2|}\"$0",
+      },
+      "kind": "Keyword",
+      "label": "class",
+      "sortText": "class",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "data:$1=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "data:",
+      "sortText": "data:",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "generic:$1=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "generic:",
+      "sortText": "generic:",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "id=\"${1|abc|}\"$0",
+      },
+      "kind": "Keyword",
+      "label": "id",
+      "sortText": "id",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "mark:$1=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "mark:",
+      "sortText": "mark:",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "slot=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "slot",
+      "sortText": "slot",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "slot:$1=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "slot:",
+      "sortText": "slot:",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "style=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "style",
+      "sortText": "style",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:elif=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:elif",
+      "sortText": "wx:elif",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:else=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:else",
+      "sortText": "wx:else",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:for=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:for",
+      "sortText": "wx:for",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:for-index=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:for-index",
+      "sortText": "wx:for-index",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:for-item=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:for-item",
+      "sortText": "wx:for-item",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:if=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:if",
+      "sortText": "wx:if",
+    },
+    Object {
+      "insertText": Object {
+        "e": 1,
+        "value": "wx:key=\"$0\"",
+      },
+      "kind": "Keyword",
+      "label": "wx:key",
+      "sortText": "wx:key",
+    },
+  ],
+}

@@ -19,7 +19,9 @@ pub(crate) enum Token<'a> {
     BadString(&'a BadString),
     TagName(&'a Ident),
     Id(&'a IDHash),
+    IncompleteId(&'a Operator),
     Class(&'a Operator, &'a Ident),
+    IncompleteClass(&'a Operator),
     PseudoClass(&'a Colon, &'a IdentOrFunction),
     PseudoElement(&'a Colon, &'a Colon, &'a IdentOrFunction),
     PropertyName(&'a Ident),
@@ -236,6 +238,8 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
         },
         Selector::PseudoClass(op, x) => Token::PseudoClass(op, x),
         Selector::PseudoElement(op1, op2, x) => Token::PseudoElement(op1, op2, x),
+        Selector::IncompleteId(op) => Token::IncompleteId(op),
+        Selector::IncompleteClass(op) => Token::IncompleteClass(op),
         Selector::NextSibling(_)
         | Selector::Child(_)
         | Selector::Column(_, _)
