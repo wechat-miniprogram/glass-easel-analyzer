@@ -43,7 +43,7 @@ const defWxmlCases = [
 const defWxssCases = [
   {
     name: 'import',
-    args: [new vscode.Position(2, 2)],
+    args: [new vscode.Position(2, 2), new vscode.Position(0, 17)],
   },
   {
     name: 'style-rule',

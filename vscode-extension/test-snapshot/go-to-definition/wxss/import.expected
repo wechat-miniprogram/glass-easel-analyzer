@@ -38,3 +38,43 @@ Array [
     },
   },
 ]
+// ====== SNAPSHOT 1 ======
+Array [
+  Object {
+    "originSelectionRange": Array [
+      Object {
+        "character": 8,
+        "line": 0,
+      },
+      Object {
+        "character": 23,
+        "line": 0,
+      },
+    ],
+    "targetRange": Array [
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+    ],
+    "targetSelectionRange": Array [
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+      Object {
+        "character": 0,
+        "line": 0,
+      },
+    ],
+    "targetUri": Object {
+      "$mid": 1,
+      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss",
+      "scheme": "file",
+    },
+  },
+]

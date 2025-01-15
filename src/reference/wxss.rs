@@ -78,6 +78,22 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
     let mut ret = vec![];
     let token = find_token_in_position(sheet, Position { line: pos.line, utf16_col: pos.character });
     match token {
+        Token::ImportUrl(src) => {
+            if let Ok(p) = project.find_rel_path_for_file(abs_path, &src.content) {
+                if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
+                    let target_range = lsp_types::Range::new(
+                        lsp_types::Position { line: 0, character: 0 },
+                        lsp_types::Position { line: 0, character: 0 },
+                    );
+                    ret.push(LocationLink {
+                        origin_selection_range: Some(location_to_lsp_range(&src.location)),
+                        target_uri: lsp_types::Url::from_file_path(imported_path).unwrap(),
+                        target_range: target_range.clone(),
+                        target_selection_range: target_range,
+                    });
+                }
+            }
+        }
         Token::TagName(x) => {
             // returns itself - this will hint the editor to call find-reference for it
             ret.push(LocationLink {
