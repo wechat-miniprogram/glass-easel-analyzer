@@ -50,7 +50,9 @@ const middleware: Middleware = {
             vscode.window.showErrorMessage('Failed to get CSS diagnostics')
           })
       }
+      return
     }
+    next(uri, diagnostics)
   },
 }
 

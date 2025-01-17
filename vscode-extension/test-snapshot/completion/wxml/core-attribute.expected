@@ -5,7 +5,7 @@ Object {
     Object {
       "insertText": Object {
         "e": 1,
-        "value": "class=\"${1|hello-class-2,hello-class|}\"$0",
+        "value": "class=\"${1|hello-class|}\"$0",
       },
       "kind": "Keyword",
       "label": "class",

@@ -204,7 +204,10 @@ async fn serve() -> anyhow::Result<()> {
         std::path::PathBuf::from(x)
     }).collect();
     for uri in initialize_params.initialization_options.workspace_folders.iter() {
-        let Ok(p) = lsp_types::Url::to_file_path(&lsp_types::Url::parse(uri).unwrap()) else { continue };
+        let p_uri = lsp_types::Url::parse(uri).unwrap();
+        let p = lsp_types::Url::to_file_path(&p_uri).unwrap_or_else(|_| {
+            crate::utils::generate_non_fs_fake_path(&p_uri)
+        });
         let name = p.file_name().and_then(|x| x.to_str()).unwrap_or_default();
         connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
             token: initialize_params.work_done_token.clone(),

@@ -1,11 +1,27 @@
 use std::{borrow::Cow, cmp::Ordering, path::{Path, PathBuf}};
 
+use lsp_types::Url;
+
 use crate::wxss::{Location, Position};
 
 pub(crate) fn log_if_err<T>(r: anyhow::Result<T>) {
     if let Err(err) = r {
         log::error!("{}", err);
     }
+}
+
+pub(crate) fn generate_non_fs_fake_path(uri: &Url) -> PathBuf {
+    let mut p = PathBuf::from("/");
+    p.push(uri.scheme());
+    if let Some(domain) = uri.domain() {
+        p.push(domain);
+    }
+    if let Some(segs) = uri.path_segments() {
+        for seg in segs {
+            p.push(seg);
+        }
+    }
+    p
 }
 
 pub(crate) fn unix_rel_path(base: &Path, target: &Path) -> anyhow::Result<String> {

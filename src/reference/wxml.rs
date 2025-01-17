@@ -113,7 +113,7 @@ fn get_target_template_path<'a>(
     is: &str,
 ) -> Option<(PathBuf, &'a TemplateDefinition)> {
     for import in source_tamplate.globals.imports.iter().rev() {
-        if let Ok(p) = project.find_rel_path_for_file(abs_path, &import.src.name) {
+        if let Some(p) = project.find_rel_path_for_file(abs_path, &import.src.name) {
             let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") else {
                 continue;
             };
@@ -133,8 +133,9 @@ fn search_wxml_template_usages(
     is: &str,
     mut f: impl FnMut(&Path, std::ops::Range<glass_easel_template_compiler::parse::Position>),
 ) {
+    let Some(root) = project.root() else { return };
     for (source_p, tree) in project.list_wxml_trees() {
-        let Ok(source_p) = crate::utils::join_unix_rel_path(project.root(), source_p, project.root()) else { continue };
+        let Ok(source_p) = crate::utils::join_unix_rel_path(root, source_p, root) else { continue };
         if let Some((p, _)) = get_target_template_path(project, &source_p, tree, is) {
             if p.as_path() != abs_path { continue };
             crate::wxml_utils::for_each_template_element(tree, |elem, _| {
@@ -320,7 +321,7 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
                 }
             }
             Token::Src(src) => {
-                if let Ok(p) = project.find_rel_path_for_file(abs_path, &src.name) {
+                if let Some(p) = project.find_rel_path_for_file(abs_path, &src.name) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
                         let target_range = lsp_types::Range::new(
                             lsp_types::Position { line: 0, character: 0 },
@@ -336,7 +337,7 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
                 }
             }
             Token::ScriptSrc(src) => {
-                if let Ok(p) = project.find_rel_path_for_file(abs_path, &src.name) {
+                if let Some(p) = project.find_rel_path_for_file(abs_path, &src.name) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxs") {
                         let target_range = lsp_types::Range::new(
                             lsp_types::Position { line: 0, character: 0 },

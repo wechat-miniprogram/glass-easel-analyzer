@@ -83,11 +83,23 @@ pub(crate) struct JsonConfig {
 }
 
 pub(crate) struct Project {
-    root: PathBuf,
+    root: Option<PathBuf>,
     file_contents: HashMap<PathBuf, FileContentMetadata>,
     json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
     style_sheet_map: HashMap<PathBuf, StyleSheet>,
+}
+
+impl Default for Project {
+    fn default() -> Self {
+        Self {
+            root: None,
+            file_contents: HashMap::new(),
+            json_config_map: HashMap::new(),
+            template_group: TmplGroup::new(),
+            style_sheet_map: HashMap::new(),
+        }
+    }
 }
 
 impl Project {
@@ -124,7 +136,7 @@ impl Project {
 
     pub(crate) fn new(root: &Path) -> Self {
         Self {
-            root: root.to_path_buf(),
+            root: Some(root.to_path_buf()),
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
@@ -136,17 +148,29 @@ impl Project {
         let _ = self.load_all_files_from_fs().await;
     }
 
-    pub(crate) fn root(&self) -> &Path {
-        &self.root
+    pub(crate) fn root(&self) -> Option<&Path> {
+        self.root.as_ref().map(|x| x.as_path())
     }
 
-    pub(crate) fn unix_rel_path(&self, abs_path: &Path) -> anyhow::Result<String> {
-        crate::utils::unix_rel_path(&self.root, abs_path)
+    fn unix_rel_path_or_fallback(&self, abs_path: &Path) -> String {
+        self
+            .root
+            .as_ref()
+            .and_then(|root| {
+                crate::utils::unix_rel_path(root, abs_path).ok()
+            })
+            .unwrap_or_else(|| {
+                abs_path
+                    .components()
+                    .map(|x| x.as_os_str().to_str().unwrap_or_default())
+                    .collect::<Vec<_>>()
+                    .join("/")
+            })
     }
 
-    pub(crate) fn find_rel_path_for_file(&self, abs_path: &Path, rel_path: &str) -> anyhow::Result<PathBuf> {
+    pub(crate) fn find_rel_path_for_file(&self, abs_path: &Path, rel_path: &str) -> Option<PathBuf> {
         let p = abs_path.parent().unwrap_or(abs_path);
-        crate::utils::join_unix_rel_path(p, rel_path, &self.root)
+        crate::utils::join_unix_rel_path(p, rel_path, self.root()?).ok()
     }
 
     pub(crate) fn file_created_or_changed(&mut self, abs_path: &Path) {
@@ -233,9 +257,12 @@ impl Project {
             }).await;
             Ok(())
         }
-        let root = self.root.to_path_buf();
-        let proj = Arc::new(AsyncMutex::new(self));
-        rec(proj, &root).await
+        if let Some(root) = self.root() {
+            let root = root.to_path_buf();
+            let proj = Arc::new(AsyncMutex::new(self));
+            rec(proj, &root).await?;
+        }
+        Ok(())
     }
 
     pub(crate) fn _file_content(&mut self, abs_path: &Path) -> Option<&FileContentMetadata> {
@@ -337,7 +364,7 @@ impl Project {
     }
 
     fn update_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
-        let tmpl_path = self.unix_rel_path(&abs_path)?;
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         let err_list = self.template_group.add_tmpl(&tmpl_path, &content);
         self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
         let diagnostics = err_list.into_iter().filter_map(diagnostic_from_wxml_parse_error).collect();
@@ -345,7 +372,7 @@ impl Project {
     }
 
     fn cleanup_wxml(&mut self, abs_path: &Path) -> anyhow::Result<()> {
-        let tmpl_path = self.unix_rel_path(&abs_path)?;
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         self.template_group.remove_tmpl(&tmpl_path);
         self.file_contents.remove(abs_path);
         Ok(())
@@ -370,7 +397,7 @@ impl Project {
     }
 
     pub(crate) fn get_wxml_tree(&self, abs_path: &Path) -> anyhow::Result<&Template> {
-        let tmpl_path = self.unix_rel_path(&abs_path)?;
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         let tree = self.template_group.get_tree(&tmpl_path)?;
         Ok(tree)
     }
@@ -393,14 +420,14 @@ impl Project {
         let Some(rel_path) = json_config.using_components.get(tag_name) else {
             return None;
         };
-        self.find_rel_path_for_file(&json_path, rel_path).ok()
+        self.find_rel_path_for_file(&json_path, rel_path)
     }
 
     pub(crate) fn search_component_wxml_usages(&self, abs_path: &Path, tag_name: &str, mut f: impl FnMut(&Path, &Template, &str)) {
         if let Some(expected_target) = self.get_target_component_path(abs_path, &tag_name) {
             self.for_each_json_config(|p, json_config| {
                 for (expected_tag_name, rel_path) in json_config.using_components.iter() {
-                    let Ok(target) = self.find_rel_path_for_file(p, &rel_path) else {
+                    let Some(target) = self.find_rel_path_for_file(p, &rel_path) else {
                         continue;
                     };
                     if target == expected_target {
@@ -420,7 +447,7 @@ impl Project {
         };
         let mut names: Vec<_> = tree.globals.sub_templates.iter().map(|x| x.name.name.to_string()).collect();
         for import in tree.globals.imports.iter() {
-            if let Ok(p) = self.find_rel_path_for_file(abs_path, &import.src.name) {
+            if let Some(p) = self.find_rel_path_for_file(abs_path, &import.src.name) {
                 if let Some(p) = crate::utils::ensure_file_extension(&p, "wxml") {
                     if let Ok(tree) = self.get_wxml_tree(&p) {
                         for item in tree.globals.sub_templates.iter() {
@@ -445,7 +472,7 @@ impl Project {
             let imp_iter = template.globals.imports.iter().map(|x| x.src.name.as_str());
             let inc_iter = template.globals.includes.iter().map(|x| x.src.name.as_str());
             for rel in imp_iter.chain(inc_iter) {
-                if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
+                if let Some(p) = project.find_rel_path_for_file(abs_path, rel) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
                         if let Ok(template) = project.get_wxml_tree(&imported_path) {
                             rec_import_and_include_templates(visited, project, &imported_path, template, f);
@@ -468,7 +495,7 @@ impl Project {
         ) {
             visited.insert(abs_path.to_path_buf());
             crate::wxss_utils::for_each_import_in_style_sheet(sheet, |rel| {
-                if let Ok(p) = project.find_rel_path_for_file(abs_path, rel) {
+                if let Some(p) = project.find_rel_path_for_file(abs_path, rel) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
                         if let Ok(sheet) = project.get_style_sheet(&imported_path) {
                             rec_import_style_sheets(visited, project, &imported_path, sheet, f);
