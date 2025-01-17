@@ -64,14 +64,23 @@
         "glass-easel-analyzer.ignorePaths": {
           "scope": "window",
           "type": "array",
-          "default": ["node_modules"],
+          "default": [
+            "node_modules"
+          ],
           "description": "The path to ignore when scanning component files (relative to the workspace root)."
         },
-        "glass-easel-analyzer.wxssDiagnosticsServerPath": {
+        "glass-easel-analyzer.wxssDiagnosticsMode": {
+          "scope": "window",
+          "type": "string",
+          "enum": ["CSS", "disabled", "custom"],
+          "default": "CSS",
+          "description": "The diagnostics information used for WXSS."
+        },
+        "glass-easel-analyzer.wxssDiagnosticsCustomServerPath": {
           "scope": "window",
           "type": "string",
           "default": "",
-          "description": "The path to the language server that provides diagnostics information used for WXSS. Leave empty to use the CSS diagnostics information."
+          "description": "The path to the language server that provides diagnostics information used for WXSS."
         }
       }
     },
@@ -93,13 +102,16 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/diff": "^6.0.0",
+    "@types/diff": "^7.0.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "chalk": "^4.1.2",
     "diff": "^7.0.0",
-    "glass-easel-miniprogram-template": "^0.10.3",
+    "glass-easel-miniprogram-template": "^0.11.0",
     "pretty-format": "^29.7.0",
     "vscode-languageclient": "^9.0.1"
+  },
+  "dependencies": {
+    "vscode-css-languageservice": "^6.3.2"
   }
 }

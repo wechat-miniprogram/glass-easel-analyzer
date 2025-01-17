@@ -1,64 +1,53 @@
-import path from 'node:path'
 import * as vscode from 'vscode'
 import { type Middleware } from 'vscode-languageclient'
+import { getCSSLanguageService } from 'vscode-css-languageservice'
 
-const toVirtualUri = (uri: string, ext: string): vscode.Uri => {
-  const vdocUriString = `glass-easel-analyzer://virtual/${encodeURIComponent(uri)}/virtual.${ext}`
-  return vscode.Uri.parse(vdocUriString)
-}
+getCSSLanguageService()
 
-const fromVirtualUri = (uri: vscode.Uri): string => {
-  const encodedUri = uri.path.slice(1, uri.path.lastIndexOf('/'))
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  vscode.window.showWarningMessage(encodedUri)
-  const uriStr = decodeURIComponent(encodedUri)
-  return uriStr
-}
-
-const virtualDocuments = Object.create(null) as { [uri: string]: string }
-
-vscode.workspace.registerTextDocumentContentProvider('glass-easel-analyzer', {
-  provideTextDocumentContent: (uri: vscode.Uri) => {
-    const u = fromVirtualUri(uri)
-    return virtualDocuments[u]
-  },
-})
-
-vscode.languages.onDidChangeDiagnostics((ev) => {
-  ev.uris.forEach((uri) => {
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    vscode.window.showErrorMessage(uri.toString())
-  })
-})
+const getWxssDiagnostics = () =>
+  vscode.workspace.getConfiguration('glass-easel-analyzer').get('wxssDiagnosticsMode') as string
 
 const getWxssDiagnosticsServerPath = () =>
   vscode.workspace
     .getConfiguration('glass-easel-analyzer')
-    .get('wxssDiagnosticsServerPath') as string
+    .get('wxssDiagnosticsCustomServerPath') as string
+
+const cssLangService = getCSSLanguageService()
+
+const doCustomValidation = async (_uri: vscode.Uri) => {
+  await vscode.window.showErrorMessage(`Unimplemented server: ${getWxssDiagnosticsServerPath()}`)
+  return []
+}
+
+const doCssValidation = async (uri: vscode.Uri) => {
+  const doc = await vscode.workspace.openTextDocument(uri)
+  const sheet = cssLangService.parseStylesheet(doc as any)
+  return cssLangService.doValidation(doc as any, sheet)
+}
 
 const middleware: Middleware = {
-  async didOpen(doc, next): Promise<void> {
-    const content = doc.getText()
-    const ext = path.extname(doc.fileName)
-    if (ext === '.wxss') {
-      const uriStr = doc.uri.toString(true)
-      virtualDocuments[uriStr] = content
-      const virt = toVirtualUri(uriStr, 'css')
-      if (!getWxssDiagnosticsServerPath()) {
-        const textDocument = await vscode.commands.executeCommand('vscode.open', virt)
-        const diag = vscode.languages.getDiagnostics(virt)
-      }
-    }
-    return next(doc)
-  },
-  async didChange(ev, next): Promise<void> {
-    return next(ev)
-  },
-  async didClose(doc, next): Promise<void> {
-    return next(doc)
-  },
   handleDiagnostics(uri, diagnostics, next) {
-    next(uri, [])
+    const mode = getWxssDiagnostics()
+    if (mode === 'disabled') {
+      next(uri, diagnostics)
+    } else if (mode === 'custom') {
+      doCustomValidation(uri)
+        // eslint-disable-next-line promise/no-callback-in-promise
+        .then((diag) => next(uri, diag))
+        .catch(() => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          vscode.window.showErrorMessage('Failed to get custom WXSS diagnostics')
+        })
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      doCssValidation(uri)
+        // eslint-disable-next-line promise/no-callback-in-promise
+        .then((diag) => next(uri, diag as any))
+        .catch(() => {
+          // eslint-disable-next-line @typescript-eslint/no-floating-promises
+          vscode.window.showErrorMessage('Failed to get CSS diagnostics')
+        })
+    }
   },
 }
 
