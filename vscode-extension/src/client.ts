@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import * as vscode from 'vscode'
 import {
@@ -14,33 +15,26 @@ export type ClientOptions = {
 }
 
 export class Client {
-  ctx: vscode.ExtensionContext
   options: ClientOptions
   client: LanguageClient | null = null
 
-  constructor(ctx: vscode.ExtensionContext) {
-    this.ctx = ctx
-    const serverPath = vscode.workspace
-      .getConfiguration('glass-easel-analyzer')
-      .get('serverPath') as string
-    const backendConfigPath = vscode.workspace
-      .getConfiguration('glass-easel-analyzer')
-      .get('backendConfigurationPath') as string
-    const ignorePaths = vscode.workspace
-      .getConfiguration('glass-easel-analyzer')
-      .get('ignorePaths') as string[]
-    this.options = {
-      serverPath,
-      backendConfigPath,
-      ignorePaths,
-    }
+  constructor(options: ClientOptions) {
+    this.options = options
   }
 
   private getServerPath(): string {
     if (process.env.GLASS_EASEL_ANALYZER_SERVER) {
       return process.env.GLASS_EASEL_ANALYZER_SERVER
     }
+    if (!this.options.serverPath) {
+      const detects = [`${__dirname}/glass-easel-analyzer.exe`, `${__dirname}/glass-easel-analyzer`]
+      return detects.find((p) => fs.existsSync(p)) ?? 'glass-easel-analyzer'
+    }
     return this.options.serverPath
+  }
+
+  private getBackendConfigPath(): string {
+    return this.options.backendConfigPath
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -59,7 +53,10 @@ export class Client {
   async start() {
     let backendConfig = ''
     const homeUri = this.getHomeUri()
-    const backendConfigUrl = this.resolveRelativePath(homeUri, this.options.backendConfigPath)
+    const backendConfigPath = this.getBackendConfigPath()
+    const backendConfigUrl = backendConfigPath
+      ? this.resolveRelativePath(homeUri, backendConfigPath)
+      : vscode.Uri.file(`${__dirname}/web.toml`)
     if (backendConfigUrl) {
       try {
         backendConfig = new TextDecoder().decode(
@@ -73,9 +70,7 @@ export class Client {
       }
     } else {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      vscode.window.showErrorMessage(
-        `Invalid glass-easel backend config path ${this.options.backendConfigPath}`,
-      )
+      vscode.window.showErrorMessage(`Invalid glass-easel backend config path ${backendConfigPath}`)
     }
     const workspaceFolders = vscode.workspace.workspaceFolders?.map((x) => x.uri.toString()) ?? []
     const ignorePaths = this.options.ignorePaths.map((x) =>

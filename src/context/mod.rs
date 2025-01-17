@@ -108,4 +108,9 @@ impl ServerContext {
             async { ret }
         }).await
     }
+
+    pub(crate) async fn clear_all_projects(&self) {
+        let mut projects = self.projects.lock().unwrap();
+        projects.clear();
+    }
 }

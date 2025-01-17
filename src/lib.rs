@@ -85,6 +85,7 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     }
 
     // handlers for each method
+    handler!("shutdown", cleanup);
     handler!("textDocument/foldingRange", folding::folding_range);
     handler!("textDocument/semanticTokens/full", semantic::tokens_full);
     handler!("textDocument/semanticTokens/range", semantic::tokens_range);
@@ -117,6 +118,7 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
     async fn noop(_ctx: ServerContext, _params: serde_json::Value) -> anyhow::Result<()> { Ok(()) }
 
     // handlers for each method
+    handler!("exit", noop);
     handler!("$/cancelRequest", noop);
     handler!("$/setTrace", logger::set_trace);
     handler!("textDocument/didOpen", file::did_open);
@@ -135,6 +137,11 @@ fn generate_notification(method: impl Into<String>, params: impl serde::Serializ
         method: method.into(),
         params: serde_json::to_value(params).unwrap(),
     })
+}
+
+async fn cleanup(ctx: ServerContext, _params: serde_json::Value) -> anyhow::Result<()> {
+    ctx.clear_all_projects().await;
+    Ok(())
 }
 
 #[derive(serde::Deserialize)]

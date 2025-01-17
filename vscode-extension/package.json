@@ -2,13 +2,17 @@
   "name": "glass-easel-analyzer",
   "displayName": "glass-easel-analyzer",
   "description": "glass-easel development tools for Visual Studio Code",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.1",
   "engines": {
     "vscode": "^1.94.0"
   },
   "categories": [
     "Other"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wechat-miniprogram/glass-easel-analyzer"
+  },
   "main": "./dist/extension.js",
   "activationEvents": [
     "workspaceContains:app.json",
@@ -53,7 +57,7 @@
           "scope": "application",
           "type": "string",
           "default": "",
-          "description": "The path to the language server binary."
+          "description": "The path to the language server binary. (Leave empty to use the default one.)"
         },
         "glass-easel-analyzer.backendConfigurationPath": {
           "scope": "window",
@@ -102,14 +106,32 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/diff": "^7.0.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "@types/assert": "^1.5.11",
+    "@types/diff": "^7.0.0",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "~22.9.0",
+    "@types/vscode": "^1.94.0",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
     "chalk": "^4.1.2",
     "diff": "^7.0.0",
+    "eslint": "^7.17.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-promise": "^4.2.1",
     "glass-easel-miniprogram-template": "^0.11.0",
+    "prettier": "^2.8.3",
     "pretty-format": "^29.7.0",
-    "vscode-languageclient": "^9.0.1"
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.2.2",
+    "vscode-languageclient": "^9.0.1",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "vscode-css-languageservice": "^6.3.2"
