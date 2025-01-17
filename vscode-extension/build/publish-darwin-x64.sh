@@ -13,16 +13,4 @@ else
   exit -1
 fi
 
-# build language server for different platforms
-cd ..
-echo "Building language server for darwin-arm64..."
-cargo build --target aarch64-apple-darwin --release
-cd vscode-extension
-
-# copy resources
-mkdir -p dist
-cp ../target/aarch64-apple-darwin/release/glass-easel-analyzer dist/
-cp ../backend-configuration/web/web.toml dist/
-
-# package
-vsce package --target darwin-arm64 -o /tmp
+source build/common.sh darwin-x64 x86_64-apple-darwin
