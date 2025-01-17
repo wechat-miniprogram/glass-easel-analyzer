@@ -66,6 +66,12 @@
           "type": "array",
           "default": ["node_modules"],
           "description": "The path to ignore when scanning component files (relative to the workspace root)."
+        },
+        "glass-easel-analyzer.wxssDiagnosticsServerPath": {
+          "scope": "window",
+          "type": "string",
+          "default": "",
+          "description": "The path to the language server that provides diagnostics information used for WXSS. Leave empty to use the CSS diagnostics information."
         }
       }
     },

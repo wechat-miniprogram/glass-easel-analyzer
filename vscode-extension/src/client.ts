@@ -5,6 +5,7 @@ import {
   LanguageClient,
   type LanguageClientOptions,
 } from 'vscode-languageclient/node'
+import middleware from './middleware'
 
 export type ClientOptions = {
   serverPath: string
@@ -112,6 +113,7 @@ export class Client {
       ],
       outputChannelName: 'glass-easel-analyzer',
       progressOnInitialization: true,
+      middleware,
     }
     this.client = new LanguageClient(
       'glass_easel_analyzer',
