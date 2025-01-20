@@ -97,7 +97,6 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     handler!("textDocument/completion", completion::completion);
     handler!("textDocument/documentColor", color::color);
     handler!("textDocument/colorPresentation", color::color_presentation);
-    handler!("workspace/didChangeWorkspaceFolders", file::did_change_workspace_folders);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);
@@ -127,6 +126,7 @@ async fn handle_notification(ctx: ServerContext, Notification { method, params }
     handler!("textDocument/didSave", file::did_save);
     handler!("textDocument/didClose", file::did_close);
     handler!("workspace/didChangeWatchedFiles", file::did_change_watched_files);
+    handler!("workspace/didChangeWorkspaceFolders", file::did_change_workspace_folders);
 
     // method not found
     log::warn!("Missing LSP notification handler for {:?}", method);
