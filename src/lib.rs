@@ -1,4 +1,4 @@
-use context::{backend_configuration::BackendConfig, project::Project, ServerContext};
+use context::{backend_configuration::BackendConfig, project::Project, ServerContext, ServerContextOptions};
 use lsp_server::{Connection, ErrorCode, Message, Notification, Request, Response, ResponseError};
 
 mod color;
@@ -97,6 +97,7 @@ async fn handle_request(ctx: ServerContext, Request { id, method, params }: Requ
     handler!("textDocument/completion", completion::completion);
     handler!("textDocument/documentColor", color::color);
     handler!("textDocument/colorPresentation", color::color_presentation);
+    handler!("workspace/didChangeWorkspaceFolders", file::did_change_workspace_folders);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);
@@ -236,7 +237,6 @@ async fn serve() -> anyhow::Result<()> {
             projects.push(project);
         }
     }
-    // TODO impl workspace change
 
     // send initialize done
     connection.sender.send(generate_notification("$/progress", lsp_types::ProgressParams {
@@ -303,6 +303,7 @@ async fn serve() -> anyhow::Result<()> {
 
     // generate a `ServerContext`
     let Connection { sender: lsp_sender, receiver: lsp_receiver } = connection;
+    let server_context_options = ServerContextOptions { ignore_paths };
     let (server_context, sender) = {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
         let lsp_sender = lsp_sender.clone();
@@ -311,7 +312,7 @@ async fn serve() -> anyhow::Result<()> {
                 lsp_sender.send(msg).unwrap();
             }
         });
-        let server_context = ServerContext::new(&sender, backend_config, projects);
+        let server_context = ServerContext::new(&sender, backend_config, projects, server_context_options);
         (server_context, sender)
     };
     logger::set_trace(server_context.clone(), lsp_types::SetTraceParams { value: lsp_types::TraceValue::Off }).await?;

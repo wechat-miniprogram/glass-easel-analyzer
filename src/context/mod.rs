@@ -9,12 +9,17 @@ pub(crate) mod project;
 
 type TaskFn = Box<dyn 'static + Send + FnOnce(&mut project::Project) -> Pin<Box<dyn 'static + Send + Future<Output = ()>>>>;
 
+pub(crate) struct ServerContextOptions {
+    pub(crate) ignore_paths: Vec<PathBuf>,
+}
+
 #[derive(Clone)]
 pub(crate) struct ServerContext {
     sender: mpsc::WeakUnboundedSender<Message>,
     backend_config: Arc<backend_configuration::BackendConfig>,
     projects: Arc<Mutex<Vec<(PathBuf, mpsc::UnboundedSender<TaskFn>)>>>,
     default_project: mpsc::UnboundedSender<TaskFn>,
+    options: Arc<ServerContextOptions>,
 }
 
 impl ServerContext {
@@ -22,6 +27,7 @@ impl ServerContext {
         sender: &mpsc::UnboundedSender<Message>,
         backend_config: backend_configuration::BackendConfig,
         initial_projects: Vec<project::Project>,
+        options: ServerContextOptions,
     ) -> Self {
         let sender = sender.downgrade();
         let mut ret = Self {
@@ -29,11 +35,16 @@ impl ServerContext {
             backend_config: Arc::new(backend_config),
             projects: Arc::new(Mutex::new(vec![])),
             default_project: Self::spawn_project_thread(Default::default()),
+            options: Arc::new(options),
         };
         for proj in initial_projects {
             ret.add_project(proj);
         }
         ret
+    }
+
+    pub(crate) fn options(&self) -> &ServerContextOptions {
+        &self.options
     }
 
     fn spawn_project_thread(project: project::Project) -> mpsc::UnboundedSender<TaskFn> {
@@ -53,7 +64,7 @@ impl ServerContext {
         sender
     }
 
-    fn add_project(&mut self, project: project::Project) {
+    pub(crate) fn add_project(&mut self, project: project::Project) {
         let p = project.root().unwrap().to_path_buf();
         let sender = Self::spawn_project_thread(project);
         self.projects.lock().unwrap().push((p, sender));

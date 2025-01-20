@@ -1,6 +1,6 @@
-use lsp_types::{DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent};
+use lsp_types::{DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidChangeWorkspaceFoldersParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams, FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent};
 
-use crate::{utils::log_if_err, ServerContext};
+use crate::{context::project::Project, utils::log_if_err, ServerContext};
 
 fn apply_content_changes_to_content(content: &str, changes: Vec<TextDocumentContentChangeEvent>) -> String {
     if changes.len() == 0 {
@@ -122,6 +122,19 @@ pub(crate) async fn did_change_watched_files(ctx: ServerContext, params: DidChan
                 });
             }
             _ => {}
+        }
+    }
+    Ok(())
+}
+
+pub(crate) async fn did_change_workspace_folders(mut ctx: ServerContext, params: DidChangeWorkspaceFoldersParams) -> anyhow::Result<()> {
+    for folder in params.event.added.iter() {
+        let p = lsp_types::Url::to_file_path(&folder.uri).unwrap_or_else(|_| {
+            crate::utils::generate_non_fs_fake_path(&folder.uri)
+        });
+        let found_projects = Project::search_projects(&p, &ctx.options().ignore_paths).await;
+        for project in found_projects {
+            ctx.add_project(project);
         }
     }
     Ok(())
