@@ -3,12 +3,19 @@
   "displayName": "glass-easel-analyzer",
   "description": "glass-easel development tools for Visual Studio Code",
   "version": "0.1.0-alpha.1",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.94.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages"
   ],
+  "keywords": [
+    "glass-easel",
+    "WXML",
+    "WXSS"
+  ],
+  "icon": "icons/logo_256.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/wechat-miniprogram/glass-easel-analyzer"
@@ -28,9 +35,14 @@
           ".wxml"
         ],
         "aliases": [
-          "WXML"
+          "WXML",
+          "glass-easel WXML"
         ],
-        "configuration": "./wxml-language-configuration.json"
+        "configuration": "./wxml-language-configuration.json",
+        "icon": {
+          "light": "./icons/wxml-light.svg",
+          "dark": "./icons/wxml-dark.svg"
+        }
       },
       {
         "id": "wxss",
@@ -38,9 +50,14 @@
           ".wxss"
         ],
         "aliases": [
-          "WXSS"
+          "WXSS",
+          "glass-easel WXSS"
         ],
-        "configuration": "./wxss-language-configuration.json"
+        "configuration": "./wxss-language-configuration.json",
+        "icon": {
+          "light": "./icons/wxss-light.svg",
+          "dark": "./icons/wxss-dark.svg"
+        }
       }
     ],
     "commands": [
