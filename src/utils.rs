@@ -33,7 +33,12 @@ pub(crate) fn unix_rel_path(base: &Path, target: &Path) -> anyhow::Result<String
     Ok(rel_path_slices.join("/"))
 }
 
-pub(crate) fn join_unix_rel_path(base: &Path, rel_path: &str, limit: &Path) -> anyhow::Result<PathBuf> {
+pub(crate) fn join_unix_rel_path(base: &Path, rel_or_abs_path: &str, limit: &Path) -> anyhow::Result<PathBuf> {
+    let (base, rel_path) = if let Some(rel_path) = rel_or_abs_path.strip_prefix('/') {
+        (limit.to_path_buf(), rel_path)
+    } else {
+        (base.to_path_buf(), rel_or_abs_path)
+    };
     let mut base = base.to_path_buf();
     for slice in rel_path.split('/') {
         match slice {

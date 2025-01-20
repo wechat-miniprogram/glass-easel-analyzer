@@ -112,14 +112,14 @@ pub(crate) async fn did_change_watched_files(ctx: ServerContext, params: DidChan
     for change in params.changes {
         match change.typ {
             FileChangeType::CREATED | FileChangeType::CHANGED => {
-                let _ = ctx.clone().project_thread_task(&change.uri, move |project, abs_path| {
+                log_if_err(ctx.clone().project_thread_task(&change.uri, move |project, abs_path| {
                     project.file_created_or_changed(&abs_path);
-                });
+                }).await);
             }
             FileChangeType::DELETED => {
-                let _ = ctx.clone().project_thread_task(&change.uri, move |project, abs_path| {
+                log_if_err(ctx.clone().project_thread_task(&change.uri, move |project, abs_path| {
                     project.file_removed(&abs_path);
-                });
+                }).await);
             }
             _ => {}
         }

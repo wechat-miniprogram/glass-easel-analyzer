@@ -7,6 +7,7 @@ use tokio::sync::Mutex as AsyncMutex;
 
 use crate::wxss::{self, StyleSheet};
 
+#[derive(Debug)]
 pub(crate) struct FileContentMetadata {
     opened: bool,
     pub(crate) content: String,
@@ -295,6 +296,7 @@ impl Project {
                 self.json_config_map.insert(abs_path.to_path_buf(), Default::default());
             }
         }
+        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
         Ok(ret)
     }
 
