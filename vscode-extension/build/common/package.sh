@@ -2,7 +2,7 @@
 
 TARGET_NAME=$1
 TARGET_TRIPLE=$2
-COMMAND=$3
+ARGS=$3
 
 # build language server for different platforms
 cd ..
@@ -17,4 +17,4 @@ cp ../backend-configuration/web/web.toml dist/
 
 # packaging
 mkdir -p packages
-vsce package --target ${TARGET_NAME} -o packages
+vsce package --target ${TARGET_NAME} -o packages ${ARGS}
