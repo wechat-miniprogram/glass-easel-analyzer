@@ -2,7 +2,7 @@
 
 A Language Server for glass-easel and glass-easel-miniprogram-adapter
 
-It handles MiniProgram code structure, i.e. WXML/WXSS/JSON files.
+It handles MiniProgram code structure, i.e. WXML/WXSS files.
 
 *Still in early development.*
 
@@ -15,6 +15,8 @@ It handles MiniProgram code structure, i.e. WXML/WXSS/JSON files.
 
 * Open this project in Visual Studio Code.
 * Ensure all extensions in [.vscode/extensions.json](.vscode/extensions.json) been installed.
+
+Furthermore, please read through [extension publishing guide for VSCode](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) and install `vsce` globally.
 
 ### Debug
 
@@ -31,3 +33,11 @@ Then go to `Test` side panel and run tests. Results will be listed in the `test 
 `npm test` is available.
 
 Run with `TEST_OVERWRITE_SNAPSHOT=1` to overwrite test snapshots.
+
+### Packaging
+
+Execute `vscode-extension/build/[PLATFORM].sh` to build packages for the specified platform.
+
+### Publish
+
+After packaging, execute `vscode-extension/build/publish.sh [VERSION]` to publish the packages of the specified version.
