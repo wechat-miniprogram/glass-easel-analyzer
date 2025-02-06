@@ -2,18 +2,26 @@
 
 glass-easel development tools for Visual Studio Code
 
+
 ## Features
 
 This extension provides development helpers for glass-easel and glass-easel-miniprogram-adapter.
 
-The major part is the language server for MiniProgram code structure, i.e. WXML/WXSS/JSON files.
+This includes the language server for MiniProgram code structure, i.e. WXML/WXSS files.
+
 
 ## Extension Settings
 
-* `glass-easel-analyzer.restart`: Restart language server.
+All configurations are under `glass-easel-analyzer.*`.
+
+
+## Commands
+
+* `glass-easel-analyzer.restart`: Restart the language server.
+
 
 ## Release Notes
 
-### 1.0.0
+### 0.1.0
 
-Initial release (work in progress).
+Basic features of the language server.

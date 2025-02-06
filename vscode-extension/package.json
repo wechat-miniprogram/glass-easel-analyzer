@@ -1,11 +1,12 @@
 {
   "name": "glass-easel-analyzer",
   "displayName": "glass-easel-analyzer",
+  "publisher": "wechat-miniprogram",
   "description": "glass-easel development tools for Visual Studio Code",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.94.0"
+    "vscode": "^1.61.0"
   },
   "categories": [
     "Programming Languages"
@@ -93,15 +94,9 @@
         "glass-easel-analyzer.wxssDiagnosticsMode": {
           "scope": "window",
           "type": "string",
-          "enum": ["CSS", "disabled", "custom"],
+          "enum": ["CSS", "disabled"],
           "default": "CSS",
           "description": "The diagnostics information used for WXSS."
-        },
-        "glass-easel-analyzer.wxssDiagnosticsCustomServerPath": {
-          "scope": "window",
-          "type": "string",
-          "default": "",
-          "description": "The path to the language server that provides diagnostics information used for WXSS."
         }
       }
     },
@@ -129,7 +124,7 @@
     "@types/diff": "^7.0.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "~22.9.0",
-    "@types/vscode": "^1.94.0",
+    "@types/vscode": "^1.61.0",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "chalk": "^4.1.2",
