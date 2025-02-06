@@ -11,12 +11,16 @@ It handles MiniProgram code structure, i.e. WXML/WXSS files.
 
 ### Preparation
 
-`node.js` `pnpm` and `rust` toolchains are needed.
+`node.js` and `rust` toolchains are needed.
 
 * Open this project in Visual Studio Code.
 * Ensure all extensions in [.vscode/extensions.json](.vscode/extensions.json) been installed.
 
 Furthermore, please read through [extension publishing guide for VSCode](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) and install `vsce` globally.
+
+### Initialize Development
+
+Run `vscode-extension/build/init.sh` to cleanup and (re)initialize development.
 
 ### Debug
 
@@ -30,7 +34,7 @@ Then go to `Test` side panel and run tests. Results will be listed in the `test 
 
 ### Run Tests in Terminal
 
-`npm test` is available.
+`npm test` is available in `vscode-extension` directory.
 
 Run with `TEST_OVERWRITE_SNAPSHOT=1` to overwrite test snapshots.
 
