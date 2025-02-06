@@ -13,4 +13,4 @@ else
   exit -1
 fi
 
-source build/common.sh darwin-arm64 aarch64-apple-darwin
+source build/common/package.sh darwin-arm64 aarch64-apple-darwin

@@ -13,4 +13,18 @@ else
   exit -1
 fi
 
-source build/common.sh darwin-x64 x86_64-apple-darwin
+VERSION=$1
+if [[ ${VERSION} == "" ]]; then
+  echo "VERSION is required: $0 [VERSION]"
+  exit -1
+fi
+
+echo 'The following packages will be published:'
+if ls packages/*-${VERSION}.vsix; then
+  echo ''
+else
+  echo 'No proper packages found.'
+  exit -1
+fi
+
+vsce publish --packagePath packages/*-${VERSION}.vsix

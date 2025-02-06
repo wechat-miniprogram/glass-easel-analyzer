@@ -1,4 +1,4 @@
 /dist
 /out
 /.vscode-test
-/*.vsix
+/packages
