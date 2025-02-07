@@ -14,7 +14,12 @@ impl CSSParse for Property {
         let colon = CSSParse::css_parse(ps)?;
         let value = ps.skip_until_before_semicolon();
         let semicolon = CSSParse::css_parse(ps);
-        Some(Self { name, colon, value, semicolon })
+        Some(Self {
+            name,
+            colon,
+            value,
+            semicolon,
+        })
     }
 
     fn location(&self) -> Location {

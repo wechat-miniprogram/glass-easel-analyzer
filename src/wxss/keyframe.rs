@@ -10,15 +10,25 @@ pub(crate) struct KeyframesRule {
 impl CSSParse for KeyframesRule {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let at_keyframes = CSSParse::css_parse(ps)?;
-        let name = MaybeUnknown::parse_with_trailing(ps, |ps| ps.skip_until_before_brace_or_semicolon());
+        let name =
+            MaybeUnknown::parse_with_trailing(ps, |ps| ps.skip_until_before_brace_or_semicolon());
         let body = CSSParse::css_parse(ps);
-        Some(Self { at_keyframes, name, body })
+        Some(Self {
+            at_keyframes,
+            name,
+            body,
+        })
     }
 
     fn location(&self) -> Location {
         let start = self.at_keyframes.location().start;
         let end = match self.body.as_ref() {
-            None => self.name.location().unwrap_or(self.at_keyframes.location()).end,
+            None => {
+                self.name
+                    .location()
+                    .unwrap_or(self.at_keyframes.location())
+                    .end
+            }
             Some(x) => x.location().end,
         };
         start..end
@@ -42,18 +52,20 @@ impl CSSParse for Keyframe {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let ret = match ps.peek()? {
             TokenTree::Ident(..) => {
-                let progress = MaybeUnknown::parse_with_trailing(ps, |ps| ps.skip_until_before_brace_or_semicolon());
+                let progress = MaybeUnknown::parse_with_trailing(ps, |ps| {
+                    ps.skip_until_before_brace_or_semicolon()
+                });
                 let body = CSSParse::css_parse(ps);
                 Self::Named { progress, body }
             }
             TokenTree::Percentage(..) => {
-                let progress = MaybeUnknown::parse_with_trailing(ps, |ps| ps.skip_until_before_brace_or_semicolon());
+                let progress = MaybeUnknown::parse_with_trailing(ps, |ps| {
+                    ps.skip_until_before_brace_or_semicolon()
+                });
                 let body = CSSParse::css_parse(ps);
                 Self::Percentage { progress, body }
             }
-            _ => {
-                Self::Unknown(ps.skip_until_before(|_| false))
-            }
+            _ => Self::Unknown(ps.skip_until_before(|_| false)),
         };
         Some(ret)
     }

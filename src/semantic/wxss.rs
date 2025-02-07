@@ -1,4 +1,13 @@
-use crate::wxss::{font_face::FontFaceRule, import::ImportRule, keyframe::{Keyframe, KeyframesRule}, media::{MediaAndKeyword, MediaFeature, MediaOrKeyword, MediaQueryList, MediaRule, MediaType}, property::Property, rule::{IdentOrFunction, Selector, StyleRule}, token::*, CSSParse, List, MaybeUnknown, Rule, RuleOrProperty, StyleSheet};
+use crate::wxss::{
+    font_face::FontFaceRule,
+    import::ImportRule,
+    keyframe::{Keyframe, KeyframesRule},
+    media::{MediaAndKeyword, MediaFeature, MediaOrKeyword, MediaQueryList, MediaRule, MediaType},
+    property::Property,
+    rule::{IdentOrFunction, Selector, StyleRule},
+    token::*,
+    CSSParse, List, MaybeUnknown, Rule, RuleOrProperty, StyleSheet,
+};
 
 use super::*;
 
@@ -21,18 +30,16 @@ impl<'a> SemanticTokenRet<'a> {
         }
     }
 
-    fn push(
-        &mut self,
-        location: std::ops::Range<Position>,
-        ty: TokenType,
-        modifier: u32,
-    ) -> bool {
+    fn push(&mut self, location: std::ops::Range<Position>, ty: TokenType, modifier: u32) -> bool {
         while let Some(next_comment) = self.comments.peek() {
             if next_comment.location.start > location.start {
                 break;
             }
             let next = self.comments.next().unwrap();
-            if !self.gen.push(self.content, next.location.clone(), TokenType::Comment, 0) {
+            if !self
+                .gen
+                .push(self.content, next.location.clone(), TokenType::Comment, 0)
+            {
                 return false;
             }
         }
@@ -41,7 +48,10 @@ impl<'a> SemanticTokenRet<'a> {
 
     fn finish(mut self) -> Vec<SemanticToken> {
         for next in self.comments {
-            if !self.gen.push(self.content, next.location.clone(), TokenType::Comment, 0) {
+            if !self
+                .gen
+                .push(self.content, next.location.clone(), TokenType::Comment, 0)
+            {
                 break;
             }
         }
@@ -49,12 +59,13 @@ impl<'a> SemanticTokenRet<'a> {
     }
 }
 
-pub(super) fn find_wxss_semantic_tokens(content: &FileContentMetadata, sheet: &StyleSheet, range: std::ops::Range<Position>) -> Vec<SemanticToken> {
-    let mut gen = SemanticTokenRet::new(
-        SemanticTokenGenerator::new(range),
-        &sheet.comments,
-        content,
-    );
+pub(super) fn find_wxss_semantic_tokens(
+    content: &FileContentMetadata,
+    sheet: &StyleSheet,
+    range: std::ops::Range<Position>,
+) -> Vec<SemanticToken> {
+    let mut gen =
+        SemanticTokenRet::new(SemanticTokenGenerator::new(range), &sheet.comments, content);
     for item in sheet.items.iter() {
         if !find_in_rule(&mut gen, item) {
             break;
@@ -72,14 +83,18 @@ fn find_in_rule(ret: &mut SemanticTokenRet, rule: &Rule) -> bool {
         Rule::FontFace(x) => find_in_font_face_rule(ret, x),
         Rule::Keyframes(x) => find_in_keyframes_rule(ret, x),
         Rule::UnknownAtRule(kw, tt_list) => {
-            ret.push(kw.location(), TokenType::Keyword, 0)
-                && find_in_token_tree_list(ret, &tt_list)
+            ret.push(kw.location(), TokenType::Keyword, 0) && find_in_token_tree_list(ret, &tt_list)
         }
     }
 }
 
 fn find_in_import_rule(ret: &mut SemanticTokenRet, import: &ImportRule) -> bool {
-    let ImportRule { at_import, url, condition, semicolon } = import;
+    let ImportRule {
+        at_import,
+        url,
+        condition,
+        semicolon,
+    } = import;
     ret.push(at_import.location(), TokenType::Keyword, 0)
         && find_in_maybe_unknown(ret, url, |ret, x| {
             ret.push(x.location(), TokenType::String, 0)
@@ -91,76 +106,76 @@ fn find_in_import_rule(ret: &mut SemanticTokenRet, import: &ImportRule) -> bool 
 }
 
 fn find_in_media_rule(ret: &mut SemanticTokenRet, media: &MediaRule) -> bool {
-    let MediaRule { at_media, list, list_str: _, body } = media;
+    let MediaRule {
+        at_media,
+        list,
+        list_str: _,
+        body,
+    } = media;
     if !ret.push(at_media.location(), TokenType::Keyword, 0) {
         return false;
     }
     fn find_in_media_query_list(ret: &mut SemanticTokenRet, list: &MediaQueryList) -> bool {
         match list {
             MediaQueryList::Unknown(x) => find_in_token_tree_list(ret, x),
-            MediaQueryList::EmptyParen(x) => find_in_children(ret, TokenType::Operator, x, |_, _| true),
+            MediaQueryList::EmptyParen(x) => {
+                find_in_children(ret, TokenType::Operator, x, |_, _| true)
+            }
             MediaQueryList::Sub(x) => find_in_children(ret, TokenType::Operator, x, |ret, x| {
                 find_in_media_query_list(ret, x)
             }),
-            MediaQueryList::And(x) => {
-                x.iter().all(|(x, kw)| {
-                    if !find_in_media_query_list(ret, x) { return false; }
-                    match kw {
-                        MediaAndKeyword::None => {}
-                        MediaAndKeyword::And(x) => {
-                            if !ret.push(x.location(), TokenType::Keyword, 0) {
-                                return false;
-                            }
+            MediaQueryList::And(x) => x.iter().all(|(x, kw)| {
+                if !find_in_media_query_list(ret, x) {
+                    return false;
+                }
+                match kw {
+                    MediaAndKeyword::None => {}
+                    MediaAndKeyword::And(x) => {
+                        if !ret.push(x.location(), TokenType::Keyword, 0) {
+                            return false;
                         }
-                    }
-                    true
-                })
-            }
-            MediaQueryList::Or(x) => {
-                x.iter().all(|(x, kw)| {
-                    if !find_in_media_query_list(ret, x) { return false; }
-                    match kw {
-                        MediaOrKeyword::None => {}
-                        MediaOrKeyword::Or(x) => {
-                            if !ret.push(x.location(), TokenType::Keyword, 0) {
-                                return false;
-                            }
-                        }
-                        MediaOrKeyword::Comma(x) => {
-                            if !ret.push(x.location(), TokenType::Operator, 0) {
-                                return false;
-                            }
-                        }
-                    }
-                    true
-                })
-            }
-            MediaQueryList::Not(kw, x) | MediaQueryList::Only(kw, x) => {
-                ret.push(kw.location(), TokenType::Keyword, 0)
-                    && find_in_media_query_list(ret, x)
-            }
-            MediaQueryList::MediaType(x) => {
-                match x {
-                    MediaType::Unknown(x) => ret.push(x.location(), TokenType::Type, 0),
-                    MediaType::All(x)
-                    | MediaType::Screen(x)
-                    | MediaType::Print(x) => {
-                        ret.push(x.location(), TokenType::Keyword, 0)
                     }
                 }
+                true
+            }),
+            MediaQueryList::Or(x) => x.iter().all(|(x, kw)| {
+                if !find_in_media_query_list(ret, x) {
+                    return false;
+                }
+                match kw {
+                    MediaOrKeyword::None => {}
+                    MediaOrKeyword::Or(x) => {
+                        if !ret.push(x.location(), TokenType::Keyword, 0) {
+                            return false;
+                        }
+                    }
+                    MediaOrKeyword::Comma(x) => {
+                        if !ret.push(x.location(), TokenType::Operator, 0) {
+                            return false;
+                        }
+                    }
+                }
+                true
+            }),
+            MediaQueryList::Not(kw, x) | MediaQueryList::Only(kw, x) => {
+                ret.push(kw.location(), TokenType::Keyword, 0) && find_in_media_query_list(ret, x)
             }
+            MediaQueryList::MediaType(x) => match x {
+                MediaType::Unknown(x) => ret.push(x.location(), TokenType::Type, 0),
+                MediaType::All(x) | MediaType::Screen(x) | MediaType::Print(x) => {
+                    ret.push(x.location(), TokenType::Keyword, 0)
+                }
+            },
             MediaQueryList::MediaFeature(x) => {
-                find_in_children(ret, TokenType::Operator, x, |ret, x| {
-                    match x {
-                        MediaFeature::Unknown(x) => find_in_token_tree_list(ret, x),
-                        MediaFeature::SingleCondition(x) => {
-                            ret.push(x.location(), TokenType::Property, 0)
-                        }
-                        MediaFeature::Condition(x, colon, tt_list) => {
-                            ret.push(x.location(), TokenType::Property, 0)
-                                && ret.push(colon.location(), TokenType::Operator, 0)
-                                && find_in_token_tree_list(ret, tt_list)
-                        }
+                find_in_children(ret, TokenType::Operator, x, |ret, x| match x {
+                    MediaFeature::Unknown(x) => find_in_token_tree_list(ret, x),
+                    MediaFeature::SingleCondition(x) => {
+                        ret.push(x.location(), TokenType::Property, 0)
+                    }
+                    MediaFeature::Condition(x, colon, tt_list) => {
+                        ret.push(x.location(), TokenType::Property, 0)
+                            && ret.push(colon.location(), TokenType::Operator, 0)
+                            && find_in_token_tree_list(ret, tt_list)
                     }
                 })
             }
@@ -186,7 +201,11 @@ fn find_in_font_face_rule(ret: &mut SemanticTokenRet, font: &FontFaceRule) -> bo
 }
 
 fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule) -> bool {
-    let KeyframesRule { at_keyframes, name, body } = keyframes;
+    let KeyframesRule {
+        at_keyframes,
+        name,
+        body,
+    } = keyframes;
     ret.push(at_keyframes.location(), TokenType::Keyword, 0)
         && find_in_maybe_unknown(ret, name, |ret, name| {
             ret.push(name.location(), TokenType::Type, 0)
@@ -197,63 +216,67 @@ fn find_in_keyframes_rule(ret: &mut SemanticTokenRet, keyframes: &KeyframesRule)
                     Keyframe::Named { progress, body } => {
                         find_in_maybe_unknown(ret, progress, |ret, x| {
                             ret.push(x.location(), TokenType::Keyword, 0)
-                        })
-                            && find_in_option_brace_or_semicolon_property(ret, body)
+                        }) && find_in_option_brace_or_semicolon_property(ret, body)
                     }
                     Keyframe::Percentage { progress, body } => {
                         find_in_maybe_unknown(ret, progress, |ret, x| {
                             ret.push(x.location(), TokenType::Number, 0)
-                        })
-                            && find_in_option_brace_or_semicolon_property(ret, body)
+                        }) && find_in_option_brace_or_semicolon_property(ret, body)
                     }
                     Keyframe::Unknown(x) => find_in_token_tree_list(ret, x),
                 };
-                if !r { return false }
+                if !r {
+                    return false;
+                }
             }
             true
         })
 }
 
 fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> bool {
-    let StyleRule { selector, selector_str: _, brace } = style_rule;
+    let StyleRule {
+        selector,
+        selector_str: _,
+        brace,
+    } = style_rule;
     for (selector_list, sep) in selector.iter_items() {
-        let r = selector_list.iter().all(|selector| {
-            match selector {
-                Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
-                Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
-                Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
-                Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
-                Selector::IncompleteId(x) => ret.push(x.location(), TokenType::Type, 0),
-                Selector::Class(op, x) => {
-                    ret.push(op.location(), TokenType::Operator, 0)
-                        && ret.push(x.location(), TokenType::Type, 0)
-                }
-                Selector::IncompleteClass(x) => ret.push(x.location(), TokenType::Type, 0),
-                Selector::Attribute(x) => {
-                    find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                        find_in_token_tree_list(ret, children)
-                    })
-                }
-                Selector::NextSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
-                Selector::Child(x) => ret.push(x.location(), TokenType::Operator, 0),
-                Selector::Column(x, y) => {
-                    ret.push(x.location(), TokenType::Operator, 0)
-                        && ret.push(y.location(), TokenType::Operator, 0)
-                }
-                Selector::SubsequentSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
-                Selector::Namespace(x) => ret.push(x.location(), TokenType::Operator, 0),
-                Selector::PseudoClass(x, name) => {
-                    ret.push(x.location(), TokenType::Operator, 0)
-                        && find_in_name_or_function(ret, name)
-                }
-                Selector::PseudoElement(x, y, name) => {
-                    ret.push(x.location(), TokenType::Operator, 0)
-                        && ret.push(y.location(), TokenType::Operator, 0)
-                        && find_in_name_or_function(ret, name)
-                }
+        let r = selector_list.iter().all(|selector| match selector {
+            Selector::Unknown(x) => find_in_token_tree_list(ret, &x),
+            Selector::Universal(x) => ret.push(x.location(), TokenType::Operator, 0),
+            Selector::TagName(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::Id(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::IncompleteId(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::Class(op, x) => {
+                ret.push(op.location(), TokenType::Operator, 0)
+                    && ret.push(x.location(), TokenType::Type, 0)
+            }
+            Selector::IncompleteClass(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::Attribute(x) => {
+                find_in_children(ret, TokenType::Operator, x, |ret, children| {
+                    find_in_token_tree_list(ret, children)
+                })
+            }
+            Selector::NextSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
+            Selector::Child(x) => ret.push(x.location(), TokenType::Operator, 0),
+            Selector::Column(x, y) => {
+                ret.push(x.location(), TokenType::Operator, 0)
+                    && ret.push(y.location(), TokenType::Operator, 0)
+            }
+            Selector::SubsequentSibling(x) => ret.push(x.location(), TokenType::Operator, 0),
+            Selector::Namespace(x) => ret.push(x.location(), TokenType::Operator, 0),
+            Selector::PseudoClass(x, name) => {
+                ret.push(x.location(), TokenType::Operator, 0)
+                    && find_in_name_or_function(ret, name)
+            }
+            Selector::PseudoElement(x, y, name) => {
+                ret.push(x.location(), TokenType::Operator, 0)
+                    && ret.push(y.location(), TokenType::Operator, 0)
+                    && find_in_name_or_function(ret, name)
             }
         });
-        if !r { return false; }
+        if !r {
+            return false;
+        }
         if let Some(x) = sep {
             if !ret.push(x.location(), TokenType::Operator, 0) {
                 return false;
@@ -275,7 +298,12 @@ fn find_in_name_or_function(ret: &mut SemanticTokenRet, name: &IdentOrFunction) 
 }
 
 fn find_in_property(ret: &mut SemanticTokenRet, prop: &Property) -> bool {
-    let Property { name, colon, value, semicolon } = prop;
+    let Property {
+        name,
+        colon,
+        value,
+        semicolon,
+    } = prop;
     ret.push(name.location(), TokenType::Property, 0)
         && ret.push(colon.location(), TokenType::Operator, 0)
         && find_in_token_tree_list(ret, value)
@@ -300,11 +328,11 @@ fn find_in_option_brace_or_semicolon<T>(
     x: &Option<BraceOrSemicolon<T>>,
     f: impl FnOnce(&mut SemanticTokenRet, &T) -> bool,
 ) -> bool {
-    find_in_option(ret, x, |ret, x| {
-        match x {
-            BraceOrSemicolon::Semicolon(x) => ret.push(x.location(), TokenType::Operator, 0),
-            BraceOrSemicolon::Brace(x) => find_in_children(ret, TokenType::Operator, x, f),
-            BraceOrSemicolon::UnknownBrace(x) => find_in_children(ret, TokenType::Operator, x, |_, _| true),
+    find_in_option(ret, x, |ret, x| match x {
+        BraceOrSemicolon::Semicolon(x) => ret.push(x.location(), TokenType::Operator, 0),
+        BraceOrSemicolon::Brace(x) => find_in_children(ret, TokenType::Operator, x, f),
+        BraceOrSemicolon::UnknownBrace(x) => {
+            find_in_children(ret, TokenType::Operator, x, |_, _| true)
         }
     })
 }
@@ -319,7 +347,9 @@ fn find_in_option_brace_or_semicolon_property(
                 RuleOrProperty::Rule(x) => find_in_rule(ret, x),
                 RuleOrProperty::Property(x) => find_in_property(ret, x),
             };
-            if !r { return false }
+            if !r {
+                return false;
+            }
         }
         true
     })
@@ -359,73 +389,33 @@ fn find_in_token_tree_list(ret: &mut SemanticTokenRet, tt_list: &[TokenTree]) ->
 
 fn find_in_token_tree(ret: &mut SemanticTokenRet, tt: &TokenTree) -> bool {
     match tt {
-        TokenTree::Ident(x) => {
-            ret.push(x.location(), TokenType::Type, 0)
-        }
-        TokenTree::AtKeyword(x) => {
-            ret.push(x.location(), TokenType::Keyword, 0)
-        }
-        TokenTree::Hash(x) => {
-            ret.push(x.location(), TokenType::Number, 0)
-        }
-        TokenTree::IDHash(x) => {
-            ret.push(x.location(), TokenType::Type, 0)
-        }
-        TokenTree::QuotedString(x) => {
-            ret.push(x.location(), TokenType::String, 0)
-        }
-        TokenTree::UnquotedUrl(x) => {
-            ret.push(x.location(), TokenType::String, 0)
-        }
-        TokenTree::Number(x) => {
-            ret.push(x.location(), TokenType::Number, 0)
-        }
-        TokenTree::Percentage(x) => {
-            ret.push(x.location(), TokenType::Number, 0)
-        }
-        TokenTree::Dimension(x) => {
-            ret.push(x.location(), TokenType::Number, 0)
-        }
-        TokenTree::Colon(x) => {
-            ret.push(x.location(), TokenType::Operator, 0)
-        }
-        TokenTree::Semicolon(x) => {
-            ret.push(x.location(), TokenType::Operator, 0)
-        }
-        TokenTree::Comma(x) => {
-            ret.push(x.location(), TokenType::Operator, 0)
-        }
-        TokenTree::Operator(x) => {
-            ret.push(x.location(), TokenType::Operator, 0)
-        }
-        TokenTree::Function(x) => {
-            find_in_children(ret, TokenType::Function, x, |ret, children| {
-                find_in_token_tree_list(ret, &children)
-            })
-        }
-        TokenTree::Paren(x) => {
-            find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                find_in_token_tree_list(ret, &children)
-            })
-        }
-        TokenTree::Bracket(x) => {
-            find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                find_in_token_tree_list(ret, &children)
-            })
-        }
-        TokenTree::Brace(x) => {
-            find_in_children(ret, TokenType::Operator, x, |ret, children| {
-                find_in_token_tree_list(ret, &children)
-            })
-        }
-        TokenTree::BadUrl(x) => {
-            ret.push(x.location(), TokenType::String, 0)
-        }
-        TokenTree::BadString(x) => {
-            ret.push(x.location(), TokenType::String, 0)
-        }
-        TokenTree::BadOperator(x) => {
-            ret.push(x.location(), TokenType::Operator, 0)
-        }
+        TokenTree::Ident(x) => ret.push(x.location(), TokenType::Type, 0),
+        TokenTree::AtKeyword(x) => ret.push(x.location(), TokenType::Keyword, 0),
+        TokenTree::Hash(x) => ret.push(x.location(), TokenType::Number, 0),
+        TokenTree::IDHash(x) => ret.push(x.location(), TokenType::Type, 0),
+        TokenTree::QuotedString(x) => ret.push(x.location(), TokenType::String, 0),
+        TokenTree::UnquotedUrl(x) => ret.push(x.location(), TokenType::String, 0),
+        TokenTree::Number(x) => ret.push(x.location(), TokenType::Number, 0),
+        TokenTree::Percentage(x) => ret.push(x.location(), TokenType::Number, 0),
+        TokenTree::Dimension(x) => ret.push(x.location(), TokenType::Number, 0),
+        TokenTree::Colon(x) => ret.push(x.location(), TokenType::Operator, 0),
+        TokenTree::Semicolon(x) => ret.push(x.location(), TokenType::Operator, 0),
+        TokenTree::Comma(x) => ret.push(x.location(), TokenType::Operator, 0),
+        TokenTree::Operator(x) => ret.push(x.location(), TokenType::Operator, 0),
+        TokenTree::Function(x) => find_in_children(ret, TokenType::Function, x, |ret, children| {
+            find_in_token_tree_list(ret, &children)
+        }),
+        TokenTree::Paren(x) => find_in_children(ret, TokenType::Operator, x, |ret, children| {
+            find_in_token_tree_list(ret, &children)
+        }),
+        TokenTree::Bracket(x) => find_in_children(ret, TokenType::Operator, x, |ret, children| {
+            find_in_token_tree_list(ret, &children)
+        }),
+        TokenTree::Brace(x) => find_in_children(ret, TokenType::Operator, x, |ret, children| {
+            find_in_token_tree_list(ret, &children)
+        }),
+        TokenTree::BadUrl(x) => ret.push(x.location(), TokenType::String, 0),
+        TokenTree::BadString(x) => ret.push(x.location(), TokenType::String, 0),
+        TokenTree::BadOperator(x) => ret.push(x.location(), TokenType::Operator, 0),
     }
 }

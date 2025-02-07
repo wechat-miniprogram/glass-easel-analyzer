@@ -10,8 +10,6 @@ fn main() -> anyhow::Result<()> {
         .enable_all()
         .build()
         .unwrap();
-    runtime.block_on(async {
-        glass_easel_analyzer::run().await
-    })?;
+    runtime.block_on(async { glass_easel_analyzer::run().await })?;
     Ok(())
 }

@@ -116,22 +116,39 @@ impl BackendConfig {
         self.component.iter().find(|x| x.tag_name == tag_name)
     }
 
-    pub(crate) fn search_attribute(&self, tag_name: &str, attr_name: &str) -> Option<&AttributeConfig> {
+    pub(crate) fn search_attribute(
+        &self,
+        tag_name: &str,
+        attr_name: &str,
+    ) -> Option<&AttributeConfig> {
         let elem = self.search_element(tag_name)?;
-        elem.attribute.iter().chain(self.global_attribute.iter()).find(|x| x.name == attr_name)
+        elem.attribute
+            .iter()
+            .chain(self.global_attribute.iter())
+            .find(|x| x.name == attr_name)
     }
 
-    pub(crate) fn search_property(&self, tag_name: &str, attr_name: &str) -> Option<&PropertyConfig> {
+    pub(crate) fn search_property(
+        &self,
+        tag_name: &str,
+        attr_name: &str,
+    ) -> Option<&PropertyConfig> {
         let comp = self.search_component(tag_name)?;
         comp.property.iter().find(|x| x.name == attr_name)
     }
 
-    pub(crate) fn list_attributes(&self, tag_name: &str) -> Option<impl Iterator<Item = &AttributeConfig>> {
+    pub(crate) fn list_attributes(
+        &self,
+        tag_name: &str,
+    ) -> Option<impl Iterator<Item = &AttributeConfig>> {
         let elem = self.search_element(tag_name)?;
         Some(elem.attribute.iter().chain(self.global_attribute.iter()))
     }
 
-    pub(crate) fn list_properties(&self, tag_name: &str) -> Option<impl Iterator<Item = &PropertyConfig>> {
+    pub(crate) fn list_properties(
+        &self,
+        tag_name: &str,
+    ) -> Option<impl Iterator<Item = &PropertyConfig>> {
         let comp = self.search_component(tag_name)?;
         Some(comp.property.iter())
     }
@@ -140,14 +157,28 @@ impl BackendConfig {
         self.global_event.iter().find(|x| x.name == event_name)
     }
 
-    pub(crate) fn search_element_event(&self, tag_name: &str, event_name: &str) -> Option<&EventConfig> {
+    pub(crate) fn search_element_event(
+        &self,
+        tag_name: &str,
+        event_name: &str,
+    ) -> Option<&EventConfig> {
         let elem = self.search_element(tag_name)?;
-        elem.event.iter().chain(self.global_event.iter()).find(|x| x.name == event_name)
+        elem.event
+            .iter()
+            .chain(self.global_event.iter())
+            .find(|x| x.name == event_name)
     }
 
-    pub(crate) fn search_component_event(&self, tag_name: &str, event_name: &str) -> Option<&EventConfig> {
+    pub(crate) fn search_component_event(
+        &self,
+        tag_name: &str,
+        event_name: &str,
+    ) -> Option<&EventConfig> {
         let comp = self.search_component(tag_name)?;
-        comp.event.iter().chain(self.global_event.iter()).find(|x| x.name == event_name)
+        comp.event
+            .iter()
+            .chain(self.global_event.iter())
+            .find(|x| x.name == event_name)
     }
 
     pub(crate) fn search_event(&self, tag_name: &str, event_name: &str) -> Option<&EventConfig> {

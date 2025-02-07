@@ -1,7 +1,14 @@
-use std::{collections::{HashMap, HashSet}, path::{Path, PathBuf}, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use futures::StreamExt;
-use glass_easel_template_compiler::{parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplGroup};
+use glass_easel_template_compiler::{
+    parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template},
+    TmplGroup,
+};
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
@@ -50,7 +57,11 @@ impl FileContentMetadata {
         let Some(start) = self.line_starts.get(line as usize).cloned() else {
             return 0;
         };
-        let end = self.line_starts.get(line as usize + 1).cloned().unwrap_or(self.content.len());
+        let end = self
+            .line_starts
+            .get(line as usize + 1)
+            .cloned()
+            .unwrap_or(self.content.len());
         self.content[start..end]
             .chars()
             .map(|ch| ch.len_utf16() as u32)
@@ -105,12 +116,29 @@ impl Default for Project {
 
 impl Project {
     pub(crate) async fn search_projects(root: &Path, ignore: &[PathBuf]) -> Vec<Self> {
-        async fn rec(ret: Arc<AsyncMutex<&mut Vec<Project>>>, p: &Path, ignore: &[PathBuf]) -> anyhow::Result<()> {
-            if ignore.iter().map(|x| x.as_path()).find(|x| *x == p).is_some() { return Ok(()) };
+        async fn rec(
+            ret: Arc<AsyncMutex<&mut Vec<Project>>>,
+            p: &Path,
+            ignore: &[PathBuf],
+        ) -> anyhow::Result<()> {
+            if ignore
+                .iter()
+                .map(|x| x.as_path())
+                .find(|x| *x == p)
+                .is_some()
+            {
+                return Ok(());
+            };
             let app_json = p.join("app.json");
             let app_wxss = p.join("app.wxss");
-            let contains = tokio::fs::metadata(&app_json).await.map(|x| x.is_file()).unwrap_or(false)
-                || tokio::fs::metadata(&app_wxss).await.map(|x| x.is_file()).unwrap_or(false);
+            let contains = tokio::fs::metadata(&app_json)
+                .await
+                .map(|x| x.is_file())
+                .unwrap_or(false)
+                || tokio::fs::metadata(&app_wxss)
+                    .await
+                    .map(|x| x.is_file())
+                    .unwrap_or(false);
             if contains {
                 ret.lock().await.push(Project::new(p));
                 return Ok(());
@@ -120,14 +148,17 @@ impl Project {
                 let ret = ret.clone();
                 async move {
                     let Ok(entry) = entry else { return };
-                    let Ok(ty) = entry.file_type().await else { return };
+                    let Ok(ty) = entry.file_type().await else {
+                        return;
+                    };
                     let abs_path = entry.path();
                     if ty.is_dir() {
                         let _ = rec(ret, &abs_path, ignore).await;
                         return;
                     }
                 }
-            }).await;
+            })
+            .await;
             Ok(())
         }
         let mut ret = vec![];
@@ -154,12 +185,9 @@ impl Project {
     }
 
     fn unix_rel_path_or_fallback(&self, abs_path: &Path) -> String {
-        self
-            .root
+        self.root
             .as_ref()
-            .and_then(|root| {
-                crate::utils::unix_rel_path(root, abs_path).ok()
-            })
+            .and_then(|root| crate::utils::unix_rel_path(root, abs_path).ok())
             .unwrap_or_else(|| {
                 abs_path
                     .components()
@@ -169,7 +197,11 @@ impl Project {
             })
     }
 
-    pub(crate) fn find_rel_path_for_file(&self, abs_path: &Path, rel_path: &str) -> Option<PathBuf> {
+    pub(crate) fn find_rel_path_for_file(
+        &self,
+        abs_path: &Path,
+        rel_path: &str,
+    ) -> Option<PathBuf> {
         let p = abs_path.parent().unwrap_or(abs_path);
         crate::utils::join_unix_rel_path(p, rel_path, self.root()?).ok()
     }
@@ -227,19 +259,27 @@ impl Project {
                 let project = project.clone();
                 async move {
                     let Ok(entry) = entry else { return };
-                    let Ok(ty) = entry.file_type().await else { return };
+                    let Ok(ty) = entry.file_type().await else {
+                        return;
+                    };
                     let abs_path = entry.path();
                     if ty.is_dir() {
                         let _ = rec(project, &abs_path).await;
                         return;
                     }
                     if ty.is_file() {
-                        let Some(ext) = abs_path.extension().and_then(|x| x.to_str()) else { return };
+                        let Some(ext) = abs_path.extension().and_then(|x| x.to_str()) else {
+                            return;
+                        };
                         match ext {
                             "wxml" | "wxss" | "json" => {}
-                            _ => { return; }
+                            _ => {
+                                return;
+                            }
                         }
-                        let Ok(content) = tokio::fs::read_to_string(&abs_path).await else { return };
+                        let Ok(content) = tokio::fs::read_to_string(&abs_path).await else {
+                            return;
+                        };
                         let mut project = project.lock().await;
                         match ext {
                             "wxml" => {
@@ -251,11 +291,12 @@ impl Project {
                             "json" => {
                                 let _ = project.update_json(&abs_path, content);
                             }
-                            _ => unreachable!()
+                            _ => unreachable!(),
                         }
                     }
                 }
-            }).await;
+            })
+            .await;
             Ok(())
         }
         if let Some(root) = self.root() {
@@ -283,20 +324,29 @@ impl Project {
         let json_config: Result<JsonConfig, _> = serde_json::from_str(&content);
         match json_config {
             Ok(json_config) => {
-                self.json_config_map.insert(abs_path.to_path_buf(), json_config);
+                self.json_config_map
+                    .insert(abs_path.to_path_buf(), json_config);
             }
             Err(err) => {
-                let pos = Position::new(err.line().saturating_sub(1) as u32, err.column().saturating_sub(1) as u32);
+                let pos = Position::new(
+                    err.line().saturating_sub(1) as u32,
+                    err.column().saturating_sub(1) as u32,
+                );
                 ret.push(Diagnostic {
-                    range: Range { start: pos, end: pos },
+                    range: Range {
+                        start: pos,
+                        end: pos,
+                    },
                     message: err.to_string(),
                     severity: Some(DiagnosticSeverity::ERROR),
                     ..Default::default()
                 });
-                self.json_config_map.insert(abs_path.to_path_buf(), Default::default());
+                self.json_config_map
+                    .insert(abs_path.to_path_buf(), Default::default());
             }
         }
-        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+        self.file_contents
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
         Ok(ret)
     }
 
@@ -306,7 +356,11 @@ impl Project {
         Ok(())
     }
 
-    pub(crate) fn open_json(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+    pub(crate) fn open_json(
+        &mut self,
+        abs_path: &Path,
+        content: String,
+    ) -> anyhow::Result<Vec<Diagnostic>> {
         let diagnostics = self.update_json(abs_path, content)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
@@ -330,9 +384,13 @@ impl Project {
 
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let (ss, err_list) = StyleSheet::parse_str(&content);
-        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+        self.file_contents
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
         self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
-        let diagnostics = err_list.into_iter().filter_map(diagnostic_from_wxss_parse_error).collect();
+        let diagnostics = err_list
+            .into_iter()
+            .filter_map(diagnostic_from_wxss_parse_error)
+            .collect();
         Ok(diagnostics)
     }
 
@@ -342,7 +400,11 @@ impl Project {
         Ok(())
     }
 
-    pub(crate) fn open_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+    pub(crate) fn open_wxss(
+        &mut self,
+        abs_path: &Path,
+        content: String,
+    ) -> anyhow::Result<Vec<Diagnostic>> {
         let diagnostics = self.update_wxss(abs_path, content)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
@@ -361,15 +423,22 @@ impl Project {
     }
 
     pub(crate) fn get_style_sheet(&self, abs_path: &Path) -> anyhow::Result<&StyleSheet> {
-        let tree = self.style_sheet_map.get(abs_path).ok_or_else(|| anyhow::Error::msg("no such style sheet"))?;
+        let tree = self
+            .style_sheet_map
+            .get(abs_path)
+            .ok_or_else(|| anyhow::Error::msg("no such style sheet"))?;
         Ok(tree)
     }
 
     fn update_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         let err_list = self.template_group.add_tmpl(&tmpl_path, &content);
-        self.file_contents.insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
-        let diagnostics = err_list.into_iter().filter_map(diagnostic_from_wxml_parse_error).collect();
+        self.file_contents
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+        let diagnostics = err_list
+            .into_iter()
+            .filter_map(diagnostic_from_wxml_parse_error)
+            .collect();
         Ok(diagnostics)
     }
 
@@ -380,7 +449,11 @@ impl Project {
         Ok(())
     }
 
-    pub(crate) fn open_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
+    pub(crate) fn open_wxml(
+        &mut self,
+        abs_path: &Path,
+        content: String,
+    ) -> anyhow::Result<Vec<Diagnostic>> {
         let diagnostics = self.update_wxml(abs_path, content)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
@@ -414,7 +487,11 @@ impl Project {
         }
     }
 
-    pub(crate) fn get_target_component_path(&self, abs_path: &Path, tag_name: &str) -> Option<PathBuf> {
+    pub(crate) fn get_target_component_path(
+        &self,
+        abs_path: &Path,
+        tag_name: &str,
+    ) -> Option<PathBuf> {
         let json_path = abs_path.with_extension("json");
         let Some(json_config) = self.get_json_config(&json_path) else {
             return None;
@@ -425,7 +502,12 @@ impl Project {
         self.find_rel_path_for_file(&json_path, rel_path)
     }
 
-    pub(crate) fn search_component_wxml_usages(&self, abs_path: &Path, tag_name: &str, mut f: impl FnMut(&Path, &Template, &str)) {
+    pub(crate) fn search_component_wxml_usages(
+        &self,
+        abs_path: &Path,
+        tag_name: &str,
+        mut f: impl FnMut(&Path, &Template, &str),
+    ) {
         if let Some(expected_target) = self.get_target_component_path(abs_path, &tag_name) {
             self.for_each_json_config(|p, json_config| {
                 for (expected_tag_name, rel_path) in json_config.using_components.iter() {
@@ -447,7 +529,12 @@ impl Project {
         let Ok(tree) = self.get_wxml_tree(&abs_path) else {
             return None;
         };
-        let mut names: Vec<_> = tree.globals.sub_templates.iter().map(|x| x.name.name.to_string()).collect();
+        let mut names: Vec<_> = tree
+            .globals
+            .sub_templates
+            .iter()
+            .map(|x| x.name.name.to_string())
+            .collect();
         for import in tree.globals.imports.iter() {
             if let Some(p) = self.find_rel_path_for_file(abs_path, &import.src.name) {
                 if let Some(p) = crate::utils::ensure_file_extension(&p, "wxml") {
@@ -462,7 +549,12 @@ impl Project {
         Some(names)
     }
 
-    pub(crate) fn import_and_include_templates(&self, abs_path: &Path, template: &Template, mut f: impl FnMut(&Path, &Template)) {
+    pub(crate) fn import_and_include_templates(
+        &self,
+        abs_path: &Path,
+        template: &Template,
+        mut f: impl FnMut(&Path, &Template),
+    ) {
         fn rec_import_and_include_templates(
             visited: &mut HashSet<PathBuf>,
             project: &Project,
@@ -472,12 +564,22 @@ impl Project {
         ) {
             visited.insert(abs_path.to_path_buf());
             let imp_iter = template.globals.imports.iter().map(|x| x.src.name.as_str());
-            let inc_iter = template.globals.includes.iter().map(|x| x.src.name.as_str());
+            let inc_iter = template
+                .globals
+                .includes
+                .iter()
+                .map(|x| x.src.name.as_str());
             for rel in imp_iter.chain(inc_iter) {
                 if let Some(p) = project.find_rel_path_for_file(abs_path, rel) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxml") {
                         if let Ok(template) = project.get_wxml_tree(&imported_path) {
-                            rec_import_and_include_templates(visited, project, &imported_path, template, f);
+                            rec_import_and_include_templates(
+                                visited,
+                                project,
+                                &imported_path,
+                                template,
+                                f,
+                            );
                         }
                     }
                 }
@@ -487,7 +589,12 @@ impl Project {
         rec_import_and_include_templates(&mut HashSet::new(), self, abs_path, template, &mut f);
     }
 
-    pub(crate) fn import_style_sheets(&self, abs_path: &Path, sheet: &StyleSheet, mut f: impl FnMut(&Path, &StyleSheet)) {
+    pub(crate) fn import_style_sheets(
+        &self,
+        abs_path: &Path,
+        sheet: &StyleSheet,
+        mut f: impl FnMut(&Path, &StyleSheet),
+    ) {
         fn rec_import_style_sheets(
             visited: &mut HashSet<PathBuf>,
             project: &Project,
@@ -512,11 +619,19 @@ impl Project {
 }
 
 fn diagnostic_from_wxml_parse_error(x: ParseError) -> Option<Diagnostic> {
-    if x.kind == ParseErrorKind::UnknownMetaTag { return None; }
+    if x.kind == ParseErrorKind::UnknownMetaTag {
+        return None;
+    }
     Some(Diagnostic {
         range: Range {
-            start: Position { line: x.location.start.line, character: x.location.start.utf16_col },
-            end: Position { line: x.location.end.line, character: x.location.end.utf16_col },
+            start: Position {
+                line: x.location.start.line,
+                character: x.location.start.utf16_col,
+            },
+            end: Position {
+                line: x.location.end.line,
+                character: x.location.end.utf16_col,
+            },
         },
         severity: Some(match x.level() {
             ParseErrorLevel::Fatal => DiagnosticSeverity::ERROR,
@@ -533,8 +648,14 @@ fn diagnostic_from_wxml_parse_error(x: ParseError) -> Option<Diagnostic> {
 fn diagnostic_from_wxss_parse_error(x: wxss::ParseError) -> Option<Diagnostic> {
     Some(Diagnostic {
         range: Range {
-            start: Position { line: x.location.start.line, character: x.location.start.utf16_col },
-            end: Position { line: x.location.end.line, character: x.location.end.utf16_col },
+            start: Position {
+                line: x.location.start.line,
+                character: x.location.start.utf16_col,
+            },
+            end: Position {
+                line: x.location.end.line,
+                character: x.location.end.utf16_col,
+            },
         },
         severity: Some(match x.level() {
             ParseErrorLevel::Fatal => DiagnosticSeverity::ERROR,

@@ -1,4 +1,9 @@
-use std::{future::Future, path::{Path, PathBuf}, pin::Pin, sync::{Arc, Mutex}};
+use std::{
+    future::Future,
+    path::{Path, PathBuf},
+    pin::Pin,
+    sync::{Arc, Mutex},
+};
 
 use lsp_server::{Message, Notification};
 use lsp_types::Url;
@@ -7,7 +12,11 @@ use tokio::sync::mpsc;
 pub(crate) mod backend_configuration;
 pub(crate) mod project;
 
-type TaskFn = Box<dyn 'static + Send + FnOnce(&mut project::Project) -> Pin<Box<dyn 'static + Send + Future<Output = ()>>>>;
+type TaskFn = Box<
+    dyn 'static
+        + Send
+        + FnOnce(&mut project::Project) -> Pin<Box<dyn 'static + Send + Future<Output = ()>>>,
+>;
 
 pub(crate) struct ServerContextOptions {
     pub(crate) ignore_paths: Vec<PathBuf>,
@@ -74,16 +83,25 @@ impl ServerContext {
         self.backend_config.clone()
     }
 
-    pub(crate) fn send_notification<T: serde::Serialize>(&self, method: &str, params: T) -> anyhow::Result<()> {
+    pub(crate) fn send_notification<T: serde::Serialize>(
+        &self,
+        method: &str,
+        params: T,
+    ) -> anyhow::Result<()> {
         let method = method.to_string();
         let params = serde_json::to_value(params)?;
         if let Some(sender) = self.sender.upgrade() {
-            sender.send(Message::Notification(Notification { method, params })).unwrap();
+            sender
+                .send(Message::Notification(Notification { method, params }))
+                .unwrap();
         }
         Ok(())
     }
 
-    async fn get_project_thread_sender(&self, path: &Path) -> anyhow::Result<mpsc::UnboundedSender<TaskFn>> {
+    async fn get_project_thread_sender(
+        &self,
+        path: &Path,
+    ) -> anyhow::Result<mpsc::UnboundedSender<TaskFn>> {
         let projects = self.projects.lock().unwrap();
         let item = projects
             .iter()
@@ -96,7 +114,10 @@ impl ServerContext {
         Ok(sender)
     }
 
-    pub(crate) async fn project_thread_async_task<R: 'static + Send, F: 'static + Send + Future<Output = R>>(
+    pub(crate) async fn project_thread_async_task<
+        R: 'static + Send,
+        F: 'static + Send + Future<Output = R>,
+    >(
         &self,
         uri: &Url,
         f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf) -> F,
@@ -109,13 +130,15 @@ impl ServerContext {
         };
         let abs_path = abs_path.unwrap_or_else(|_| crate::utils::generate_non_fs_fake_path(uri));
         let (ret_sender, ret_receiver) = tokio::sync::oneshot::channel();
-        sender.send(Box::new(move |project| {
-            let fut = f(project, abs_path);
-            Box::pin(async {
-                let r = fut.await;
-                let _ = ret_sender.send(r);
-            })
-        })).unwrap();
+        sender
+            .send(Box::new(move |project| {
+                let fut = f(project, abs_path);
+                Box::pin(async {
+                    let r = fut.await;
+                    let _ = ret_sender.send(r);
+                })
+            }))
+            .unwrap();
         let r = ret_receiver.await.unwrap();
         Ok(r)
     }
@@ -128,7 +151,8 @@ impl ServerContext {
         self.project_thread_async_task(uri, |project, abs_path| {
             let ret = f(project, abs_path);
             async { ret }
-        }).await
+        })
+        .await
     }
 
     pub(crate) async fn clear_all_projects(&self) {

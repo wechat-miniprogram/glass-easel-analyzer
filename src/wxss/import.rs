@@ -15,24 +15,25 @@ impl CSSParse for ImportRule {
             Some(TokenTree::QuotedString(_)) => {
                 MaybeUnknown::Normal(CSSParse::css_parse(ps)?, vec![])
             }
-            _ => {
-                MaybeUnknown::Unknown(ps.skip_until_before_semicolon())
-            }
+            _ => MaybeUnknown::Unknown(ps.skip_until_before_semicolon()),
         };
         let condition = ps.skip_until_before_semicolon();
         let semicolon = CSSParse::css_parse(ps);
-        Some(Self { at_import, url, condition, semicolon })
+        Some(Self {
+            at_import,
+            url,
+            condition,
+            semicolon,
+        })
     }
 
     fn location(&self) -> Location {
         let start = self.at_import.location().start;
         let end = match self.semicolon.as_ref() {
-            None => {
-                match self.condition.last() {
-                    None => self.url.location().unwrap_or(self.at_import.location()).end,
-                    Some(x) => x.location().end,
-                }
-            }
+            None => match self.condition.last() {
+                None => self.url.location().unwrap_or(self.at_import.location()).end,
+                Some(x) => x.location().end,
+            },
             Some(x) => x.location().end,
         };
         start..end

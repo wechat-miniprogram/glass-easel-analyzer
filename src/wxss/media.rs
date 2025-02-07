@@ -65,11 +65,20 @@ impl CSSParse for MediaQueryList {
         let trailing = ps.skip_until_before_brace_or_semicolon();
         if let Self::Or(mut x) = ret {
             if trailing.len() > 0 {
-                x.push((Self::Unknown(List::from_vec(trailing)), MediaOrKeyword::None));
+                x.push((
+                    Self::Unknown(List::from_vec(trailing)),
+                    MediaOrKeyword::None,
+                ));
             }
             Some(Self::Or(x))
         } else if trailing.len() > 0 {
-            let list = vec![(ret, MediaOrKeyword::None), (Self::Unknown(List::from_vec(trailing)), MediaOrKeyword::None)];
+            let list = vec![
+                (ret, MediaOrKeyword::None),
+                (
+                    Self::Unknown(List::from_vec(trailing)),
+                    MediaOrKeyword::None,
+                ),
+            ];
             Some(Self::Or(List::from_vec(list)))
         } else {
             Some(ret)
@@ -78,12 +87,8 @@ impl CSSParse for MediaQueryList {
 
     fn location(&self) -> Location {
         match self {
-            Self::Unknown(x) => {
-                x.first().location().start..x.last().location().end
-            }
-            Self::EmptyParen(x) => {
-                x.location()
-            }
+            Self::Unknown(x) => x.first().location().start..x.last().location().end,
+            Self::EmptyParen(x) => x.location(),
             Self::Sub(x) => x.location(),
             Self::And(x) => {
                 let start = x.first().0.location().start;
@@ -134,11 +139,8 @@ impl MediaQueryList {
             };
             Some(Box::new(ret))
         });
-        sub
-            .map(|x| MediaQueryList::Sub(x))
-            .or_else(|| {
-                Some(MediaQueryList::MediaFeature(CSSParse::css_parse(ps)?))
-            })
+        sub.map(|x| MediaQueryList::Sub(x))
+            .or_else(|| Some(MediaQueryList::MediaFeature(CSSParse::css_parse(ps)?)))
             .or_else(|| {
                 let empty = ps.parse_paren(|ps| {
                     if ps.peek().is_none() {
@@ -201,7 +203,7 @@ impl MediaQueryList {
             } else if peek.is_keyword("or") {
                 MediaOrKeyword::Or(CSSParse::css_parse(ps)?)
             } else {
-                break
+                break;
             };
             let n = Self::parse_and(ps);
             let prev = std::mem::replace(&mut next, n).unwrap();
@@ -275,7 +277,11 @@ impl CSSParse for MediaFeature {
     fn css_parse(ps: &mut ParseState) -> Option<Self> {
         let ret = if let (Some(TokenTree::Ident(peek1)), p2) = ps.peek2() {
             if let Some(TokenTree::Colon(_)) = p2 {
-                Self::Condition(CSSParse::css_parse(ps)?, CSSParse::css_parse(ps)?, ps.skip_to_end())
+                Self::Condition(
+                    CSSParse::css_parse(ps)?,
+                    CSSParse::css_parse(ps)?,
+                    ps.skip_to_end(),
+                )
             } else if p2.is_none() {
                 Self::SingleCondition(peek1)
             } else {
@@ -289,15 +295,14 @@ impl CSSParse for MediaFeature {
 
     fn location(&self) -> Location {
         match self {
-            Self::Unknown(x) => {
-                x.first().location().start..x.last().location().end
-            }
-            Self::SingleCondition(k) => {
-                k.location()
-            }
+            Self::Unknown(x) => x.first().location().start..x.last().location().end,
+            Self::SingleCondition(k) => k.location(),
             Self::Condition(k, colon, v) => {
                 let start = k.location().start;
-                let end = v.last().map(|x| x.location().end).unwrap_or(colon.location().end);
+                let end = v
+                    .last()
+                    .map(|x| x.location().end)
+                    .unwrap_or(colon.location().end);
                 start..end
             }
         }

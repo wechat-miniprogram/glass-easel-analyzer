@@ -1,4 +1,8 @@
-use std::{borrow::Cow, cmp::Ordering, path::{Path, PathBuf}};
+use std::{
+    borrow::Cow,
+    cmp::Ordering,
+    path::{Path, PathBuf},
+};
 
 use lsp_types::Url;
 
@@ -33,7 +37,11 @@ pub(crate) fn unix_rel_path(base: &Path, target: &Path) -> anyhow::Result<String
     Ok(rel_path_slices.join("/"))
 }
 
-pub(crate) fn join_unix_rel_path(base: &Path, rel_or_abs_path: &str, limit: &Path) -> anyhow::Result<PathBuf> {
+pub(crate) fn join_unix_rel_path(
+    base: &Path,
+    rel_or_abs_path: &str,
+    limit: &Path,
+) -> anyhow::Result<PathBuf> {
     let (base, rel_path) = if let Some(rel_path) = rel_or_abs_path.strip_prefix('/') {
         (limit.to_path_buf(), rel_path)
     } else {
@@ -76,14 +84,26 @@ pub(crate) fn ensure_file_extension<'a>(p: &'a Path, ext: &str) -> Option<Cow<'a
 
 pub(crate) fn location_to_lsp_range(loc: &Location) -> lsp_types::Range {
     lsp_types::Range {
-        start: lsp_types::Position { line: loc.start.line, character: loc.start.utf16_col },
-        end: lsp_types::Position { line: loc.end.line, character: loc.end.utf16_col },
+        start: lsp_types::Position {
+            line: loc.start.line,
+            character: loc.start.utf16_col,
+        },
+        end: lsp_types::Position {
+            line: loc.end.line,
+            character: loc.end.utf16_col,
+        },
     }
 }
 
 pub(crate) fn _lsp_range_to_location(loc: &lsp_types::Range) -> Location {
-    let start = Position { line: loc.start.line, utf16_col: loc.start.character };
-    let end = Position { line: loc.end.line, utf16_col: loc.end.character };
+    let start = Position {
+        line: loc.start.line,
+        utf16_col: loc.start.character,
+    };
+    let end = Position {
+        line: loc.end.line,
+        utf16_col: loc.end.character,
+    };
     start..end
 }
 

@@ -1,6 +1,13 @@
 use std::ops::Range;
 
-use glass_easel_template_compiler::parse::{expr::Expression, tag::{ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value}, Position, Template};
+use glass_easel_template_compiler::parse::{
+    expr::Expression,
+    tag::{
+        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node,
+        Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value,
+    },
+    Position, Template,
+};
 
 use crate::utils::{exclusive_contains, inclusive_contains};
 
@@ -113,20 +120,27 @@ fn start_tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
 }
 
 fn end_tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
-    let Some(end_loc) = tag_loc.end.as_ref() else { return false };
+    let Some(end_loc) = tag_loc.end.as_ref() else {
+        return false;
+    };
     let start = end_loc.0.start;
     let end = end_loc.1.end;
     exclusive_contains(&(start..end), pos)
 }
 
 pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Token {
-    fn find_in_expr<'a>(expr: &'a Expression, pos: Position, scopes: &mut Vec<ScopeKind<'a>>, has_static_parts: bool) -> Token<'a> {
+    fn find_in_expr<'a>(
+        expr: &'a Expression,
+        pos: Position,
+        scopes: &mut Vec<ScopeKind<'a>>,
+        has_static_parts: bool,
+    ) -> Token<'a> {
         let mut next_has_static_parts = false;
         match expr {
             Expression::Plus { .. } => {
                 next_has_static_parts = true;
             }
-            Expression::LitStr { value, location } =>  {
+            Expression::LitStr { value, location } => {
                 if has_static_parts {
                     if inclusive_contains(location, pos) {
                         return Token::StaticValuePart(location.clone(), &value);
@@ -143,7 +157,11 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                     return Token::DataField(&name, location.clone());
                 }
             }
-            Expression::StaticMember { field_name, field_location, .. } => {
+            Expression::StaticMember {
+                field_name,
+                field_location,
+                ..
+            } => {
                 if inclusive_contains(field_location, pos) {
                     return Token::DataField(&field_name, field_location.clone());
                 }
@@ -159,16 +177,26 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
         }
         Token::None
     }
-    fn find_in_value<'a>(v: &'a Value, pos: Position, scopes: &mut Vec<ScopeKind<'a>>) -> Option<Token<'a>> {
+    fn find_in_value<'a>(
+        v: &'a Value,
+        pos: Position,
+        scopes: &mut Vec<ScopeKind<'a>>,
+    ) -> Option<Token<'a>> {
         match v {
-            Value::Static { value, location, .. } => {
+            Value::Static {
+                value, location, ..
+            } => {
                 if inclusive_contains(location, pos) {
                     Some(Token::StaticValuePart(location.clone(), value))
                 } else {
                     None
                 }
             }
-            Value::Dynamic { expression, double_brace_location, .. } => {
+            Value::Dynamic {
+                expression,
+                double_brace_location,
+                ..
+            } => {
                 fn static_parts_range<'a>(loc: &mut Range<Position>, expr: &'a Expression) -> bool {
                     match expr {
                         Expression::LitStr { location, .. } => {
@@ -176,9 +204,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             loc.end = loc.end.max(location.end);
                             false
                         }
-                        Expression::ToStringWithoutUndefined { .. } => {
-                            true
-                        }
+                        Expression::ToStringWithoutUndefined { .. } => true,
                         Expression::Plus { left, right, .. } => {
                             static_parts_range(loc, &left) || static_parts_range(loc, &right)
                         }
@@ -193,7 +219,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                     None
                 }
             }
-            _ => None
+            _ => None,
         }
     }
     fn find_in_nodes<'a>(
@@ -230,12 +256,24 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 for attr in slot_value_refs.iter() {
                                     if ident_contains(&attr.name, pos) {
                                         if attr.name.location == attr.value.location {
-                                            return Token::SlotValueRefAndScope(&attr.name, &attr.value, parent);
+                                            return Token::SlotValueRefAndScope(
+                                                &attr.name,
+                                                &attr.value,
+                                                parent,
+                                            );
                                         }
-                                        return Token::SlotValueRef(&attr.name, &attr.value, parent);
+                                        return Token::SlotValueRef(
+                                            &attr.name,
+                                            &attr.value,
+                                            parent,
+                                        );
                                     }
                                     if str_name_contains(&attr.value, pos) {
-                                        return Token::SlotValueScope(&attr.value, &attr.name, parent);
+                                        return Token::SlotValueScope(
+                                            &attr.value,
+                                            &attr.name,
+                                            parent,
+                                        );
                                     }
                                 }
                             }
@@ -253,9 +291,11 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     return Token::AttributeKeyword(loc.clone(), &elem);
                                 }
                                 match v {
-                                    Value::Static { value, location, .. } => {
+                                    Value::Static {
+                                        value, location, ..
+                                    } => {
                                         return Token::StaticId(location.clone(), &value);
-                                    },
+                                    }
                                     _ => {
                                         if let Some(ret) = find_in_value(v, pos, scopes) {
                                             return ret;
@@ -324,7 +364,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
                                             if let Token::StaticValuePart(loc, v) = ret {
-                                                return Token::AttributeStaticValue(loc, v, &attr.name, elem);
+                                                return Token::AttributeStaticValue(
+                                                    loc, v, &attr.name, elem,
+                                                );
                                             }
                                             return ret;
                                         }
@@ -335,7 +377,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
                                             if let Token::StaticValuePart(loc, v) = ret {
-                                                return Token::AttributeStaticValue(loc, v, &attr.name, elem);
+                                                return Token::AttributeStaticValue(
+                                                    loc, v, &attr.name, elem,
+                                                );
                                             }
                                             return ret;
                                         }
@@ -364,7 +408,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             }
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
                                                 return match ret {
-                                                    Token::StaticValuePart(loc, name) => Token::StaticClassName(loc.clone(), name),
+                                                    Token::StaticValuePart(loc, name) => {
+                                                        Token::StaticClassName(loc.clone(), name)
+                                                    }
                                                     x => x,
                                                 };
                                             }
@@ -372,7 +418,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         ClassAttribute::Multiple(list) => {
                                             for (name, v) in list {
                                                 if ident_contains(name, pos) {
-                                                    return Token::StaticClassName(name.location.clone(), &name.name);
+                                                    return Token::StaticClassName(
+                                                        name.location.clone(),
+                                                        &name.name,
+                                                    );
                                                 }
                                                 if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;
@@ -403,14 +452,20 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         }
                                         _ => {}
                                     }
-                                    return find_in_common(parent, elem, common, pos, scopes).or(Token::StartTagBody(elem));
+                                    return find_in_common(parent, elem, common, pos, scopes)
+                                        .or(Token::StartTagBody(elem));
                                 }
                                 if end_tag_body_contains(&elem.tag_location, pos) {
                                     return Token::EndTagBody(elem);
                                 }
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
-                            ElementKind::Pure { children, slot, slot_value_refs, .. } => {
+                            ElementKind::Pure {
+                                children,
+                                slot,
+                                slot_value_refs,
+                                ..
+                            } => {
                                 if start_tag_body_contains(&elem.tag_location, pos) {
                                     if let Some((loc, v)) = slot.as_ref() {
                                         if inclusive_contains(loc, pos) {
@@ -420,14 +475,19 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return ret;
                                         }
                                     }
-                                    return find_in_slot_value_refs(parent, slot_value_refs, pos).or(Token::StartTagBody(elem));
+                                    return find_in_slot_value_refs(parent, slot_value_refs, pos)
+                                        .or(Token::StartTagBody(elem));
                                 }
                                 if end_tag_body_contains(&elem.tag_location, pos) {
                                     return Token::EndTagBody(elem);
                                 }
                                 return find_in_nodes(Some(elem), &children, pos, scopes);
                             }
-                            ElementKind::If { branches, else_branch, .. } => {
+                            ElementKind::If {
+                                branches,
+                                else_branch,
+                                ..
+                            } => {
                                 for (loc, v, nodes) in branches {
                                     if inclusive_contains(loc, pos) {
                                         return Token::AttributeKeyword(loc.clone(), &elem);
@@ -460,7 +520,14 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 }
                                 return Token::None;
                             }
-                            ElementKind::For { list, item_name, index_name, key, children, .. } => {
+                            ElementKind::For {
+                                list,
+                                item_name,
+                                index_name,
+                                key,
+                                children,
+                                ..
+                            } => {
                                 {
                                     let (loc, v) = list;
                                     if inclusive_contains(loc, pos) {
@@ -511,9 +578,14 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         return Token::AttributeKeyword(loc.clone(), &elem);
                                     }
                                     match v {
-                                        Value::Static { value, location, .. } => {
+                                        Value::Static {
+                                            value, location, ..
+                                        } => {
                                             if inclusive_contains(location, pos) {
-                                                return Token::TemplateRef(&value, location.clone());
+                                                return Token::TemplateRef(
+                                                    &value,
+                                                    location.clone(),
+                                                );
                                             }
                                         }
                                         _ => {
@@ -539,7 +611,12 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             ElementKind::Include { .. } => {
                                 return Token::None;
                             }
-                            ElementKind::Slot { name, values, common, .. } => {
+                            ElementKind::Slot {
+                                name,
+                                values,
+                                common,
+                                ..
+                            } => {
                                 if start_tag_body_contains(&elem.tag_location, pos) {
                                     let (loc, v) = name;
                                     if inclusive_contains(loc, pos) {
@@ -556,7 +633,8 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             return ret;
                                         }
                                     }
-                                    return find_in_common(parent, elem, common, pos, scopes).or(Token::StartTagBody(elem));
+                                    return find_in_common(parent, elem, common, pos, scopes)
+                                        .or(Token::StartTagBody(elem));
                                 }
                                 if end_tag_body_contains(&elem.tag_location, pos) {
                                     return Token::EndTagBody(elem);
@@ -622,12 +700,16 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                 return Token::ScriptModule(i.module_name());
             }
             match i {
-                Script::Inline { content_location, .. } => {
+                Script::Inline {
+                    content_location, ..
+                } => {
                     if inclusive_contains(content_location, pos) {
                         return Token::ScriptContent(content_location.clone());
                     }
                 }
-                Script::GlobalRef { src_location, src, .. } => {
+                Script::GlobalRef {
+                    src_location, src, ..
+                } => {
                     if inclusive_contains(src_location, pos) {
                         return Token::OtherKeyword(src_location.clone());
                     }
@@ -642,7 +724,12 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     }
 
     // find in sub templates
-    let mut scopes = template.globals.scripts.iter().map(|x| ScopeKind::Script(x)).collect();
+    let mut scopes = template
+        .globals
+        .scripts
+        .iter()
+        .map(|x| ScopeKind::Script(x))
+        .collect();
     for i in template.globals.sub_templates.iter() {
         if tag_contains(&i.tag_location, pos) {
             if inclusive_contains(&i.name_location, pos) {
@@ -658,8 +745,16 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     find_in_nodes(None, &template.content, pos, &mut scopes)
 }
 
-pub(crate) fn for_each_template_root<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &mut Vec<ScopeKind<'a>>)) {
-    let mut scopes: Vec<_> = template.globals.scripts.iter().map(|x| ScopeKind::Script(x)).collect();
+pub(crate) fn for_each_template_root<'a>(
+    template: &'a Template,
+    mut f: impl FnMut(&'a Node, &mut Vec<ScopeKind<'a>>),
+) {
+    let mut scopes: Vec<_> = template
+        .globals
+        .scripts
+        .iter()
+        .map(|x| ScopeKind::Script(x))
+        .collect();
     for sub in template.globals.sub_templates.iter() {
         for node in sub.content.iter() {
             f(node, &mut scopes);
@@ -672,13 +767,29 @@ pub(crate) fn for_each_template_root<'a>(template: &'a Template, mut f: impl FnM
 
 pub(crate) fn insert_element_scopes<'a>(scopes: &mut Vec<ScopeKind<'a>>, elem: &'a Element) {
     match &elem.kind {
-        ElementKind::For { item_name, index_name, .. } => {
+        ElementKind::For {
+            item_name,
+            index_name,
+            ..
+        } => {
             scopes.push(ScopeKind::ForScope(&item_name.1, elem));
             scopes.push(ScopeKind::ForScope(&index_name.1, elem));
         }
-        ElementKind::Normal { common: CommonElementAttributes { slot_value_refs, .. }, .. }
-        | ElementKind::Slot { common: CommonElementAttributes { slot_value_refs, .. }, .. }
-        | ElementKind::Pure { slot_value_refs, .. }=> {
+        ElementKind::Normal {
+            common: CommonElementAttributes {
+                slot_value_refs, ..
+            },
+            ..
+        }
+        | ElementKind::Slot {
+            common: CommonElementAttributes {
+                slot_value_refs, ..
+            },
+            ..
+        }
+        | ElementKind::Pure {
+            slot_value_refs, ..
+        } => {
             for attr in slot_value_refs {
                 scopes.push(ScopeKind::SlotValue(attr, elem));
             }
@@ -708,7 +819,10 @@ pub(crate) fn for_each_template_node_in_subtree<'a>(
     }
 }
 
-pub(crate) fn _for_each_template_node<'a>(template: &'a Template, mut f: impl FnMut(&'a Node, &[ScopeKind<'a>])) {
+pub(crate) fn _for_each_template_node<'a>(
+    template: &'a Template,
+    mut f: impl FnMut(&'a Node, &[ScopeKind<'a>]),
+) {
     for_each_template_root(template, |node, scopes| {
         for_each_template_node_in_subtree(node, scopes, &mut f);
     });
@@ -719,25 +833,32 @@ pub(crate) fn for_each_template_element_in_subtree<'a>(
     scopes: &mut Vec<ScopeKind<'a>>,
     f: &mut impl FnMut(&'a Element, &[ScopeKind<'a>]),
 ) {
-    for_each_template_node_in_subtree(node, scopes, &mut |node, scopes| {
-        match node {
-            Node::Element(elem) => {
-                f(elem, scopes)
-            }
-            _ => {}
-        }
+    for_each_template_node_in_subtree(node, scopes, &mut |node, scopes| match node {
+        Node::Element(elem) => f(elem, scopes),
+        _ => {}
     });
 }
 
-pub(crate) fn for_each_template_element<'a>(template: &'a Template, mut f: impl FnMut(&'a Element, &[ScopeKind<'a>])) {
+pub(crate) fn for_each_template_element<'a>(
+    template: &'a Template,
+    mut f: impl FnMut(&'a Element, &[ScopeKind<'a>]),
+) {
     for_each_template_root(template, |node, scopes| {
         for_each_template_element_in_subtree(node, scopes, &mut f);
     });
 }
 
-pub(crate) fn for_each_template_value_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Value, &[ScopeKind<'a>])) {
+pub(crate) fn for_each_template_value_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(&'a Value, &[ScopeKind<'a>]),
+) {
     for_each_template_node_in_subtree(node, scopes, &mut |node, scopes| {
-        fn handle_common<'a>(common: &'a CommonElementAttributes, scopes: &[ScopeKind<'a>], f: &mut impl FnMut(&'a Value, &[ScopeKind<'a>])) {
+        fn handle_common<'a>(
+            common: &'a CommonElementAttributes,
+            scopes: &[ScopeKind<'a>],
+            f: &mut impl FnMut(&'a Value, &[ScopeKind<'a>]),
+        ) {
             if let Some((_, value)) = common.id.as_ref() {
                 f(value, scopes);
             }
@@ -752,75 +873,100 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(node: &'a Node, scopes: &mu
             }
         }
         match node {
-            Node::Text(v) => { f(v, scopes); }
-            Node::Element(elem) => {
-                match &elem.kind {
-                    ElementKind::Normal {
-                        tag_name: _,
-                        attributes,
-                        class,
-                        style,
-                        change_attributes,
-                        worklet_attributes: _,
-                        children: _,
-                        generics: _,
-                        extra_attr: _,
-                        common,
-                        ..
-                    } => {
-                        for attr in attributes.iter().chain(change_attributes.iter()) {
-                            f(&attr.value, scopes);
-                        }
-                        match class {
-                            ClassAttribute::None => {}
-                            ClassAttribute::String(_, value) => { f(value, scopes); }
-                            ClassAttribute::Multiple(v) => {
-                                for (_, value) in v {
-                                    f(value, scopes);
-                                }
-                            }
-                            _ => {}
-                        }
-                        match style {
-                            StyleAttribute::None => {}
-                            StyleAttribute::String(_, value) => { f(value, scopes); }
-                            StyleAttribute::Multiple(v) => {
-                                for (_, value) in v {
-                                    f(value, scopes);
-                                }
-                            }
-                            _ => {}
-                        }
-                        handle_common(common, scopes, &mut f);
+            Node::Text(v) => {
+                f(v, scopes);
+            }
+            Node::Element(elem) => match &elem.kind {
+                ElementKind::Normal {
+                    tag_name: _,
+                    attributes,
+                    class,
+                    style,
+                    change_attributes,
+                    worklet_attributes: _,
+                    children: _,
+                    generics: _,
+                    extra_attr: _,
+                    common,
+                    ..
+                } => {
+                    for attr in attributes.iter().chain(change_attributes.iter()) {
+                        f(&attr.value, scopes);
                     }
-                    ElementKind::Pure { children: _, slot, slot_value_refs: _, .. } => {
-                        if let Some((_, value)) = slot {
+                    match class {
+                        ClassAttribute::None => {}
+                        ClassAttribute::String(_, value) => {
                             f(value, scopes);
                         }
-                    }
-                    ElementKind::If { branches, else_branch: _, .. } => {
-                        for (_, value, _) in branches {
-                            f(&value, scopes);
+                        ClassAttribute::Multiple(v) => {
+                            for (_, value) in v {
+                                f(value, scopes);
+                            }
                         }
+                        _ => {}
                     }
-                    ElementKind::For { list, item_name: _, index_name: _, key: _, children: _, .. } => {
-                        f(&list.1, scopes);
-                    }
-                    ElementKind::TemplateRef { target, data, .. } => {
-                        f(&target.1, scopes);
-                        f(&data.1, scopes);
-                    }
-                    ElementKind::Include { path: _, .. } => {}
-                    ElementKind::Slot { name, values, common, .. } => {
-                        f(&name.1, scopes);
-                        for attr in values.iter() {
-                            f(&attr.value, scopes);
+                    match style {
+                        StyleAttribute::None => {}
+                        StyleAttribute::String(_, value) => {
+                            f(value, scopes);
                         }
-                        handle_common(common, scopes, &mut f);
+                        StyleAttribute::Multiple(v) => {
+                            for (_, value) in v {
+                                f(value, scopes);
+                            }
+                        }
+                        _ => {}
                     }
-                    _ => {}
+                    handle_common(common, scopes, &mut f);
                 }
-            }
+                ElementKind::Pure {
+                    children: _,
+                    slot,
+                    slot_value_refs: _,
+                    ..
+                } => {
+                    if let Some((_, value)) = slot {
+                        f(value, scopes);
+                    }
+                }
+                ElementKind::If {
+                    branches,
+                    else_branch: _,
+                    ..
+                } => {
+                    for (_, value, _) in branches {
+                        f(&value, scopes);
+                    }
+                }
+                ElementKind::For {
+                    list,
+                    item_name: _,
+                    index_name: _,
+                    key: _,
+                    children: _,
+                    ..
+                } => {
+                    f(&list.1, scopes);
+                }
+                ElementKind::TemplateRef { target, data, .. } => {
+                    f(&target.1, scopes);
+                    f(&data.1, scopes);
+                }
+                ElementKind::Include { path: _, .. } => {}
+                ElementKind::Slot {
+                    name,
+                    values,
+                    common,
+                    ..
+                } => {
+                    f(&name.1, scopes);
+                    for attr in values.iter() {
+                        f(&attr.value, scopes);
+                    }
+                    handle_common(common, scopes, &mut f);
+                }
+                _ => {}
+            },
             Node::Comment(..) => {}
             Node::UnknownMetaTag(..) => {}
             _ => {}
@@ -828,53 +974,70 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(node: &'a Node, scopes: &mu
     });
 }
 
-pub(crate) fn for_each_template_expression_root_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
-    for_each_template_value_in_subtree(node, scopes, |value, scopes| {
-        match value {
-            Value::Dynamic { expression, .. } => f(expression, scopes),
-            Value::Static { .. } => {}
-            _ => {}
-        }
+pub(crate) fn for_each_template_expression_root_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>]),
+) {
+    for_each_template_value_in_subtree(node, scopes, |value, scopes| match value {
+        Value::Dynamic { expression, .. } => f(expression, scopes),
+        Value::Static { .. } => {}
+        _ => {}
     });
 }
 
-pub(crate) fn for_each_template_expression_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
-    fn rec<'a>(expression: &'a Expression, scopes: &[ScopeKind<'a>], f: &mut impl FnMut(&'a Expression, &[ScopeKind<'a>])) {
+pub(crate) fn for_each_template_expression_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(&'a Expression, &[ScopeKind<'a>]),
+) {
+    fn rec<'a>(
+        expression: &'a Expression,
+        scopes: &[ScopeKind<'a>],
+        f: &mut impl FnMut(&'a Expression, &[ScopeKind<'a>]),
+    ) {
         f(expression, scopes);
         for sub in expression.sub_expressions() {
             rec(sub, scopes, f);
         }
     }
-    for_each_template_expression_root_in_subtree(node, scopes, |expression, scopes| { rec(expression, scopes, &mut f); });
-}
-
-pub(crate) fn for_each_scope_ref_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(Range<Position>, ScopeKind<'a>)) {
-    for_each_template_expression_in_subtree(node, scopes, |expr, scopes| {
-        match expr {
-            Expression::ScopeRef { location, index } => {
-                if let Some(s) = scopes.get(*index) {
-                    f(location.clone(), *s);
-                }
-            }
-            _ => {}
-        }
+    for_each_template_expression_root_in_subtree(node, scopes, |expression, scopes| {
+        rec(expression, scopes, &mut f);
     });
 }
 
-pub(crate) fn for_each_scope_ref<'a>(template: &'a Template, mut f: impl FnMut(Range<Position>, ScopeKind<'a>)) {
+pub(crate) fn for_each_scope_ref_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(Range<Position>, ScopeKind<'a>),
+) {
+    for_each_template_expression_in_subtree(node, scopes, |expr, scopes| match expr {
+        Expression::ScopeRef { location, index } => {
+            if let Some(s) = scopes.get(*index) {
+                f(location.clone(), *s);
+            }
+        }
+        _ => {}
+    });
+}
+
+pub(crate) fn for_each_scope_ref<'a>(
+    template: &'a Template,
+    mut f: impl FnMut(Range<Position>, ScopeKind<'a>),
+) {
     for_each_template_root(&template, |node, scopes| {
         for_each_scope_ref_in_subtree(node, scopes, &mut f);
     });
 }
 
-pub(crate) fn for_each_slot_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&Element)) {
-    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| {
-        match &elem.kind {
-            ElementKind::Slot { .. } => {
-                f(elem)
-            }
-            _ => {}
-        }
+pub(crate) fn for_each_slot_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(&Element),
+) {
+    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| match &elem.kind {
+        ElementKind::Slot { .. } => f(elem),
+        _ => {}
     });
 }
 
@@ -884,14 +1047,14 @@ pub(crate) fn for_each_slot<'a>(template: &'a Template, mut f: impl FnMut(&Eleme
     });
 }
 
-pub(crate) fn for_each_tag_name_in_subtree<'a>(node: &'a Node, scopes: &mut Vec<ScopeKind<'a>>, mut f: impl FnMut(&'a Ident)) {
-    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| {
-        match &elem.kind {
-            ElementKind::Normal { tag_name, .. } => {
-                f(tag_name)
-            }
-            _ => {}
-        }
+pub(crate) fn for_each_tag_name_in_subtree<'a>(
+    node: &'a Node,
+    scopes: &mut Vec<ScopeKind<'a>>,
+    mut f: impl FnMut(&'a Ident),
+) {
+    for_each_template_element_in_subtree(node, scopes, &mut |elem, _scopes| match &elem.kind {
+        ElementKind::Normal { tag_name, .. } => f(tag_name),
+        _ => {}
     });
 }
 
@@ -901,7 +1064,10 @@ pub(crate) fn for_each_tag_name<'a>(template: &'a Template, mut f: impl FnMut(&'
     });
 }
 
-pub(crate) fn for_each_static_class_name_in_element<'a>(elem: &'a Element, mut f: impl FnMut(&'a str, Range<Position>)) {
+pub(crate) fn for_each_static_class_name_in_element<'a>(
+    elem: &'a Element,
+    mut f: impl FnMut(&'a str, Range<Position>),
+) {
     if let ElementKind::Normal { class, .. } = &elem.kind {
         match class {
             ClassAttribute::String(_, value) => {
@@ -916,22 +1082,33 @@ pub(crate) fn for_each_static_class_name_in_element<'a>(elem: &'a Element, mut f
                             rec_expr(&left, left_space, false, f);
                             rec_expr(&right, false, left_space, f);
                         }
-                        Expression::LitStr { value, location, .. } => {
+                        Expression::LitStr {
+                            value, location, ..
+                        } => {
                             f(&value, &location, left_space, right_space);
                         }
                         _ => {}
                     }
                 }
-                let mut check_str = |s: &'a str, loc: &Range<Position>, left_space: bool, right_space: bool| {
-                    let s_end_ptr = s.as_ptr() as usize + s.len();
-                    for class_name in s.split_ascii_whitespace() {
-                        if !left_space && class_name.as_ptr() == s.as_ptr() { continue; }
-                        if !right_space && class_name.as_ptr() as usize + class_name.len() == s_end_ptr { continue; }
-                        f(class_name, loc.clone());
-                    }
-                };
+                let mut check_str =
+                    |s: &'a str, loc: &Range<Position>, left_space: bool, right_space: bool| {
+                        let s_end_ptr = s.as_ptr() as usize + s.len();
+                        for class_name in s.split_ascii_whitespace() {
+                            if !left_space && class_name.as_ptr() == s.as_ptr() {
+                                continue;
+                            }
+                            if !right_space
+                                && class_name.as_ptr() as usize + class_name.len() == s_end_ptr
+                            {
+                                continue;
+                            }
+                            f(class_name, loc.clone());
+                        }
+                    };
                 match value {
-                    Value::Static { value, location, .. } => {
+                    Value::Static {
+                        value, location, ..
+                    } => {
                         check_str(&value, location, true, true);
                     }
                     Value::Dynamic { expression, .. } => {

@@ -1,33 +1,58 @@
 use glass_easel_template_compiler::parse::{Template, TemplateStructure};
 use lsp_types::{DocumentSymbol, DocumentSymbolParams, SymbolKind};
 
-use crate::{utils::location_to_lsp_range, wxss::{keyframe::Keyframe, token::BraceOrSemicolon, CSSParse, List, Rule, RuleOrProperty, StyleSheet}, ServerContext};
+use crate::{
+    utils::location_to_lsp_range,
+    wxss::{
+        keyframe::Keyframe, token::BraceOrSemicolon, CSSParse, List, Rule, RuleOrProperty,
+        StyleSheet,
+    },
+    ServerContext,
+};
 
-pub(crate) async fn document_symbol(ctx: ServerContext, params: DocumentSymbolParams) -> anyhow::Result<Vec<DocumentSymbol>> {
-    let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<Vec<DocumentSymbol>> {
-        let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-            Some("wxml") => {
-                let template = project.get_wxml_tree(&abs_path)?;
-                collect_wxml_symbol_list(template)
-            }
-            Some("wxss") => {
-                let template = project.get_style_sheet(&abs_path)?;
-                collect_wxss_symbol_list(template)
-            }
-            _ => vec![],
-        };
-        Ok(ranges)
-    }).await??;
+pub(crate) async fn document_symbol(
+    ctx: ServerContext,
+    params: DocumentSymbolParams,
+) -> anyhow::Result<Vec<DocumentSymbol>> {
+    let ret = ctx
+        .clone()
+        .project_thread_task(
+            &params.text_document.uri,
+            move |project, abs_path| -> anyhow::Result<Vec<DocumentSymbol>> {
+                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
+                    Some("wxml") => {
+                        let template = project.get_wxml_tree(&abs_path)?;
+                        collect_wxml_symbol_list(template)
+                    }
+                    Some("wxss") => {
+                        let template = project.get_style_sheet(&abs_path)?;
+                        collect_wxss_symbol_list(template)
+                    }
+                    _ => vec![],
+                };
+                Ok(ranges)
+            },
+        )
+        .await??;
     Ok(ret)
 }
 
 fn collect_wxml_symbol_list(template: &Template) -> Vec<DocumentSymbol> {
     let mut ret = vec![];
     for sub in &template.globals.sub_templates {
-        if sub.name.is("") { continue; }
+        if sub.name.is("") {
+            continue;
+        }
         let name_loc = sub.name.location();
         let tag_start_pos = sub.tag_location.start.0.start.clone();
-        let tag_end_pos = sub.tag_location.end.as_ref().unwrap_or(&sub.tag_location.start).1.end.clone();
+        let tag_end_pos = sub
+            .tag_location
+            .end
+            .as_ref()
+            .unwrap_or(&sub.tag_location.start)
+            .1
+            .end
+            .clone();
         #[allow(deprecated)]
         ret.push(DocumentSymbol {
             name: sub.name.name.to_string(),
@@ -46,9 +71,7 @@ fn collect_wxml_symbol_list(template: &Template) -> Vec<DocumentSymbol> {
 fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
     fn rec(rule: &Rule) -> Option<DocumentSymbol> {
         match rule {
-            Rule::Unknown(_) => {
-                None
-            }
+            Rule::Unknown(_) => None,
             Rule::Style(x) => {
                 let children = convert_option_rule_or_property(&x.brace);
                 #[allow(deprecated)]
@@ -63,7 +86,8 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
                     children,
                 })
             }
-            Rule::Import(x) => {
+            Rule::Import(x) =>
+            {
                 #[allow(deprecated)]
                 Some(DocumentSymbol {
                     name: "@import".to_string(),
@@ -90,7 +114,8 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
                     children,
                 })
             }
-            Rule::FontFace(x) => {
+            Rule::FontFace(x) =>
+            {
                 #[allow(deprecated)]
                 Some(DocumentSymbol {
                     name: "@font-face".to_string(),
@@ -106,47 +131,54 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
             Rule::Keyframes(x) => {
                 let children = match &x.body {
                     Some(BraceOrSemicolon::Brace(x)) => {
-                        let children = x.children.iter().filter_map(|keyframe| {
-                            let (name, loc) = match keyframe {
-                                Keyframe::Named { progress, body: _ } => {
-                                    let name = progress.known()?;
-                                    (name.content.to_string(), name.location())
-                                }
-                                | Keyframe::Percentage { progress, body: _ } => {
-                                    let progress = progress.known()?;
-                                    let v = format!("{}%", progress.value * 100.);
-                                    (v, progress.location())
-                                }
-                                Keyframe::Unknown(..) => {
-                                    return None;
-                                }
-                            };
-                            let children = match keyframe {
-                                Keyframe::Named { progress: _, body }
-                                | Keyframe::Percentage { progress: _, body } => {
-                                    convert_option_rule_or_property(&body)
-                                }
-                                Keyframe::Unknown(..) => unreachable!(),
-                            };
-                            #[allow(deprecated)]
-                            Some(DocumentSymbol {
-                                name,
-                                detail: None,
-                                kind: SymbolKind::MODULE,
-                                tags: Default::default(),
-                                deprecated: Default::default(),
-                                selection_range: location_to_lsp_range(&loc),
-                                range: location_to_lsp_range(&x.location()),
-                                children,
+                        let children = x
+                            .children
+                            .iter()
+                            .filter_map(|keyframe| {
+                                let (name, loc) = match keyframe {
+                                    Keyframe::Named { progress, body: _ } => {
+                                        let name = progress.known()?;
+                                        (name.content.to_string(), name.location())
+                                    }
+                                    Keyframe::Percentage { progress, body: _ } => {
+                                        let progress = progress.known()?;
+                                        let v = format!("{}%", progress.value * 100.);
+                                        (v, progress.location())
+                                    }
+                                    Keyframe::Unknown(..) => {
+                                        return None;
+                                    }
+                                };
+                                let children = match keyframe {
+                                    Keyframe::Named { progress: _, body }
+                                    | Keyframe::Percentage { progress: _, body } => {
+                                        convert_option_rule_or_property(&body)
+                                    }
+                                    Keyframe::Unknown(..) => unreachable!(),
+                                };
+                                #[allow(deprecated)]
+                                Some(DocumentSymbol {
+                                    name,
+                                    detail: None,
+                                    kind: SymbolKind::MODULE,
+                                    tags: Default::default(),
+                                    deprecated: Default::default(),
+                                    selection_range: location_to_lsp_range(&loc),
+                                    range: location_to_lsp_range(&x.location()),
+                                    children,
+                                })
                             })
-                        }).collect();
+                            .collect();
                         Some(children)
                     }
                     _ => None,
                 };
                 #[allow(deprecated)]
                 Some(DocumentSymbol {
-                    name: format!("@keyframes {}", x.name.known().map(|x| x.content.as_str()).unwrap_or("")),
+                    name: format!(
+                        "@keyframes {}",
+                        x.name.known().map(|x| x.content.as_str()).unwrap_or("")
+                    ),
                     detail: None,
                     kind: SymbolKind::MODULE,
                     tags: Default::default(),
@@ -156,7 +188,8 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
                     children,
                 })
             }
-            Rule::UnknownAtRule(kw, x) => {
+            Rule::UnknownAtRule(kw, x) =>
+            {
                 #[allow(deprecated)]
                 Some(DocumentSymbol {
                     name: format!("@{}", kw.content),
@@ -171,7 +204,9 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
             }
         }
     }
-    fn convert_option_rule(x: &Option<BraceOrSemicolon<List<Rule>>>) -> Option<Vec<DocumentSymbol>> {
+    fn convert_option_rule(
+        x: &Option<BraceOrSemicolon<List<Rule>>>,
+    ) -> Option<Vec<DocumentSymbol>> {
         match x {
             Some(BraceOrSemicolon::Brace(x)) => {
                 let children = x.children.iter().filter_map(rec).collect();
@@ -180,15 +215,19 @@ fn collect_wxss_symbol_list(sheet: &StyleSheet) -> Vec<DocumentSymbol> {
             _ => None,
         }
     }
-    fn convert_option_rule_or_property(x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>) -> Option<Vec<DocumentSymbol>> {
+    fn convert_option_rule_or_property(
+        x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>,
+    ) -> Option<Vec<DocumentSymbol>> {
         match x {
             Some(BraceOrSemicolon::Brace(x)) => {
-                let children = x.children.iter().filter_map(|rp| {
-                    match rp {
+                let children = x
+                    .children
+                    .iter()
+                    .filter_map(|rp| match rp {
                         RuleOrProperty::Rule(rule) => rec(rule),
                         RuleOrProperty::Property(_) => None,
-                    }
-                }).collect();
+                    })
+                    .collect();
                 Some(children)
             }
             _ => None,

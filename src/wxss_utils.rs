@@ -1,4 +1,13 @@
-use crate::{utils::{exclusive_contains, exclusive_ordering, inclusive_contains}, wxss::{keyframe::Keyframe, media::*, rule::{IdentOrFunction, Selector}, token::*, CSSParse, List, MaybeUnknown, Position, Rule, RuleOrProperty, StyleSheet}};
+use crate::{
+    utils::{exclusive_contains, exclusive_ordering, inclusive_contains},
+    wxss::{
+        keyframe::Keyframe,
+        media::*,
+        rule::{IdentOrFunction, Selector},
+        token::*,
+        CSSParse, List, MaybeUnknown, Position, Rule, RuleOrProperty, StyleSheet,
+    },
+};
 
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
@@ -37,33 +46,34 @@ pub(crate) enum Token<'a> {
 }
 
 pub(crate) fn find_token_in_position(sheet: &StyleSheet, pos: Position) -> Token {
-    sheet.items.iter().find_map(|x| find_in_rule(x, pos)).unwrap_or(Token::None)
+    sheet
+        .items
+        .iter()
+        .find_map(|x| find_in_rule(x, pos))
+        .unwrap_or(Token::None)
 }
 
 fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
     match rule {
-        Rule::Unknown(tt_list) => {
-            match find_in_token_tree_list(&tt_list, pos) {
-                Some(Token::Ident(x)) if tt_list.first().location() == x.location() => {
-                    Some(Token::StyleRuleUnknownIdent(x))
-                }
-                x => x,
+        Rule::Unknown(tt_list) => match find_in_token_tree_list(&tt_list, pos) {
+            Some(Token::Ident(x)) if tt_list.first().location() == x.location() => {
+                Some(Token::StyleRuleUnknownIdent(x))
             }
-        }
-        Rule::Style(style_rule) => {
-            style_rule
-                .selector
-                .iter_values()
-                .find_map(|selector_list| selector_list.iter().find_map(|x| find_in_selector(x, pos)))
-                .or_else(|| find_in_option_brace_or_semicolon_properties(&style_rule.brace, pos))
-        }
+            x => x,
+        },
+        Rule::Style(style_rule) => style_rule
+            .selector
+            .iter_values()
+            .find_map(|selector_list| selector_list.iter().find_map(|x| find_in_selector(x, pos)))
+            .or_else(|| find_in_option_brace_or_semicolon_properties(&style_rule.brace, pos)),
         Rule::Import(import_rule) => {
             if inclusive_contains(&import_rule.at_import.location, pos) {
                 Some(Token::AtKeyword(&import_rule.at_import))
             } else {
                 find_in_maybe_unknown(&import_rule.url, pos, |t| {
                     inclusive_contains(&t.location, pos).then_some(Token::ImportUrl(t))
-                }).or_else(|| find_in_token_tree_list(&import_rule.condition, pos))
+                })
+                .or_else(|| find_in_token_tree_list(&import_rule.condition, pos))
             }
         }
         Rule::Media(media_rule) => {
@@ -85,13 +95,12 @@ fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
             if inclusive_contains(&font_face_rule.at_font_face.location, pos) {
                 Some(Token::AtKeyword(&font_face_rule.at_font_face))
             } else {
-                find_in_option_brace_or_semicolon_properties(&font_face_rule.body, pos)
-                    .map(|x| {
-                        match x {
-                            Token::PropertyName(x) => Token::FontFacePropertyName(x),
-                            x => x,
-                        }
-                    })
+                find_in_option_brace_or_semicolon_properties(&font_face_rule.body, pos).map(|x| {
+                    match x {
+                        Token::PropertyName(x) => Token::FontFacePropertyName(x),
+                        x => x,
+                    }
+                })
             }
         }
         Rule::Keyframes(keyframes_rule) => {
@@ -100,28 +109,25 @@ fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
             } else {
                 find_in_maybe_unknown(&keyframes_rule.name, pos, |t| {
                     inclusive_contains(&t.location, pos).then_some(Token::KeyframesName(t))
-                }).or_else(|| {
+                })
+                .or_else(|| {
                     find_in_option_brace_or_semicolon(&keyframes_rule.body, pos, |x| {
-                        x.iter().find_map(|x| {
-                            match x {
-                                Keyframe::Named { progress, body } => {
-                                    find_in_maybe_unknown(progress, pos, |t| {
-                                        inclusive_contains(&t.location, pos).then_some(Token::KeyframeProgressName(t))
-                                    }).or_else(|| {
-                                        find_in_option_brace_or_semicolon_properties(body, pos)
-                                    })
-                                }
-                                Keyframe::Percentage { progress, body } => {
-                                    find_in_maybe_unknown(progress, pos, |t| {
-                                        inclusive_contains(&t.location, pos).then_some(Token::KeyframeProgressPercentage(t))
-                                    }).or_else(|| {
-                                        find_in_option_brace_or_semicolon_properties(body, pos)
-                                    })
-                                }
-                                Keyframe::Unknown(x) => {
-                                    find_in_token_tree_list(x, pos)
-                                }
+                        x.iter().find_map(|x| match x {
+                            Keyframe::Named { progress, body } => {
+                                find_in_maybe_unknown(progress, pos, |t| {
+                                    inclusive_contains(&t.location, pos)
+                                        .then_some(Token::KeyframeProgressName(t))
+                                })
+                                .or_else(|| find_in_option_brace_or_semicolon_properties(body, pos))
                             }
+                            Keyframe::Percentage { progress, body } => {
+                                find_in_maybe_unknown(progress, pos, |t| {
+                                    inclusive_contains(&t.location, pos)
+                                        .then_some(Token::KeyframeProgressPercentage(t))
+                                })
+                                .or_else(|| find_in_option_brace_or_semicolon_properties(body, pos))
+                            }
+                            Keyframe::Unknown(x) => find_in_token_tree_list(x, pos),
                         })
                     })
                 })
@@ -149,12 +155,8 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
             } else {
                 None
             }
-        },
-        MediaQueryList::Sub(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_media_query_list(x, pos)
-            })
         }
+        MediaQueryList::Sub(x) => find_in_children(x, pos, |x| find_in_media_query_list(x, pos)),
         MediaQueryList::Not(kw, x) | MediaQueryList::Only(kw, x) => {
             if inclusive_contains(&kw.location, pos) {
                 Some(Token::Keyword(kw))
@@ -162,33 +164,23 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
                 find_in_media_query_list(&x, pos)
             }
         }
-        MediaQueryList::And(list) => {
-            list.iter().find_map(|(cond, kw)| {
-                find_in_media_query_list(cond, pos)
-                    .or_else(|| {
-                        match kw {
-                            MediaAndKeyword::None => None,
-                            MediaAndKeyword::And(kw) => {
-                                inclusive_contains(&kw.location(), pos).then_some(Token::Keyword(kw))
-                            }
-                        }
-                    })
+        MediaQueryList::And(list) => list.iter().find_map(|(cond, kw)| {
+            find_in_media_query_list(cond, pos).or_else(|| match kw {
+                MediaAndKeyword::None => None,
+                MediaAndKeyword::And(kw) => {
+                    inclusive_contains(&kw.location(), pos).then_some(Token::Keyword(kw))
+                }
             })
-        }
-        MediaQueryList::Or(list) => {
-            list.iter().find_map(|(cond, kw)| {
-                find_in_media_query_list(cond, pos)
-                    .or_else(|| {
-                        match kw {
-                            MediaOrKeyword::None => None,
-                            MediaOrKeyword::Comma(_) => None,
-                            MediaOrKeyword::Or(kw) => {
-                                inclusive_contains(&kw.location(), pos).then_some(Token::Keyword(kw))
-                            }
-                        }
-                    })
+        }),
+        MediaQueryList::Or(list) => list.iter().find_map(|(cond, kw)| {
+            find_in_media_query_list(cond, pos).or_else(|| match kw {
+                MediaOrKeyword::None => None,
+                MediaOrKeyword::Comma(_) => None,
+                MediaOrKeyword::Or(kw) => {
+                    inclusive_contains(&kw.location(), pos).then_some(Token::Keyword(kw))
+                }
             })
-        }
+        }),
         MediaQueryList::MediaType(x) => {
             if inclusive_contains(&x.location(), pos) {
                 let kw = match x {
@@ -202,23 +194,17 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
                 None
             }
         }
-        MediaQueryList::MediaFeature(x) => {
-            find_in_children(x, pos, |x| {
-                match x {
-                    MediaFeature::Unknown(x) => find_in_token_tree_list(x, pos),
-                    MediaFeature::SingleCondition(k) => {
-                        Some(Token::MediaFeatureName(k))
-                    }
-                    MediaFeature::Condition(k, _, v) => {
-                        if inclusive_contains(&k.location, pos) {
-                            Some(Token::MediaFeatureName(k))
-                        } else {
-                            find_in_token_tree_list(&v, pos)
-                        }
-                    }
+        MediaQueryList::MediaFeature(x) => find_in_children(x, pos, |x| match x {
+            MediaFeature::Unknown(x) => find_in_token_tree_list(x, pos),
+            MediaFeature::SingleCondition(k) => Some(Token::MediaFeatureName(k)),
+            MediaFeature::Condition(k, _, v) => {
+                if inclusive_contains(&k.location, pos) {
+                    Some(Token::MediaFeatureName(k))
+                } else {
+                    find_in_token_tree_list(&v, pos)
                 }
-            })
-        }
+            }
+        }),
     }
 }
 
@@ -231,11 +217,7 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
         Selector::TagName(x) => Token::TagName(x),
         Selector::Id(x) => Token::Id(x),
         Selector::Class(op, x) => Token::Class(op, x),
-        Selector::Attribute(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_token_tree_list(x, pos)
-            })?
-        },
+        Selector::Attribute(x) => find_in_children(x, pos, |x| find_in_token_tree_list(x, pos))?,
         Selector::PseudoClass(op, x) => Token::PseudoClass(op, x),
         Selector::PseudoElement(op1, op2, x) => Token::PseudoElement(op1, op2, x),
         Selector::IncompleteId(op) => Token::IncompleteId(op),
@@ -256,24 +238,23 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
 }
 
 fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token> {
-    x.iter().find_map(|x| {
-        match x {
-            RuleOrProperty::Rule(x) => find_in_rule(x, pos),
-            RuleOrProperty::Property(x) => {
-                if inclusive_contains(&x.name.location, pos) {
-                    Some(Token::PropertyName(&x.name))
-                } else {
-                    find_in_token_tree_list(&x.value, pos)
-                }
+    x.iter().find_map(|x| match x {
+        RuleOrProperty::Rule(x) => find_in_rule(x, pos),
+        RuleOrProperty::Property(x) => {
+            if inclusive_contains(&x.name.location, pos) {
+                Some(Token::PropertyName(&x.name))
+            } else {
+                find_in_token_tree_list(&x.value, pos)
             }
         }
     })
 }
 
-fn find_in_option_brace_or_semicolon_properties(x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>, pos: Position) -> Option<Token> {
-    find_in_option_brace_or_semicolon(x, pos, |x| {
-        find_in_rule_properties(x, pos)
-    })
+fn find_in_option_brace_or_semicolon_properties(
+    x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>,
+    pos: Position,
+) -> Option<Token> {
+    find_in_option_brace_or_semicolon(x, pos, |x| find_in_rule_properties(x, pos))
 }
 
 fn find_in_option_brace_or_semicolon<T>(
@@ -296,29 +277,31 @@ fn find_in_option_brace_or_semicolon<T>(
                 find_in_token_tree_list(&x.trailing, pos)
             }
         }
-        BraceOrSemicolon::Semicolon(..) => {
-            None
-        }
+        BraceOrSemicolon::Semicolon(..) => None,
     }
 }
 
-fn find_in_maybe_unknown<T>(x: &MaybeUnknown<T>, pos: Position, f: impl FnOnce(&T) -> Option<Token>) -> Option<Token> {
+fn find_in_maybe_unknown<T>(
+    x: &MaybeUnknown<T>,
+    pos: Position,
+    f: impl FnOnce(&T) -> Option<Token>,
+) -> Option<Token> {
     match x {
         MaybeUnknown::Unknown(x) => find_in_token_tree_list(&x, pos),
-        MaybeUnknown::Normal(x, tt_list) => {
-            f(x).or_else(|| find_in_token_tree_list(tt_list, pos))
-        }
+        MaybeUnknown::Normal(x, tt_list) => f(x).or_else(|| find_in_token_tree_list(tt_list, pos)),
     }
 }
 
-fn find_in_children<'a, T: 'a, P: TokenGroupExt<T>>(p: &'a P, pos: Position, f: impl FnOnce(&T) -> Option<Token>) -> Option<Token<'a>> {
+fn find_in_children<'a, T: 'a, P: TokenGroupExt<T>>(
+    p: &'a P,
+    pos: Position,
+    f: impl FnOnce(&T) -> Option<Token>,
+) -> Option<Token<'a>> {
     f(p.children()).or_else(|| find_in_token_tree_list(p.trailing(), pos))
 }
 
 fn find_in_token_tree_list(tt_list: &[TokenTree], pos: Position) -> Option<Token> {
-    let index = tt_list.binary_search_by(|tt| {
-        exclusive_ordering(&tt.location(), pos)
-    });
+    let index = tt_list.binary_search_by(|tt| exclusive_ordering(&tt.location(), pos));
     match index {
         Ok(index) => find_in_token_tree(&tt_list[index], pos),
         Err(index) => {
@@ -354,46 +337,34 @@ fn find_in_token_tree(tt: &TokenTree, pos: Position) -> Option<Token> {
         TokenTree::IDHash(x) => Token::IDHash(x),
         TokenTree::QuotedString(x) => Token::QuotedString(x),
         TokenTree::UnquotedUrl(x) => Token::UnquotedUrl(x),
-        TokenTree::Function(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_token_tree_list(x, pos)
-            }).or_else(|| {
+        TokenTree::Function(x) => find_in_children(x, pos, |x| find_in_token_tree_list(x, pos))
+            .or_else(|| {
                 if !tt.location().contains(&pos) {
                     return None;
                 }
                 Some(Token::Function(x))
-            })?
-        }
-        TokenTree::Paren(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_token_tree_list(x, pos)
-            }).or_else(|| {
+            })?,
+        TokenTree::Paren(x) => find_in_children(x, pos, |x| find_in_token_tree_list(x, pos))
+            .or_else(|| {
                 if !exclusive_contains(&tt.location(), pos) {
                     return None;
                 }
                 Some(Token::Paren(x))
-            })?
-        }
-        TokenTree::Bracket(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_token_tree_list(x, pos)
-            }).or_else(|| {
+            })?,
+        TokenTree::Bracket(x) => find_in_children(x, pos, |x| find_in_token_tree_list(x, pos))
+            .or_else(|| {
                 if !exclusive_contains(&tt.location(), pos) {
                     return None;
                 }
                 Some(Token::Bracket(x))
-            })?
-        }
-        TokenTree::Brace(x) => {
-            find_in_children(x, pos, |x| {
-                find_in_token_tree_list(x, pos)
-            }).or_else(|| {
+            })?,
+        TokenTree::Brace(x) => find_in_children(x, pos, |x| find_in_token_tree_list(x, pos))
+            .or_else(|| {
                 if !exclusive_contains(&tt.location(), pos) {
                     return None;
                 }
                 Some(Token::Brace(x))
-            })?
-        }
+            })?,
         TokenTree::BadUrl(x) => Token::BadUrl(x),
         TokenTree::BadString(x) => Token::BadString(x),
         TokenTree::Number(_)
@@ -417,10 +388,7 @@ pub(crate) fn for_each_rule_in_style_sheet(sheet: &StyleSheet, mut f: impl FnMut
     fn rec_in_rule(rule: &Rule, f: &mut impl FnMut(&Rule)) {
         f(rule);
         match rule {
-            Rule::Unknown(_)
-            | Rule::UnknownAtRule(_, _)
-            | Rule::Import(_)
-            | Rule::FontFace(_) => {}
+            Rule::Unknown(_) | Rule::UnknownAtRule(_, _) | Rule::Import(_) | Rule::FontFace(_) => {}
             Rule::Style(x) => {
                 rec_in_option_brace(&x.brace, |x| {
                     for x in x.iter() {
@@ -486,17 +454,13 @@ pub(crate) fn for_each_selector_in_style_sheet(sheet: &StyleSheet, mut f: impl F
 }
 
 pub(crate) fn for_each_import_in_style_sheet(sheet: &StyleSheet, mut f: impl FnMut(&str)) {
-    for_each_rule_in_style_sheet(sheet, |rule| {
-        match rule {
-            Rule::Import(x) => {
-                match &x.url {
-                    MaybeUnknown::Normal(url, _) => {
-                        f(url.content.as_str());
-                    }
-                    MaybeUnknown::Unknown(_) => {}
-                }
+    for_each_rule_in_style_sheet(sheet, |rule| match rule {
+        Rule::Import(x) => match &x.url {
+            MaybeUnknown::Normal(url, _) => {
+                f(url.content.as_str());
             }
-            _ => {}
-        }
+            MaybeUnknown::Unknown(_) => {}
+        },
+        _ => {}
     });
 }

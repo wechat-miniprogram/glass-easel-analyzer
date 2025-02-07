@@ -132,7 +132,9 @@ macro_rules! basic_token {
         impl CSSParse for $t {
             fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
                 if let Some(TokenTree::$t(..)) = ps.peek() {
-                    let Some(TokenTree::$t(x)) = ps.next() else { unreachable!() };
+                    let Some(TokenTree::$t(x)) = ps.next() else {
+                        unreachable!()
+                    };
                     Some(x)
                 } else {
                     None
@@ -167,7 +169,9 @@ macro_rules! core_delim_token {
         impl CSSParse for $t {
             fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
                 if let Some(TokenTree::$t(..)) = ps.peek() {
-                    let Some(TokenTree::$t(x)) = ps.next() else { unreachable!() };
+                    let Some(TokenTree::$t(x)) = ps.next() else {
+                        unreachable!()
+                    };
                     Some(x)
                 } else {
                     None
@@ -221,7 +225,9 @@ impl TokenExt for Operator {}
 impl CSSParse for Operator {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Operator(..)) = ps.peek() {
-            let Some(TokenTree::Operator(x)) = ps.next() else { unreachable!() };
+            let Some(TokenTree::Operator(x)) = ps.next() else {
+                unreachable!()
+            };
             Some(x)
         } else {
             None
@@ -247,7 +253,9 @@ impl TokenExt for Number {}
 impl CSSParse for Number {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Number(..)) = ps.peek() {
-            let Some(TokenTree::Number(x)) = ps.next() else { unreachable!() };
+            let Some(TokenTree::Number(x)) = ps.next() else {
+                unreachable!()
+            };
             Some(x)
         } else {
             None
@@ -273,7 +281,9 @@ impl TokenExt for Percentage {}
 impl CSSParse for Percentage {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Percentage(..)) = ps.peek() {
-            let Some(TokenTree::Percentage(x)) = ps.next() else { unreachable!() };
+            let Some(TokenTree::Percentage(x)) = ps.next() else {
+                unreachable!()
+            };
             Some(x)
         } else {
             None
@@ -300,7 +310,9 @@ impl TokenExt for Dimension {}
 impl CSSParse for Dimension {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Dimension(..)) = ps.peek() {
-            let Some(TokenTree::Dimension(x)) = ps.next() else { unreachable!() };
+            let Some(TokenTree::Dimension(x)) = ps.next() else {
+                unreachable!()
+            };
             Some(x)
         } else {
             None
@@ -357,9 +369,7 @@ impl<T> TokenGroupExt<T> for Function<T> {
 impl<T: CSSParse> CSSParse for Function<T> {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         if let Some(TokenTree::Function(..)) = ps.peek() {
-            ps.parse_function(|mut ps| {
-                CSSParse::css_parse(&mut ps)
-            })
+            ps.parse_function(|mut ps| CSSParse::css_parse(&mut ps))
         } else {
             None
         }
@@ -404,11 +414,11 @@ macro_rules! group_token {
             fn left(&self) -> Location {
                 self.left.clone()
             }
-        
+
             fn right(&self) -> Location {
                 self.right.clone()
             }
-        
+
             fn children(&self) -> &T {
                 &self.children
             }
@@ -421,9 +431,7 @@ macro_rules! group_token {
         impl<T: CSSParse> CSSParse for $t<T> {
             fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
                 if let Some(TokenTree::$t(..)) = ps.peek() {
-                    ps.$p(|mut ps| {
-                        CSSParse::css_parse(&mut ps)
-                    })
+                    ps.$p(|mut ps| CSSParse::css_parse(&mut ps))
                 } else {
                     None
                 }
@@ -457,14 +465,12 @@ pub(crate) enum BraceOrSemicolon<T> {
 impl<T: CSSParse> CSSParse for BraceOrSemicolon<T> {
     fn css_parse(ps: &mut super::state::ParseState) -> Option<Self> {
         let ret = match ps.peek()? {
-            TokenTree::Brace(_) => {
-                match Brace::<T>::css_parse(ps) {
-                    None => Self::UnknownBrace(ps.parse_brace(|_| Some(())).unwrap()),
-                    Some(x) => Self::Brace(x),
-                }
+            TokenTree::Brace(_) => match Brace::<T>::css_parse(ps) {
+                None => Self::UnknownBrace(ps.parse_brace(|_| Some(())).unwrap()),
+                Some(x) => Self::Brace(x),
             },
             TokenTree::Semicolon(_) => Self::Semicolon(CSSParse::css_parse(ps)?),
-            _ => return None
+            _ => return None,
         };
         Some(ret)
     }

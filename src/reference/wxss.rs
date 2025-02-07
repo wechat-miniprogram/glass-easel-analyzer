@@ -1,4 +1,8 @@
-use crate::{utils::location_to_lsp_range, wxss::{rule::Selector, Position, StyleSheet}, wxss_utils::{find_token_in_position, for_each_selector_in_style_sheet, Token}};
+use crate::{
+    utils::location_to_lsp_range,
+    wxss::{rule::Selector, Position, StyleSheet},
+    wxss_utils::{find_token_in_position, for_each_selector_in_style_sheet, Token},
+};
 
 use super::*;
 
@@ -73,17 +77,33 @@ pub(super) fn find_class_selectors(
     ret
 }
 
-pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_types::Position) -> anyhow::Result<Vec<LocationLink>> {
+pub(super) fn find_declaration(
+    project: &mut Project,
+    abs_path: &Path,
+    pos: lsp_types::Position,
+) -> anyhow::Result<Vec<LocationLink>> {
     let sheet = project.get_style_sheet(abs_path)?;
     let mut ret = vec![];
-    let token = find_token_in_position(sheet, Position { line: pos.line, utf16_col: pos.character });
+    let token = find_token_in_position(
+        sheet,
+        Position {
+            line: pos.line,
+            utf16_col: pos.character,
+        },
+    );
     match token {
         Token::ImportUrl(src) => {
             if let Some(p) = project.find_rel_path_for_file(abs_path, &src.content) {
                 if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
                     let target_range = lsp_types::Range::new(
-                        lsp_types::Position { line: 0, character: 0 },
-                        lsp_types::Position { line: 0, character: 0 },
+                        lsp_types::Position {
+                            line: 0,
+                            character: 0,
+                        },
+                        lsp_types::Position {
+                            line: 0,
+                            character: 0,
+                        },
                     );
                     ret.push(LocationLink {
                         origin_selection_range: Some(location_to_lsp_range(&src.location)),
@@ -127,15 +147,27 @@ pub(super) fn find_declaration(project: &mut Project, abs_path: &Path, pos: lsp_
     Ok(ret)
 }
 
-pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_types::Position) -> anyhow::Result<Vec<Location>> {
+pub(super) fn find_references(
+    project: &mut Project,
+    abs_path: &Path,
+    pos: lsp_types::Position,
+) -> anyhow::Result<Vec<Location>> {
     let sheet = project.get_style_sheet(abs_path)?;
-    let token = find_token_in_position(sheet, Position { line: pos.line, utf16_col: pos.character });
+    let token = find_token_in_position(
+        sheet,
+        Position {
+            line: pos.line,
+            utf16_col: pos.character,
+        },
+    );
     let ret = match token {
         Token::TagName(x) => {
             let mut ret = find_tag_name_selectors(project, abs_path, sheet, &x.content);
             let wxml_path = abs_path.with_extension("wxml");
             if let Ok(template) = project.get_wxml_tree(&wxml_path) {
-                let mut x = wxml::find_elements_matching_tag_name(project, &wxml_path, template, &x.content);
+                let mut x = wxml::find_elements_matching_tag_name(
+                    project, &wxml_path, template, &x.content,
+                );
                 ret.append(&mut x);
             }
             ret
@@ -144,7 +176,8 @@ pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_t
             let mut ret = find_id_selectors(project, abs_path, sheet, &x.content);
             let wxml_path = abs_path.with_extension("wxml");
             if let Ok(template) = project.get_wxml_tree(&wxml_path) {
-                let mut x = wxml::find_elements_matching_id(project, &wxml_path, template, &x.content);
+                let mut x =
+                    wxml::find_elements_matching_id(project, &wxml_path, template, &x.content);
                 ret.append(&mut x);
             }
             ret
@@ -153,7 +186,8 @@ pub(super) fn find_references(project: &mut Project, abs_path: &Path, pos: lsp_t
             let mut ret = find_class_selectors(project, abs_path, sheet, &x.content);
             let wxml_path = abs_path.with_extension("wxml");
             if let Ok(template) = project.get_wxml_tree(&wxml_path) {
-                let mut x = wxml::find_elements_matching_class(project, &wxml_path, template, &x.content);
+                let mut x =
+                    wxml::find_elements_matching_class(project, &wxml_path, template, &x.content);
                 ret.append(&mut x);
             }
             ret

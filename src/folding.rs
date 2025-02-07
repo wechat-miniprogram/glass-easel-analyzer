@@ -1,27 +1,42 @@
-use glass_easel_template_compiler::parse::{tag::{ElementKind, Node, Script}, Position, Template};
+use glass_easel_template_compiler::parse::{
+    tag::{ElementKind, Node, Script},
+    Position, Template,
+};
 use lsp_types::{FoldingRange, FoldingRangeKind, FoldingRangeParams};
 
 use crate::{wxss::StyleSheet, ServerContext};
 
-pub(crate) async fn folding_range(ctx: ServerContext, params: FoldingRangeParams) -> anyhow::Result<Vec<FoldingRange>> {
-    let ret = ctx.clone().project_thread_task(&params.text_document.uri, move |project, abs_path| -> anyhow::Result<Vec<FoldingRange>> {
-        let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-            Some("wxml") => {
-                let template = project.get_wxml_tree(&abs_path)?;
-                collect_wxml_folding_ranges(template)
-            }
-            Some("wxss") => {
-                let template = project.get_style_sheet(&abs_path)?;
-                collect_wxss_folding_ranges(template)
-            }
-            _ => vec![],
-        };
-        Ok(ranges)
-    }).await??;
+pub(crate) async fn folding_range(
+    ctx: ServerContext,
+    params: FoldingRangeParams,
+) -> anyhow::Result<Vec<FoldingRange>> {
+    let ret = ctx
+        .clone()
+        .project_thread_task(
+            &params.text_document.uri,
+            move |project, abs_path| -> anyhow::Result<Vec<FoldingRange>> {
+                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
+                    Some("wxml") => {
+                        let template = project.get_wxml_tree(&abs_path)?;
+                        collect_wxml_folding_ranges(template)
+                    }
+                    Some("wxss") => {
+                        let template = project.get_style_sheet(&abs_path)?;
+                        collect_wxss_folding_ranges(template)
+                    }
+                    _ => vec![],
+                };
+                Ok(ranges)
+            },
+        )
+        .await??;
     Ok(ret)
 }
 
-fn convert_folding_range(loc: std::ops::Range<Position>, kind: Option<FoldingRangeKind>) -> FoldingRange {
+fn convert_folding_range(
+    loc: std::ops::Range<Position>,
+    kind: Option<FoldingRangeKind>,
+) -> FoldingRange {
     FoldingRange {
         start_line: loc.start.line,
         start_character: Some(loc.start.utf16_col),
@@ -40,15 +55,22 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
                 Node::Text(..) => {}
                 Node::Element(elem) => {
                     if let Some(end_loc) = elem.tag_location.end.as_ref() {
-                        ranges.push(convert_folding_range(elem.tag_location.start.1.end..end_loc.0.start, None));
+                        ranges.push(convert_folding_range(
+                            elem.tag_location.start.1.end..end_loc.0.start,
+                            None,
+                        ));
                     }
                     match &elem.kind {
-                        ElementKind::Normal { children, .. } |
-                        ElementKind::Pure { children, .. } |
-                        ElementKind::For { children, .. } => {
+                        ElementKind::Normal { children, .. }
+                        | ElementKind::Pure { children, .. }
+                        | ElementKind::For { children, .. } => {
                             collect_in_nodes(ranges, &children);
                         }
-                        ElementKind::If { branches, else_branch, .. } => {
+                        ElementKind::If {
+                            branches,
+                            else_branch,
+                            ..
+                        } => {
                             for br in branches {
                                 collect_in_nodes(ranges, &br.2);
                             }
@@ -56,16 +78,18 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
                                 collect_in_nodes(ranges, &br.1);
                             }
                         }
-                        ElementKind::Slot { .. } |
-                        ElementKind::TemplateRef { .. } |
-                        ElementKind::Include { .. } => {}
+                        ElementKind::Slot { .. }
+                        | ElementKind::TemplateRef { .. }
+                        | ElementKind::Include { .. } => {}
                         _ => {}
                     }
                 }
                 Node::Comment(x) => {
                     let mut loc = x.location.clone();
                     loc.start.utf16_col += 3;
-                    if loc.end.utf16_col >= 3 { loc.end.utf16_col -= 3; }
+                    if loc.end.utf16_col >= 3 {
+                        loc.end.utf16_col -= 3;
+                    }
                     ranges.push(convert_folding_range(loc, Some(FoldingRangeKind::Comment)));
                 }
                 Node::UnknownMetaTag(..) => {}
@@ -96,9 +120,13 @@ fn collect_wxml_folding_ranges(template: &Template) -> Vec<FoldingRange> {
 }
 
 fn collect_wxss_folding_ranges(sheet: &StyleSheet) -> Vec<FoldingRange> {
-    let mut ranges = Vec::with_capacity(sheet.comments.len() + sheet.special_locations.braces.len());
+    let mut ranges =
+        Vec::with_capacity(sheet.comments.len() + sheet.special_locations.braces.len());
     for comment in sheet.comments.iter() {
-        ranges.push(convert_folding_range(comment.location.clone(), Some(FoldingRangeKind::Comment)));
+        ranges.push(convert_folding_range(
+            comment.location.clone(),
+            Some(FoldingRangeKind::Comment),
+        ));
     }
     for loc in sheet.special_locations.braces.iter() {
         ranges.push(convert_folding_range(loc.clone(), None));
