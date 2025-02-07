@@ -25,10 +25,6 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: armhf
-            npm_config_arch: arm
-          - os: ubuntu-latest
-            platform: alpine
-            arch: x64
           - os: macos-latest
             platform: darwin
             arch: x64
@@ -45,6 +41,7 @@ jobs:
         with:
           toolchain: stable
       - run: vscode-extension/build/init.sh
+      - run: vscode-extension/build/${{ matrix.platform }}-${{ matrix.arch }}.sh
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
