@@ -20,7 +20,7 @@ Furthermore, please read through [extension publishing guide for VSCode](https:/
 
 ### Initialize Development
 
-Run `vscode-extension/build/init.sh` to cleanup and (re)initialize development.
+Run `vscode-extension/build/init.sh` (or `.bat` for Windows) to cleanup and (re)initialize development.
 
 ### Debug
 
@@ -40,7 +40,7 @@ Run with `TEST_OVERWRITE_SNAPSHOT=1` to overwrite test snapshots.
 
 ### Packaging
 
-Execute `vscode-extension/build/[PLATFORM].sh` to build packages for the specified platform.
+Execute `vscode-extension/build/[PLATFORM].sh` (or `.bat` for Windows) to build packages for the specified platform.
 
 ### Publish
 

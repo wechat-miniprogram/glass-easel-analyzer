@@ -8,9 +8,9 @@ ARGS=$3
 cd ..
 echo "Building language server for ${TARGET_NAME}..."
 if cargo build --target ${TARGET_TRIPLE} --release; then
-  echo 'Cargo build done.'
+  echo "Cargo build done."
 else
-  echo 'Cargo build failed! Abort.'
+  echo "Cargo build failed! Abort."
   exit -1
 fi
 cd vscode-extension
@@ -22,4 +22,4 @@ cp ../backend-configuration/web/web.toml dist/
 
 # packaging
 mkdir -p packages
-vsce package --target ${TARGET_NAME} -o packages ${ARGS}
+npx vsce package --target ${TARGET_NAME} -o packages ${ARGS}
