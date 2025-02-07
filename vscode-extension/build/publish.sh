@@ -17,4 +17,4 @@ else
   exit -1
 fi
 
-vsce publish --packagePath packages/*-${VERSION}.vsix --pre-release
+npx vsce publish --packagePath packages/*-${VERSION}.vsix --pre-release
