@@ -10,22 +10,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: windows-latest
-          #   platform: win32
-          #   arch: x64
-          # - os: windows-latest
-          #   platform: win32
-          #   arch: arm64
-          - os: ubuntu-latest
-            platform: linux
+          - os: windows-latest
+            platform: win32
             arch: x64
           - os: ubuntu-latest
             platform: linux
-            arch: arm64
-          - os: ubuntu-latest
+            arch: x64
+          - os: ubuntu-24.04-arm
             platform: linux
-            arch: armhf
-          - os: macos-latest
+            arch: arm64
+          - os: macos-13
             platform: darwin
             arch: x64
           - os: macos-latest
@@ -41,7 +35,15 @@ jobs:
         with:
           toolchain: stable
       - run: vscode-extension/build/init.sh
+        if: ${{ matrix.platform != 'win32' }}
+      - run: vscode-extension\build\init.bat
+        shell: cmd
+        if: ${{ matrix.platform == 'win32' }}
       - run: vscode-extension/build/${{ matrix.platform }}-${{ matrix.arch }}.sh
+        if: ${{ matrix.platform != 'win32' }}
+      - run: vscode-extension\build\${{ matrix.platform }}-${{ matrix.arch }}.bat
+        shell: cmd
+        if: ${{ matrix.platform == 'win32' }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}-${{ matrix.arch }}
@@ -50,9 +52,17 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: build
-    if: success() && startsWith( github.ref, 'refs/tags/')
+    if: success() && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
-      # - run: npx vsce publish --packagePath $(find . -iname *.vsix)
-      #   env:
-      #     VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        with:
+          path: vscode-extension/packages/
+          merge-multiple: true
+      - run: npx vsce publish --packagePath vscode-extension/packages
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_DELETE: true
+          GHR_PATH: vscode-extension/packages/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
