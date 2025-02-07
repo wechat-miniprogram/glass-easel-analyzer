@@ -7,7 +7,12 @@ ARGS=$3
 # build language server for different platforms
 cd ..
 echo "Building language server for ${TARGET_NAME}..."
-cargo build --target ${TARGET_TRIPLE} --release
+if cargo build --target ${TARGET_TRIPLE} --release; then
+  echo 'Cargo build done.'
+else
+  echo 'Cargo build failed! Abort.'
+  exit -1
+fi
 cd vscode-extension
 
 # copy resources
