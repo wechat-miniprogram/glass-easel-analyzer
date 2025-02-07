@@ -44,4 +44,6 @@ Execute `vscode-extension/build/[PLATFORM].sh` (or `.bat` for Windows) to build 
 
 ### Publish
 
-After packaging, execute `vscode-extension/build/publish.sh [VERSION]` to publish the packages of the specified version.
+After packaging, `vscode-extension/build/publish.sh [VERSION]` can be used to publish the packages of the specified version.
+
+However, the regular publish should be done through [this GitHub Action](https://github.com/wechat-miniprogram/glass-easel-analyzer/actions/workflows/vscode-extension.yml).
