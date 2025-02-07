@@ -57,6 +57,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: vscode-extension/packages/
+          merge-multiple: true
       # - run: npx vsce publish --packagePath vscode-extension/packages
       #   env:
       #     VSCE_PAT: ${{ secrets.VSCE_PAT }}
