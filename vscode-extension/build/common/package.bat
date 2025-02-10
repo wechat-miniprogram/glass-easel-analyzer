@@ -2,7 +2,6 @@
 
 set TARGET_NAME=%1
 set TARGET_TRIPLE=%2
-set ARGS=%3
 
 :: build language server for different platforms
 cd ..
@@ -22,4 +21,4 @@ copy "..\target\%TARGET_TRIPLE%\release\glass-easel-analyzer.exe" "dist\"
 copy "..\backend-configuration\web\web.toml" "dist\"
 
 :: packaging
-npx vsce package --target %TARGET_NAME% -o packages %ARGS%
+npx vsce package --target %TARGET_NAME% -o packages

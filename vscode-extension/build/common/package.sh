@@ -2,7 +2,6 @@
 
 TARGET_NAME=$1
 TARGET_TRIPLE=$2
-ARGS=$3
 
 # build language server for different platforms
 cd ..
@@ -22,4 +21,4 @@ cp ../backend-configuration/web/web.toml dist/
 
 # packaging
 mkdir -p packages
-npx vsce package --target ${TARGET_NAME} -o packages ${ARGS}
+npx vsce package --target ${TARGET_NAME} -o packages
