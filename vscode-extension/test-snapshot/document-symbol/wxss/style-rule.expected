@@ -1,91 +1,67 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "containerName": "",
-    "kind": "Class",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 0,
-        },
-        Object {
-          "character": 1,
-          "line": 7,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": "div#a.b-c[attr=\"value\"]",
-  },
-  Object {
-    "containerName": "",
-    "kind": "Class",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 9,
-        },
-        Object {
-          "character": 6,
-          "line": 9,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": "div",
-  },
-  Object {
-    "containerName": "",
-    "kind": "Class",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 11,
-        },
-        Object {
-          "character": 5,
-          "line": 11,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": "#a",
-  },
-  Object {
-    "containerName": "",
-    "kind": "Class",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 13,
-        },
-        Object {
-          "character": 7,
-          "line": 13,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": ".b-c",
-  },
-]
+[Array]
+  [Object]
+    containerName = ""
+    kind = "Class"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 0
+        [Object]
+          character = 1
+          line = 7
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
+        scheme = "file"
+    name = "div#a.b-c[attr=\"value\"]"
+  [Object]
+    containerName = ""
+    kind = "Class"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 9
+        [Object]
+          character = 6
+          line = 9
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
+        scheme = "file"
+    name = "div"
+  [Object]
+    containerName = ""
+    kind = "Class"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 11
+        [Object]
+          character = 5
+          line = 11
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
+        scheme = "file"
+    name = "#a"
+  [Object]
+    containerName = ""
+    kind = "Class"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 13
+        [Object]
+          character = 7
+          line = 13
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
+        scheme = "file"
+    name = ".b-c"
+

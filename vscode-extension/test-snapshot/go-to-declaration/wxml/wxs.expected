@@ -1,160 +1,116 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 11,
-        "line": 9,
-      },
-      Object {
-        "character": 22,
-        "line": 9,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 13,
-        "line": 0,
-      },
-      Object {
-        "character": 24,
-        "line": 0,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 13,
-        "line": 0,
-      },
-      Object {
-        "character": 24,
-        "line": 0,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 11
+        line = 9
+      [Object]
+        character = 22
+        line = 9
+    targetRange = [Array]
+      [Object]
+        character = 13
+        line = 0
+      [Object]
+        character = 24
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 13
+        line = 0
+      [Object]
+        character = 24
+        line = 0
+    targetUri = [Object]
+      $mid = 1
+      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml"
+      scheme = "file"
+
 // ====== SNAPSHOT 1 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 11,
-        "line": 10,
-      },
-      Object {
-        "character": 30,
-        "line": 10,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 13,
-        "line": 6,
-      },
-      Object {
-        "character": 32,
-        "line": 6,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 13,
-        "line": 6,
-      },
-      Object {
-        "character": 32,
-        "line": 6,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 11
+        line = 10
+      [Object]
+        character = 30
+        line = 10
+    targetRange = [Array]
+      [Object]
+        character = 13
+        line = 6
+      [Object]
+        character = 32
+        line = 6
+    targetSelectionRange = [Array]
+      [Object]
+        character = 13
+        line = 6
+      [Object]
+        character = 32
+        line = 6
+    targetUri = [Object]
+      $mid = 1
+      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml"
+      scheme = "file"
+
 // ====== SNAPSHOT 2 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 11,
-        "line": 11,
-      },
-      Object {
-        "character": 12,
-        "line": 11,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 39,
-        "line": 8,
-      },
-      Object {
-        "character": 40,
-        "line": 8,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 39,
-        "line": 8,
-      },
-      Object {
-        "character": 40,
-        "line": 8,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 11
+        line = 11
+      [Object]
+        character = 12
+        line = 11
+    targetRange = [Array]
+      [Object]
+        character = 39
+        line = 8
+      [Object]
+        character = 40
+        line = 8
+    targetSelectionRange = [Array]
+      [Object]
+        character = 39
+        line = 8
+      [Object]
+        character = 40
+        line = 8
+    targetUri = [Object]
+      $mid = 1
+      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/wxs.wxml"
+      scheme = "file"
+
 // ====== SNAPSHOT 3 ======
-Array [
-  Object {
-    "originSelectionRange": Array [
-      Object {
-        "character": 39,
-        "line": 6,
-      },
-      Object {
-        "character": 45,
-        "line": 6,
-      },
-    ],
-    "targetRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetSelectionRange": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-    ],
-    "targetUri": Object {
-      "$mid": 1,
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global.wxs",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 39
+        line = 6
+      [Object]
+        character = 45
+        line = 6
+    targetRange = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 0
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 0
+        line = 0
+    targetUri = [Object]
+      $mid = 1
+      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global.wxs"
+      scheme = "file"
+

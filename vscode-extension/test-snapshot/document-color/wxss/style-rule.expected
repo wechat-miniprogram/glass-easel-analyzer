@@ -1,39 +1,29 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "color": Object {
-      "alpha": 1,
-      "blue": 0,
-      "green": 0,
-      "red": 1,
-    },
-    "range": Array [
-      Object {
-        "character": 9,
-        "line": 1,
-      },
-      Object {
-        "character": 12,
-        "line": 1,
-      },
-    ],
-  },
-  Object {
-    "color": Object {
-      "alpha": 1,
-      "blue": 0.33725491166114807,
-      "green": 0.20392157137393951,
-      "red": 0.07058823853731155,
-    },
-    "range": Array [
-      Object {
-        "character": 11,
-        "line": 5,
-      },
-      Object {
-        "character": 18,
-        "line": 5,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    color = [Object]
+      alpha = 1
+      blue = 0
+      green = 0
+      red = 1
+    range = [Array]
+      [Object]
+        character = 9
+        line = 1
+      [Object]
+        character = 12
+        line = 1
+  [Object]
+    color = [Object]
+      alpha = 1
+      blue = 0.33725491166114807
+      green = 0.20392157137393951
+      red = 0.07058823853731155
+    range = [Array]
+      [Object]
+        character = 11
+        line = 5
+      [Object]
+        character = 18
+        line = 5
+

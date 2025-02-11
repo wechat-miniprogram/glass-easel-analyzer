@@ -1,272 +1,198 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 1,
-        "line": 0,
-      },
-      Object {
-        "character": 5,
-        "line": 0,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 0
+      [Object]
+        character = 5
+        line = 0
+
 // ====== SNAPSHOT 1 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 6,
-        "line": 0,
-      },
-      Object {
-        "character": 12,
-        "line": 0,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 6
+        line = 0
+      [Object]
+        character = 12
+        line = 0
+
 // ====== SNAPSHOT 2 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 18,
-        "line": 0,
-      },
-      Object {
-        "character": 21,
-        "line": 0,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 18
+        line = 0
+      [Object]
+        character = 21
+        line = 0
+
 // ====== SNAPSHOT 3 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 35,
-        "line": 0,
-      },
-      Object {
-        "character": 45,
-        "line": 0,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 35
+        line = 0
+      [Object]
+        character = 45
+        line = 0
+
 // ====== SNAPSHOT 4 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 1,
-        "line": 2,
-      },
-      Object {
-        "character": 4,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 2
+      [Object]
+        character = 4
+        line = 2
+
 // ====== SNAPSHOT 5 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 5,
-        "line": 2,
-      },
-      Object {
-        "character": 11,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 5
+        line = 2
+      [Object]
+        character = 11
+        line = 2
+
 // ====== SNAPSHOT 6 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 17,
-        "line": 2,
-      },
-      Object {
-        "character": 20,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 17
+        line = 2
+      [Object]
+        character = 20
+        line = 2
+
 // ====== SNAPSHOT 7 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 34,
-        "line": 2,
-      },
-      Object {
-        "character": 39,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 34
+        line = 2
+      [Object]
+        character = 39
+        line = 2
+
 // ====== SNAPSHOT 8 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 50,
-        "line": 2,
-      },
-      Object {
-        "character": 62,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 50
+        line = 2
+      [Object]
+        character = 62
+        line = 2
+
 // ====== SNAPSHOT 9 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 64,
-        "line": 2,
-      },
-      Object {
-        "character": 69,
-        "line": 2,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 64
+        line = 2
+      [Object]
+        character = 69
+        line = 2
+
 // ====== SNAPSHOT 10 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 1,
-        "line": 4,
-      },
-      Object {
-        "character": 8,
-        "line": 4,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 4
+      [Object]
+        character = 8
+        line = 4
+
 // ====== SNAPSHOT 11 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 14,
-        "line": 4,
-      },
-      Object {
-        "character": 17,
-        "line": 4,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 14
+        line = 4
+      [Object]
+        character = 17
+        line = 4
+
 // ====== SNAPSHOT 12 ======
-Array []
+[Array]
+
 // ====== SNAPSHOT 13 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 11,
-        "line": 6,
-      },
-      Object {
-        "character": 14,
-        "line": 6,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 11
+        line = 6
+      [Object]
+        character = 14
+        line = 6
+
 // ====== SNAPSHOT 14 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 1,
-        "line": 8,
-      },
-      Object {
-        "character": 7,
-        "line": 8,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 8
+      [Object]
+        character = 7
+        line = 8
+
 // ====== SNAPSHOT 15 ======
-Array [
-  Object {
-    "contents": Array [
-      Object {},
-    ],
-    "range": Array [
-      Object {
-        "character": 8,
-        "line": 8,
-      },
-      Object {
-        "character": 12,
-        "line": 8,
-      },
-    ],
-  },
-]
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 8
+        line = 8
+      [Object]
+        character = 12
+        line = 8
+

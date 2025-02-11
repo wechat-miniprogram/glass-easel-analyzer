@@ -1,24 +1,19 @@
 // ====== SNAPSHOT 0 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "color: $0;",
-      },
-      "kind": "Property",
-      "label": "color",
-      "sortText": "color",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "display: ${1|block,inline,inline-block,flex,none|};",
-      },
-      "kind": "Property",
-      "label": "display",
-      "sortText": "display",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "color: $0;"
+      kind = "Property"
+      label = "color"
+      sortText = "color"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "display: ${1|block,inline,inline-block,flex,none|};"
+      kind = "Property"
+      label = "display"
+      sortText = "display"
+

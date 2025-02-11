@@ -1,43 +1,27 @@
 // ====== SNAPSHOT 0 ======
-Array []
+[Array]
+
 // ====== SNAPSHOT 1 ======
-Array []
+[Array]
+
 // ====== SNAPSHOT 2 ======
-Array [
-  Object {
-    "range": Array [
-      Object {
-        "character": 16,
-        "line": 0,
-      },
-      Object {
-        "character": 31,
-        "line": 0,
-      },
-    ],
-    "uri": Object {
-      "$mid": 1,
-      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/global2.wxml",
-      "scheme": "file",
-    },
-  },
-  Object {
-    "range": Array [
-      Object {
-        "character": 14,
-        "line": 3,
-      },
-      Object {
-        "character": 29,
-        "line": 3,
-      },
-    ],
-    "uri": Object {
-      "$mid": 1,
-      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/import.wxml",
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/import.wxml",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 16
+        line = 0
+      [Object]
+        character = 31
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/global2.wxml"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 14
+        line = 3
+      [Object]
+        character = 29
+        line = 3
+    uri = [Object] "../../test-fixture/wxml/import.wxml"
+

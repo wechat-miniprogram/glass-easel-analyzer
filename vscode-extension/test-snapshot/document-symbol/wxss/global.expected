@@ -1,47 +1,35 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "containerName": "",
-    "kind": "Class",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 0,
-        },
-        Object {
-          "character": 1,
-          "line": 2,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": "*",
-  },
-  Object {
-    "containerName": "",
-    "kind": "Interface",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 4,
-        },
-        Object {
-          "character": 19,
-          "line": 4,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss",
-        "scheme": "file",
-      },
-    },
-    "name": "@import",
-  },
-]
+[Array]
+  [Object]
+    containerName = ""
+    kind = "Class"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 0
+        [Object]
+          character = 1
+          line = 2
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss"
+        scheme = "file"
+    name = "*"
+  [Object]
+    containerName = ""
+    kind = "Interface"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 4
+        [Object]
+          character = 19
+          line = 4
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss"
+        scheme = "file"
+    name = "@import"
+

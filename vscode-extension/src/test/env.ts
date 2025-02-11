@@ -3,7 +3,6 @@ import fs from 'node:fs'
 import * as vscode from 'vscode'
 import * as diff from 'diff'
 import chalk from 'chalk'
-import { format as prettyFormat } from 'pretty-format'
 
 const wxmlCases = [
   'core-attribute',
@@ -226,7 +225,7 @@ class Expect {
 
   snapshot(actual: unknown) {
     const normalized = JSON.parse(JSON.stringify(actual ?? null)) as unknown
-    const actualStr = prettyFormat(normalized, { printFunctionName: false })
+    const actualStr = formatData(normalized)
     this.actualOutput += `// ====== SNAPSHOT ${this.index} ======\n`
     this.actualOutput += actualStr
     this.actualOutput += '\n'
@@ -237,4 +236,83 @@ class Expect {
     }
     this.index += 1
   }
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+const customObjectFormatter = (data: { [key: string]: unknown }): string | null => {
+  if (typeof data.external === 'string' && data.external.startsWith('file:///')) {
+    // local URL path
+    const uri = data as unknown as vscode.Uri
+    if (uri.path) {
+      return path.relative(__dirname, uri.path)
+    }
+    return ''
+  }
+  return null
+}
+
+const formatData = (data: unknown) => {
+  let out = ''
+  const visited: Map<any, string> = new Map()
+  const rec = (data: unknown, path: string[], key?: string) => {
+    for (let i = 0; i < path.length; i += 1) {
+      out += '  '
+    }
+    if (key !== undefined) out += `${key} = `
+    if (typeof data === 'undefined') {
+      out += 'undefined\n'
+    } else if (data === null) {
+      out += 'null\n'
+    } else if (
+      typeof data === 'bigint' ||
+      typeof data === 'boolean' ||
+      typeof data === 'number' ||
+      typeof data === 'symbol'
+    ) {
+      out += data.toString()
+      out += '\n'
+    } else if (typeof data === 'string') {
+      out += JSON.stringify(data)
+      out += '\n'
+    } else if (typeof data === 'function') {
+      out += '[Function]'
+      out += '\n'
+    } else if (typeof data === 'object') {
+      const customStr = customObjectFormatter(data as { [key: string]: unknown })
+      if (customStr !== null) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        out += `[Object] ${JSON.stringify(customStr)}\n`
+      } else {
+        const id = visited.get(data)
+        if (typeof id === 'string') {
+          out += `[Recursive ${id}]\n`
+        } else {
+          const id = path.join('/')
+          visited.set(data, id)
+          if (Array.isArray(data)) {
+            out += `[Array]\n`
+            for (let i = 0; i < data.length; i += 1) {
+              const item = data[i]! as unknown
+              const newPath = path.concat(String(i))
+              rec(item, newPath)
+            }
+          } else {
+            out += `[Object]\n`
+            const keys = Object.keys(data)
+            keys.sort()
+            for (let i = 0; i < keys.length; i += 1) {
+              const key = keys[i]!
+              const child = (data as { [key: string]: unknown })[key]
+              const newPath = path.concat(key)
+              rec(child, newPath, key)
+            }
+          }
+        }
+      }
+    } else {
+      out += '[Unknown]\n'
+    }
+  }
+  rec(data, [])
+  return out
 }

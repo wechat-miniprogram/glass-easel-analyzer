@@ -1,25 +1,19 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "containerName": "",
-    "kind": "Namespace",
-    "location": Object {
-      "range": Array [
-        Object {
-          "character": 0,
-          "line": 0,
-        },
-        Object {
-          "character": 11,
-          "line": 2,
-        },
-      ],
-      "uri": Object {
-        "$mid": 1,
-        "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/template.wxml",
-        "scheme": "file",
-      },
-    },
-    "name": "test",
-  },
-]
+[Array]
+  [Object]
+    containerName = ""
+    kind = "Namespace"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 0
+        [Object]
+          character = 11
+          line = 2
+      uri = [Object]
+        $mid = 1
+        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/template.wxml"
+        scheme = "file"
+    name = "test"
+

@@ -1,11 +1,9 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "end": 4,
-    "start": 0,
-  },
-  Object {
-    "end": 3,
-    "start": 1,
-  },
-]
+[Array]
+  [Object]
+    end = 4
+    start = 0
+  [Object]
+    end = 3
+    start = 1
+

@@ -1,942 +1,744 @@
 // ====== SNAPSHOT 0 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "anchor",
-      "kind": "Class",
-      "label": "anchor",
-      "sortText": "anchor",
-    },
-    Object {
-      "insertText": "div",
-      "kind": "Class",
-      "label": "div",
-      "sortText": "div",
-    },
-    Object {
-      "insertText": "view",
-      "kind": "Class",
-      "label": "view",
-      "sortText": "view",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "anchor"
+      kind = "Class"
+      label = "anchor"
+      sortText = "anchor"
+    [Object]
+      insertText = "div"
+      kind = "Class"
+      label = "div"
+      sortText = "div"
+    [Object]
+      insertText = "view"
+      kind = "Class"
+      label = "view"
+      sortText = "view"
+
 // ====== SNAPSHOT 1 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "bind:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "bind:",
-      "sortText": "bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-bind:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-bind:",
-      "sortText": "capture-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-catch:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-catch:",
-      "sortText": "capture-catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-mut-bind:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-mut-bind:",
-      "sortText": "capture-mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "catch:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "catch:",
-      "sortText": "catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "class=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "class",
-      "sortText": "class",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "data:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "data:",
-      "sortText": "data:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "generic:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "generic:",
-      "sortText": "generic:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "id=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "id",
-      "sortText": "id",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mark:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mark:",
-      "sortText": "mark:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mut-bind:${1|hoverend,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mut-bind:",
-      "sortText": "mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot",
-      "sortText": "slot",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot:",
-      "sortText": "slot:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "style=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "style",
-      "sortText": "style",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:elif=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:elif",
-      "sortText": "wx:elif",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:else=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:else",
-      "sortText": "wx:else",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for",
-      "sortText": "wx:for",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-index=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-index",
-      "sortText": "wx:for-index",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-item=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-item",
-      "sortText": "wx:for-item",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:if=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:if",
-      "sortText": "wx:if",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:key=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:key",
-      "sortText": "wx:key",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "bind:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "bind:"
+      sortText = "bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-bind:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-bind:"
+      sortText = "capture-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-catch:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-catch:"
+      sortText = "capture-catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-mut-bind:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-mut-bind:"
+      sortText = "capture-mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "catch:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "catch:"
+      sortText = "catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "class=\"$0\""
+      kind = "Keyword"
+      label = "class"
+      sortText = "class"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "data:$1=\"$0\""
+      kind = "Keyword"
+      label = "data:"
+      sortText = "data:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "generic:$1=\"$0\""
+      kind = "Keyword"
+      label = "generic:"
+      sortText = "generic:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "id=\"$0\""
+      kind = "Keyword"
+      label = "id"
+      sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mark:$1=\"$0\""
+      kind = "Keyword"
+      label = "mark:"
+      sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mut-bind:${1|hoverend,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "mut-bind:"
+      sortText = "mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot=\"$0\""
+      kind = "Keyword"
+      label = "slot"
+      sortText = "slot"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot:$1=\"$0\""
+      kind = "Keyword"
+      label = "slot:"
+      sortText = "slot:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "style=\"$0\""
+      kind = "Keyword"
+      label = "style"
+      sortText = "style"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:elif=\"$0\""
+      kind = "Keyword"
+      label = "wx:elif"
+      sortText = "wx:elif"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:else=\"$0\""
+      kind = "Keyword"
+      label = "wx:else"
+      sortText = "wx:else"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for=\"$0\""
+      kind = "Keyword"
+      label = "wx:for"
+      sortText = "wx:for"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-index=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-index"
+      sortText = "wx:for-index"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-item=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-item"
+      sortText = "wx:for-item"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:if=\"$0\""
+      kind = "Keyword"
+      label = "wx:if"
+      sortText = "wx:if"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:key=\"$0\""
+      kind = "Keyword"
+      label = "wx:key"
+      sortText = "wx:key"
+
 // ====== SNAPSHOT 2 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "canceltap",
-      "kind": "Variable",
-      "label": "canceltap",
-      "sortText": "canceltap",
-    },
-    Object {
-      "insertText": "hoverend",
-      "kind": "Variable",
-      "label": "hoverend",
-      "sortText": "hoverend",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "canceltap"
+      kind = "Variable"
+      label = "canceltap"
+      sortText = "canceltap"
+    [Object]
+      insertText = "hoverend"
+      kind = "Variable"
+      label = "hoverend"
+      sortText = "hoverend"
+
 // ====== SNAPSHOT 3 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "anchor",
-      "kind": "Class",
-      "label": "anchor",
-      "sortText": "anchor",
-    },
-    Object {
-      "insertText": "div",
-      "kind": "Class",
-      "label": "div",
-      "sortText": "div",
-    },
-    Object {
-      "insertText": "view",
-      "kind": "Class",
-      "label": "view",
-      "sortText": "view",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "anchor"
+      kind = "Class"
+      label = "anchor"
+      sortText = "anchor"
+    [Object]
+      insertText = "div"
+      kind = "Class"
+      label = "div"
+      sortText = "div"
+    [Object]
+      insertText = "view"
+      kind = "Class"
+      label = "view"
+      sortText = "view"
+
 // ====== SNAPSHOT 4 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "canceltap",
-      "kind": "Variable",
-      "label": "canceltap",
-      "sortText": "canceltap",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "canceltap"
+      kind = "Variable"
+      label = "canceltap"
+      sortText = "canceltap"
+
 // ====== SNAPSHOT 5 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "false",
-      "kind": "EnumMember",
-      "label": "false",
-      "sortText": "false",
-    },
-    Object {
-      "insertText": "mixed",
-      "kind": "EnumMember",
-      "label": "mixed",
-      "sortText": "mixed",
-    },
-    Object {
-      "insertText": "true",
-      "kind": "EnumMember",
-      "label": "true",
-      "sortText": "true",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "false"
+      kind = "EnumMember"
+      label = "false"
+      sortText = "false"
+    [Object]
+      insertText = "mixed"
+      kind = "EnumMember"
+      label = "mixed"
+      sortText = "mixed"
+    [Object]
+      insertText = "true"
+      kind = "EnumMember"
+      label = "true"
+      sortText = "true"
+
 // ====== SNAPSHOT 6 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "anchor",
-      "kind": "Class",
-      "label": "anchor",
-      "sortText": "anchor",
-    },
-    Object {
-      "insertText": "div",
-      "kind": "Class",
-      "label": "div",
-      "sortText": "div",
-    },
-    Object {
-      "insertText": "view",
-      "kind": "Class",
-      "label": "view",
-      "sortText": "view",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "anchor"
+      kind = "Class"
+      label = "anchor"
+      sortText = "anchor"
+    [Object]
+      insertText = "div"
+      kind = "Class"
+      label = "div"
+      sortText = "div"
+    [Object]
+      insertText = "view"
+      kind = "Class"
+      label = "view"
+      sortText = "view"
+
 // ====== SNAPSHOT 7 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "class=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "class",
-      "sortText": "class",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "data:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "data:",
-      "sortText": "data:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "generic:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "generic:",
-      "sortText": "generic:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "id=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "id",
-      "sortText": "id",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mark:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mark:",
-      "sortText": "mark:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot",
-      "sortText": "slot",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot:",
-      "sortText": "slot:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "style=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "style",
-      "sortText": "style",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:elif=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:elif",
-      "sortText": "wx:elif",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:else=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:else",
-      "sortText": "wx:else",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for",
-      "sortText": "wx:for",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-index=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-index",
-      "sortText": "wx:for-index",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-item=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-item",
-      "sortText": "wx:for-item",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:if=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:if",
-      "sortText": "wx:if",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:key=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:key",
-      "sortText": "wx:key",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "class=\"$0\""
+      kind = "Keyword"
+      label = "class"
+      sortText = "class"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "data:$1=\"$0\""
+      kind = "Keyword"
+      label = "data:"
+      sortText = "data:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "generic:$1=\"$0\""
+      kind = "Keyword"
+      label = "generic:"
+      sortText = "generic:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "id=\"$0\""
+      kind = "Keyword"
+      label = "id"
+      sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mark:$1=\"$0\""
+      kind = "Keyword"
+      label = "mark:"
+      sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot=\"$0\""
+      kind = "Keyword"
+      label = "slot"
+      sortText = "slot"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot:$1=\"$0\""
+      kind = "Keyword"
+      label = "slot:"
+      sortText = "slot:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "style=\"$0\""
+      kind = "Keyword"
+      label = "style"
+      sortText = "style"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:elif=\"$0\""
+      kind = "Keyword"
+      label = "wx:elif"
+      sortText = "wx:elif"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:else=\"$0\""
+      kind = "Keyword"
+      label = "wx:else"
+      sortText = "wx:else"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for=\"$0\""
+      kind = "Keyword"
+      label = "wx:for"
+      sortText = "wx:for"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-index=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-index"
+      sortText = "wx:for-index"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-item=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-item"
+      sortText = "wx:for-item"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:if=\"$0\""
+      kind = "Keyword"
+      label = "wx:if"
+      sortText = "wx:if"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:key=\"$0\""
+      kind = "Keyword"
+      label = "wx:key"
+      sortText = "wx:key"
+
 // ====== SNAPSHOT 8 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "canceltap",
-      "kind": "Variable",
-      "label": "canceltap",
-      "sortText": "canceltap",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "canceltap"
+      kind = "Variable"
+      label = "canceltap"
+      sortText = "canceltap"
+
 // ====== SNAPSHOT 9 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "bind:",
-      "sortText": "bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-bind:",
-      "sortText": "capture-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-catch:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-catch:",
-      "sortText": "capture-catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-mut-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-mut-bind:",
-      "sortText": "capture-mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "catch:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "catch:",
-      "sortText": "catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "data:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "data:",
-      "sortText": "data:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "id=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "id",
-      "sortText": "id",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mark:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mark:",
-      "sortText": "mark:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mut-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mut-bind:",
-      "sortText": "mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot",
-      "sortText": "slot",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot:",
-      "sortText": "slot:",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "bind:"
+      sortText = "bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-bind:"
+      sortText = "capture-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-catch:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-catch:"
+      sortText = "capture-catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-mut-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-mut-bind:"
+      sortText = "capture-mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "catch:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "catch:"
+      sortText = "catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "data:$1=\"$0\""
+      kind = "Keyword"
+      label = "data:"
+      sortText = "data:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "id=\"$0\""
+      kind = "Keyword"
+      label = "id"
+      sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mark:$1=\"$0\""
+      kind = "Keyword"
+      label = "mark:"
+      sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mut-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "mut-bind:"
+      sortText = "mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot=\"$0\""
+      kind = "Keyword"
+      label = "slot"
+      sortText = "slot"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot:$1=\"$0\""
+      kind = "Keyword"
+      label = "slot:"
+      sortText = "slot:"
+
 // ====== SNAPSHOT 10 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "bind:",
-      "sortText": "bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-bind:",
-      "sortText": "capture-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-catch:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-catch:",
-      "sortText": "capture-catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-mut-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-mut-bind:",
-      "sortText": "capture-mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "catch:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "catch:",
-      "sortText": "catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "data:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "data:",
-      "sortText": "data:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "id=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "id",
-      "sortText": "id",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mark:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mark:",
-      "sortText": "mark:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mut-bind:${1|canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mut-bind:",
-      "sortText": "mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot",
-      "sortText": "slot",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot:",
-      "sortText": "slot:",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "bind:"
+      sortText = "bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-bind:"
+      sortText = "capture-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-catch:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-catch:"
+      sortText = "capture-catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-mut-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-mut-bind:"
+      sortText = "capture-mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "catch:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "catch:"
+      sortText = "catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "data:$1=\"$0\""
+      kind = "Keyword"
+      label = "data:"
+      sortText = "data:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "id=\"$0\""
+      kind = "Keyword"
+      label = "id"
+      sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mark:$1=\"$0\""
+      kind = "Keyword"
+      label = "mark:"
+      sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mut-bind:${1|canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "mut-bind:"
+      sortText = "mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot=\"$0\""
+      kind = "Keyword"
+      label = "slot"
+      sortText = "slot"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot:$1=\"$0\""
+      kind = "Keyword"
+      label = "slot:"
+      sortText = "slot:"
+
 // ====== SNAPSHOT 11 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "canceltap",
-      "kind": "Variable",
-      "label": "canceltap",
-      "sortText": "canceltap",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "canceltap"
+      kind = "Variable"
+      label = "canceltap"
+      sortText = "canceltap"
+
 // ====== SNAPSHOT 12 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": "anchor",
-      "kind": "Class",
-      "label": "anchor",
-      "sortText": "anchor",
-    },
-    Object {
-      "insertText": "div",
-      "kind": "Class",
-      "label": "div",
-      "sortText": "div",
-    },
-    Object {
-      "insertText": "view",
-      "kind": "Class",
-      "label": "view",
-      "sortText": "view",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "anchor"
+      kind = "Class"
+      label = "anchor"
+      sortText = "anchor"
+    [Object]
+      insertText = "div"
+      kind = "Class"
+      label = "div"
+      sortText = "div"
+    [Object]
+      insertText = "view"
+      kind = "Class"
+      label = "view"
+      sortText = "view"
+
 // ====== SNAPSHOT 13 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "bind:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "bind:",
-      "sortText": "bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-bind:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-bind:",
-      "sortText": "capture-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-catch:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-catch:",
-      "sortText": "capture-catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "capture-mut-bind:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "capture-mut-bind:",
-      "sortText": "capture-mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "catch:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "catch:",
-      "sortText": "catch:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "change:${1|hidden|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "change:",
-      "sortText": "change:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "class=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "class",
-      "sortText": "class",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "data:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "data:",
-      "sortText": "data:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "generic:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "generic:",
-      "sortText": "generic:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "hidden=\"$0\"",
-      },
-      "kind": "Variable",
-      "label": "hidden",
-      "sortText": "hidden",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "id=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "id",
-      "sortText": "id",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mark:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mark:",
-      "sortText": "mark:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "model:${1|hidden|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "model:",
-      "sortText": "model:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "mut-bind:${1|tap,canceltap|}=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "mut-bind:",
-      "sortText": "mut-bind:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot",
-      "sortText": "slot",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "slot:$1=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "slot:",
-      "sortText": "slot:",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "style=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "style",
-      "sortText": "style",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:elif=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:elif",
-      "sortText": "wx:elif",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:else=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:else",
-      "sortText": "wx:else",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for",
-      "sortText": "wx:for",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-index=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-index",
-      "sortText": "wx:for-index",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-item=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-item",
-      "sortText": "wx:for-item",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:if=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:if",
-      "sortText": "wx:if",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:key=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:key",
-      "sortText": "wx:key",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "bind:"
+      sortText = "bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-bind:"
+      sortText = "capture-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-catch:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-catch:"
+      sortText = "capture-catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-mut-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-mut-bind:"
+      sortText = "capture-mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "catch:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "catch:"
+      sortText = "catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "change:${1|hidden|}=\"$0\""
+      kind = "Keyword"
+      label = "change:"
+      sortText = "change:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "class=\"$0\""
+      kind = "Keyword"
+      label = "class"
+      sortText = "class"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "data:$1=\"$0\""
+      kind = "Keyword"
+      label = "data:"
+      sortText = "data:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "generic:$1=\"$0\""
+      kind = "Keyword"
+      label = "generic:"
+      sortText = "generic:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "hidden=\"$0\""
+      kind = "Variable"
+      label = "hidden"
+      sortText = "hidden"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "id=\"$0\""
+      kind = "Keyword"
+      label = "id"
+      sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mark:$1=\"$0\""
+      kind = "Keyword"
+      label = "mark:"
+      sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "model:${1|hidden|}=\"$0\""
+      kind = "Keyword"
+      label = "model:"
+      sortText = "model:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mut-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "mut-bind:"
+      sortText = "mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot=\"$0\""
+      kind = "Keyword"
+      label = "slot"
+      sortText = "slot"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "slot:$1=\"$0\""
+      kind = "Keyword"
+      label = "slot:"
+      sortText = "slot:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "style=\"$0\""
+      kind = "Keyword"
+      label = "style"
+      sortText = "style"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:elif=\"$0\""
+      kind = "Keyword"
+      label = "wx:elif"
+      sortText = "wx:elif"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:else=\"$0\""
+      kind = "Keyword"
+      label = "wx:else"
+      sortText = "wx:else"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for=\"$0\""
+      kind = "Keyword"
+      label = "wx:for"
+      sortText = "wx:for"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-index=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-index"
+      sortText = "wx:for-index"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-item=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-item"
+      sortText = "wx:for-item"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:if=\"$0\""
+      kind = "Keyword"
+      label = "wx:if"
+      sortText = "wx:if"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:key=\"$0\""
+      kind = "Keyword"
+      label = "wx:key"
+      sortText = "wx:key"
+

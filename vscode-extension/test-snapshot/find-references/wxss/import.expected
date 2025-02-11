@@ -1,41 +1,24 @@
 // ====== SNAPSHOT 0 ======
-Array [
-  Object {
-    "range": Array [
-      Object {
-        "character": 0,
-        "line": 0,
-      },
-      Object {
-        "character": 3,
-        "line": 0,
-      },
-    ],
-    "uri": Object {
-      "$mid": 1,
-      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global2.wxss",
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global2.wxss",
-      "scheme": "file",
-    },
-  },
-  Object {
-    "range": Array [
-      Object {
-        "character": 0,
-        "line": 2,
-      },
-      Object {
-        "character": 3,
-        "line": 2,
-      },
-    ],
-    "uri": Object {
-      "$mid": 1,
-      "external": "file:///Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/import.wxss",
-      "path": "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/import.wxss",
-      "scheme": "file",
-    },
-  },
-]
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 3
+        line = 0
+    uri = [Object] "../../test-fixture/wxss/global2.wxss"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 0
+        line = 2
+      [Object]
+        character = 3
+        line = 2
+    uri = [Object] "../../test-fixture/wxss/import.wxss"
+
 // ====== SNAPSHOT 1 ======
-Array []
+[Array]
+

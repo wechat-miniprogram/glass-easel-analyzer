@@ -1,24 +1,19 @@
 // ====== SNAPSHOT 0 ======
-Object {
-  "isIncomplete": false,
-  "items": Array [
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:for-index=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:for-index",
-      "sortText": "wx:for-index",
-    },
-    Object {
-      "insertText": Object {
-        "e": 1,
-        "value": "wx:key=\"$0\"",
-      },
-      "kind": "Keyword",
-      "label": "wx:key",
-      "sortText": "wx:key",
-    },
-  ],
-}
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:for-index=\"$0\""
+      kind = "Keyword"
+      label = "wx:for-index"
+      sortText = "wx:for-index"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "wx:key=\"$0\""
+      kind = "Keyword"
+      label = "wx:key"
+      sortText = "wx:key"
+
