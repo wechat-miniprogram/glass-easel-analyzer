@@ -1,0 +1,34 @@
+name: npm-test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    - uses: dtolnay/rust-toolchain@v1
+      with:
+        toolchain: stable
+    - run: npm ci
+    - run: xvfb-run -a npm test
+      working-directory: ./vscode-extension
+      if: runner.os == 'Linux'
+    - run: npm test
+      working-directory: ./vscode-extension
+      if: runner.os != 'Linux'
