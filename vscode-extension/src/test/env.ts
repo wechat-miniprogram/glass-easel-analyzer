@@ -248,6 +248,14 @@ const customObjectFormatter = (data: { [key: string]: unknown }): string | null 
     }
     return ''
   }
+  if (typeof data.path === 'string' && data.scheme === 'file') {
+    // local URL path
+    const uri = data as unknown as vscode.Uri
+    if (uri.path) {
+      return path.relative(__dirname, uri.path)
+    }
+    return ''
+  }
   return null
 }
 

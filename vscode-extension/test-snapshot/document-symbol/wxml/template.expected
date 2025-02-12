@@ -11,9 +11,6 @@
         [Object]
           character = 11
           line = 2
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/template.wxml"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxml/template.wxml"
     name = "test"
 

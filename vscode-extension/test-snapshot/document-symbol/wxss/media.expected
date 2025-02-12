@@ -11,10 +11,7 @@
         [Object]
           character = 1
           line = 4
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/media.wxss"
     name = "@media (max-width: 10px)"
   [Object]
     containerName = ""
@@ -27,10 +24,7 @@
         [Object]
           character = 31
           line = 6
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/media.wxss"
     name = "@media not (min-width: 10px)"
   [Object]
     containerName = ""
@@ -43,10 +37,7 @@
         [Object]
           character = 71
           line = 8
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/media.wxss"
     name = "@media only screen or (width: 10px) and (prefers-color-scheme: dark)"
   [Object]
     containerName = ""
@@ -59,10 +50,7 @@
         [Object]
           character = 29
           line = 10
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/media.wxss"
     name = "@media print, (monochrome)"
   [Object]
     containerName = ""
@@ -75,9 +63,6 @@
         [Object]
           character = 41
           line = 12
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/media.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/media.wxss"
     name = "@media all or only (max-width >= 10px)"
 
