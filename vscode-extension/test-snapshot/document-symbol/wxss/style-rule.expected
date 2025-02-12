@@ -11,10 +11,7 @@
         [Object]
           character = 1
           line = 7
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/style-rule.wxss"
     name = "div#a.b-c[attr=\"value\"]"
   [Object]
     containerName = ""
@@ -27,10 +24,7 @@
         [Object]
           character = 6
           line = 9
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/style-rule.wxss"
     name = "div"
   [Object]
     containerName = ""
@@ -43,10 +37,7 @@
         [Object]
           character = 5
           line = 11
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/style-rule.wxss"
     name = "#a"
   [Object]
     containerName = ""
@@ -59,9 +50,6 @@
         [Object]
           character = 7
           line = 13
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/style-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/style-rule.wxss"
     name = ".b-c"
 

@@ -11,10 +11,7 @@
         [Object]
           character = 10
           line = 0
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/unknown-at-rule.wxss"
     name = "@unknown"
   [Object]
     containerName = ""
@@ -27,10 +24,7 @@
         [Object]
           character = 9
           line = 4
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/unknown-at-rule.wxss"
     name = "@unknown"
   [Object]
     containerName = ""
@@ -43,9 +37,6 @@
         [Object]
           character = 6
           line = 6
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/unknown-at-rule.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/unknown-at-rule.wxss"
     name = "div"
 

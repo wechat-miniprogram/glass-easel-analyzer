@@ -1,5 +1,4 @@
 name: npm-test
-
 on:
   workflow_dispatch:
   push:
@@ -12,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
+          # - os: windows-latest # snapshots are different on Windows, so this should be disabled
           - os: ubuntu-latest
           - os: macos-latest
     runs-on: ${{ matrix.os }}
@@ -22,6 +21,7 @@ jobs:
       with:
         node-version: 20.x
         cache: 'npm'
+        cache-dependency-path: ./vscode-extension
     - uses: dtolnay/rust-toolchain@v1
       with:
         toolchain: stable

@@ -22,10 +22,7 @@
       [Object]
         character = 0
         line = 0
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/component.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/component.wxml"
 
 // ====== SNAPSHOT 1 ======
 [Array]
@@ -51,10 +48,7 @@
       [Object]
         character = 17
         line = 2
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/slot-value.wxml"
 
 // ====== SNAPSHOT 2 ======
 [Array]
@@ -83,10 +77,7 @@
       [Object]
         character = 27
         line = 2
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/slot-value.wxml"
 
 // ====== SNAPSHOT 4 ======
 [Array]
@@ -112,10 +103,7 @@
       [Object]
         character = 17
         line = 2
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/slot-value.wxml"
 
 // ====== SNAPSHOT 5 ======
 [Array]
@@ -141,10 +129,7 @@
       [Object]
         character = 24
         line = 2
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/slot-value.wxml"
 
 // ====== SNAPSHOT 6 ======
 [Array]
@@ -170,8 +155,5 @@
       [Object]
         character = 27
         line = 2
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/slot-value.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/slot-value.wxml"
 

@@ -22,10 +22,7 @@
       [Object]
         character = 0
         line = 0
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/component.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/component.wxml"
 
 // ====== SNAPSHOT 1 ======
 [Array]
@@ -103,10 +100,7 @@
       [Object]
         character = 21
         line = 1
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/component.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/component.wxml"
 
 // ====== SNAPSHOT 4 ======
 [Array]
@@ -181,10 +175,7 @@
       [Object]
         character = 21
         line = 1
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/component.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/component.wxml"
 
 // ====== SNAPSHOT 6 ======
 [Array]
@@ -210,8 +201,5 @@
       [Object]
         character = 21
         line = 1
-    targetUri = [Object]
-      $mid = 1
-      path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxml/component.wxml"
-      scheme = "file"
+    targetUri = [Object] "../../test-fixture/wxml/component.wxml"
 

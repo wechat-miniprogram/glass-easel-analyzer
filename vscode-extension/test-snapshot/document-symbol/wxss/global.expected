@@ -11,10 +11,7 @@
         [Object]
           character = 1
           line = 2
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/global.wxss"
     name = "*"
   [Object]
     containerName = ""
@@ -27,9 +24,6 @@
         [Object]
           character = 19
           line = 4
-      uri = [Object]
-        $mid = 1
-        path = "/Users/lastleaf/work/wxweb/glass-easel-analyzer/vscode-extension/test-fixture/wxss/global.wxss"
-        scheme = "file"
+      uri = [Object] "../../test-fixture/wxss/global.wxss"
     name = "@import"
 
