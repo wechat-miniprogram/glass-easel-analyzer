@@ -94,7 +94,7 @@
         "glass-easel-analyzer.wxssDiagnosticsMode": {
           "scope": "window",
           "type": "string",
-          "enum": ["CSS", "disabled"],
+          "enum": ["CSS", "LESS", "SCSS", "disabled"],
           "default": "CSS",
           "description": "The diagnostics information used for WXSS."
         }
