@@ -1,8 +1,7 @@
 use glass_easel_template_compiler::parse::{
     expr::{ArrayFieldKind, Expression, ObjectFieldKind},
     tag::{
-        ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, Script, StrName,
-        StyleAttribute, Value,
+        ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, NormalAttributePrefix, Script, StrName, StyleAttribute, Value
     },
     Position, Template,
 };
@@ -124,8 +123,8 @@ pub(super) fn find_wxml_semantic_tokens(
                 });
             }
             tokens.push((&attr.name).into());
-            if !attr.is_value_unspecified {
-                collect_in_value(tokens, &attr.value);
+            if let Some(value) = attr.value.as_ref() {
+                collect_in_value(tokens, value);
             }
         }
         for attr in common.event_bindings.iter() {
@@ -139,8 +138,8 @@ pub(super) fn find_wxml_semantic_tokens(
                 ty: TokenType::Event,
                 modifier: 0,
             });
-            if !attr.is_value_unspecified {
-                collect_in_value_with_static_type(tokens, &attr.value, TokenType::Method);
+            if let Some(value) = attr.value.as_ref() {
+                collect_in_value_with_static_type(tokens, value, TokenType::Method);
             }
         }
     }
@@ -189,7 +188,20 @@ pub(super) fn find_wxml_semantic_tokens(
                                 modifier: 0,
                             });
                         }
-                        for attr in attributes.iter().chain(change_attributes.iter()) {
+                        for attr in attributes.iter() {
+                            if let NormalAttributePrefix::Model(p) = &attr.prefix {
+                                tokens.push(WxmlToken {
+                                    location: p.clone(),
+                                    ty: TokenType::Keyword,
+                                    modifier: 0,
+                                });
+                            }
+                            tokens.push((&attr.name).into());
+                            if let Some(value) = attr.value.as_ref() {
+                                collect_in_value(tokens, value);
+                            }
+                        }
+                        for attr in change_attributes.iter() {
                             if let Some(p) = attr.prefix_location.as_ref() {
                                 tokens.push(WxmlToken {
                                     location: p.clone(),
@@ -198,8 +210,8 @@ pub(super) fn find_wxml_semantic_tokens(
                                 });
                             }
                             tokens.push((&attr.name).into());
-                            if !attr.is_value_unspecified {
-                                collect_in_value(tokens, &attr.value);
+                            if let Some(value) = attr.value.as_ref() {
+                                collect_in_value(tokens, value);
                             }
                         }
                         for attr in worklet_attributes
@@ -311,8 +323,8 @@ pub(super) fn find_wxml_semantic_tokens(
                                 });
                             }
                             tokens.push((&attr.name).into());
-                            if !attr.is_value_unspecified {
-                                collect_in_value(tokens, &attr.value);
+                            if let Some(value) = attr.value.as_ref() {
+                                collect_in_value(tokens, value);
                             }
                         }
                         collect_in_common_attrs(tokens, common);

@@ -3,8 +3,7 @@ use std::ops::Range;
 use glass_easel_template_compiler::parse::{
     expr::Expression,
     tag::{
-        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node,
-        Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value,
+        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value
     },
     Position, Template,
 };
@@ -222,6 +221,17 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
             _ => None,
         }
     }
+    fn find_in_option_value<'a>(
+        v: &'a Option<Value>,
+        pos: Position,
+        scopes: &mut Vec<ScopeKind<'a>>,
+    ) -> Option<Token<'a>> {
+        if let Some(v) = v {
+            find_in_value(v, pos, scopes)
+        } else {
+            None
+        }
+    }
     fn find_in_nodes<'a>(
         parent: Option<&'a Element>,
         nodes: &'a [Node],
@@ -315,7 +325,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 if ident_contains(&attr.name, pos) {
                                     return Token::DataKey(&attr.name);
                                 }
-                                if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
                                     return ret;
                                 }
                             }
@@ -323,7 +333,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 if ident_contains(&attr.name, pos) {
                                     return Token::MarkKey(&attr.name);
                                 }
-                                if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
                                     return ret;
                                 }
                             }
@@ -331,7 +341,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 if ident_contains(&ev.name, pos) {
                                     return Token::EventName(&ev.name, elem);
                                 }
-                                if let Some(ret) = find_in_value(&ev.value, pos, scopes) {
+                                if let Some(ret) = find_in_option_value(&ev.value, pos, scopes) {
                                     return ret;
                                 }
                             }
@@ -357,12 +367,12 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                     }
                                     for attr in attributes.iter() {
                                         if ident_contains(&attr.name, pos) {
-                                            if attr.is_model {
+                                            if let NormalAttributePrefix::Model(_) = &attr.prefix {
                                                 return Token::ModelAttributeName(&attr.name, elem);
                                             }
                                             return Token::AttributeName(&attr.name, elem);
                                         }
-                                        if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
                                             if let Token::StaticValuePart(loc, v) = ret {
                                                 return Token::AttributeStaticValue(
                                                     loc, v, &attr.name, elem,
@@ -375,7 +385,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         if ident_contains(&attr.name, pos) {
                                             return Token::AttributeName(&attr.name, elem);
                                         }
-                                        if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
                                             if let Token::StaticValuePart(loc, v) = ret {
                                                 return Token::AttributeStaticValue(
                                                     loc, v, &attr.name, elem,
@@ -629,7 +639,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         if ident_contains(&attr.name, pos) {
                                             return Token::SlotValueDefinition(&attr.name);
                                         }
-                                        if let Some(ret) = find_in_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
                                             return ret;
                                         }
                                     }
@@ -866,10 +876,14 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                 f(value, scopes);
             }
             for attr in common.data.iter().chain(common.marks.iter()) {
-                f(&attr.value, scopes);
+                if let Some(value) = attr.value.as_ref() {
+                    f(value, scopes);
+                }
             }
             for ev in common.event_bindings.iter() {
-                f(&ev.value, scopes);
+                if let Some(value) = ev.value.as_ref() {
+                    f(value, scopes);
+                }
             }
         }
         match node {
@@ -890,8 +904,15 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                     common,
                     ..
                 } => {
-                    for attr in attributes.iter().chain(change_attributes.iter()) {
-                        f(&attr.value, scopes);
+                    for attr in attributes.iter() {
+                        if let Some(value) = attr.value.as_ref() {
+                            f(value, scopes);
+                        }
+                    }
+                    for attr in change_attributes.iter() {
+                        if let Some(value) = attr.value.as_ref() {
+                            f(value, scopes);
+                        }
                     }
                     match class {
                         ClassAttribute::None => {}
@@ -961,7 +982,9 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                 } => {
                     f(&name.1, scopes);
                     for attr in values.iter() {
-                        f(&attr.value, scopes);
+                        if let Some(value) = attr.value.as_ref() {
+                            f(value, scopes);
+                        }
                     }
                     handle_common(common, scopes, &mut f);
                 }

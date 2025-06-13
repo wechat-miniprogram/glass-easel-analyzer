@@ -217,8 +217,9 @@ fn completion_wxml(
             let has_attr = |name: &str| {
                 attributes
                     .iter()
-                    .chain(change_attributes.iter())
-                    .find(|x| x.name.name.as_str() == name)
+                    .map(|x| &x.name)
+                    .chain(change_attributes.iter().map(|x| &x.name))
+                    .find(|x| x.name.as_str() == name)
                     .is_some()
             };
             if let Some(_target_path) = project.get_target_component_path(abs_path, &tag_name.name)
