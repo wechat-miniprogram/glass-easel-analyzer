@@ -8,6 +8,7 @@ mod completion;
 mod context;
 mod file;
 mod folding;
+mod formatting;
 mod hover;
 mod logger;
 mod reference;
@@ -76,6 +77,8 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
                 },
             ),
         ),
+        document_formatting_provider: Some(lsp_types::OneOf::Left(true)),
+        // document_range_formatting_provider: Some(lsp_types::OneOf::Left(true)),
         workspace: Some(lsp_types::WorkspaceServerCapabilities {
             workspace_folders: Some(lsp_types::WorkspaceFoldersServerCapabilities {
                 supported: Some(true),
@@ -121,6 +124,7 @@ async fn handle_request(
     handler!("textDocument/completion", completion::completion);
     handler!("textDocument/documentColor", color::color);
     handler!("textDocument/colorPresentation", color::color_presentation);
+    handler!("textDocument/formatting", formatting::formatting);
 
     // method not found
     log::warn!("Missing LSP request handler for {:?}", method);
