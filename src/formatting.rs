@@ -21,8 +21,7 @@ pub(crate) async fn formatting(
                             ..Default::default()
                         };
                         let mut out = String::new();
-                        Stringifier::new(&mut out, "", "", options)
-                            .run(template)?;
+                        Stringifier::new(&mut out, "", "", options).run(template)?;
                         let text_edit = TextEdit {
                             range: lsp_types::Range {
                                 start: lsp_types::Position {

@@ -3,7 +3,9 @@ use std::ops::Range;
 use glass_easel_template_compiler::parse::{
     expr::Expression,
     tag::{
-        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value
+        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node,
+        NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation,
+        UnknownMetaTag, Value,
     },
     Position, Template,
 };
@@ -372,7 +374,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             }
                                             return Token::AttributeName(&attr.name, elem);
                                         }
-                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) =
+                                            find_in_option_value(&attr.value, pos, scopes)
+                                        {
                                             if let Token::StaticValuePart(loc, v) = ret {
                                                 return Token::AttributeStaticValue(
                                                     loc, v, &attr.name, elem,
@@ -385,7 +389,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         if ident_contains(&attr.name, pos) {
                                             return Token::AttributeName(&attr.name, elem);
                                         }
-                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) =
+                                            find_in_option_value(&attr.value, pos, scopes)
+                                        {
                                             if let Token::StaticValuePart(loc, v) = ret {
                                                 return Token::AttributeStaticValue(
                                                     loc, v, &attr.name, elem,
@@ -639,7 +645,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         if ident_contains(&attr.name, pos) {
                                             return Token::SlotValueDefinition(&attr.name);
                                         }
-                                        if let Some(ret) = find_in_option_value(&attr.value, pos, scopes) {
+                                        if let Some(ret) =
+                                            find_in_option_value(&attr.value, pos, scopes)
+                                        {
                                             return ret;
                                         }
                                     }

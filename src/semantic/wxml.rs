@@ -1,7 +1,8 @@
 use glass_easel_template_compiler::parse::{
     expr::{ArrayFieldKind, Expression, ObjectFieldKind},
     tag::{
-        ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, NormalAttributePrefix, Script, StrName, StyleAttribute, Value
+        ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, NormalAttributePrefix,
+        Script, StrName, StyleAttribute, Value,
     },
     Position, Template,
 };
