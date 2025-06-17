@@ -4,7 +4,7 @@ use lsp_types::{
     FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent,
 };
 
-use crate::{context::project::Project, utils::log_if_err, ServerContext};
+use crate::{context::{project::Project, FileLang}, utils::log_if_err, ServerContext};
 
 fn apply_content_changes_to_content(
     content: &str,
@@ -32,11 +32,11 @@ pub(crate) async fn did_open(
     let uri = params.text_document.uri.clone();
     log_if_err(
         ctx.clone()
-            .project_thread_task(&params.text_document.uri, move |project, abs_path| {
-                let diag = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => project.open_wxml(&abs_path, params.text_document.text),
-                    Some("wxss") => project.open_wxss(&abs_path, params.text_document.text),
-                    Some("json") => project.open_json(&abs_path, params.text_document.text),
+            .project_thread_task(&params.text_document.uri, move |project, abs_path, _| {
+                let diag = match params.text_document.language_id.as_str() {
+                    "wxml" => project.open_wxml(&abs_path, params.text_document.text),
+                    "wxss" => project.open_wxss(&abs_path, params.text_document.text),
+                    "json" => project.open_json(&abs_path, params.text_document.text),
                     _ => return,
                 };
                 match diag {
@@ -68,14 +68,14 @@ pub(crate) async fn did_change(
     let uri = params.text_document.uri.clone();
     log_if_err(
         ctx.clone()
-            .project_thread_task(&params.text_document.uri, move |project, abs_path| {
+            .project_thread_task(&params.text_document.uri, move |project, abs_path, file_lang| {
                 if let Some(content) = project.cached_file_content(&abs_path) {
                     let new_content =
                         apply_content_changes_to_content(&content.content, params.content_changes);
-                    let diag = match abs_path.extension().and_then(|x| x.to_str()) {
-                        Some("wxml") => project.open_wxml(&abs_path, new_content),
-                        Some("wxss") => project.open_wxss(&abs_path, new_content),
-                        Some("json") => project.open_json(&abs_path, new_content),
+                    let diag = match file_lang {
+                        FileLang::Wxml => project.open_wxml(&abs_path, new_content),
+                        FileLang::Wxss => project.open_wxss(&abs_path, new_content),
+                        FileLang::Json => project.open_json(&abs_path, new_content),
                         _ => return,
                     };
                     match diag {
@@ -117,14 +117,14 @@ pub(crate) async fn did_close(
         ctx.clone()
             .project_thread_task(
                 &params.text_document.uri,
-                move |project, abs_path| match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("json") => {
+                move |project, abs_path, file_lang| match file_lang {
+                    FileLang::Json => {
                         log_if_err(project.close_json(&abs_path));
                     }
-                    Some("wxml") => {
+                    FileLang::Wxml => {
                         log_if_err(project.close_wxml(&abs_path));
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         log_if_err(project.close_wxss(&abs_path));
                     }
                     _ => {}
@@ -144,7 +144,7 @@ pub(crate) async fn did_change_watched_files(
             FileChangeType::CREATED | FileChangeType::CHANGED => {
                 log_if_err(
                     ctx.clone()
-                        .project_thread_task(&change.uri, move |project, abs_path| {
+                        .project_thread_task(&change.uri, move |project, abs_path, _| {
                             project.file_created_or_changed(&abs_path);
                         })
                         .await,
@@ -153,7 +153,7 @@ pub(crate) async fn did_change_watched_files(
             FileChangeType::DELETED => {
                 log_if_err(
                     ctx.clone()
-                        .project_thread_task(&change.uri, move |project, abs_path| {
+                        .project_thread_task(&change.uri, move |project, abs_path, _| {
                             project.file_removed(&abs_path);
                         })
                         .await,

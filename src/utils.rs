@@ -24,6 +24,8 @@ pub(crate) fn generate_non_fs_fake_path(uri: &Url) -> PathBuf {
         for seg in segs {
             p.push(seg);
         }
+    } else {
+        p.push(uri.path());
     }
     p
 }

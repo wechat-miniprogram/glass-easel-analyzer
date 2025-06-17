@@ -104,7 +104,9 @@ export class Client {
       },
       documentSelector: [
         { language: 'wxml', scheme: 'file' },
+        { language: 'wxml', scheme: 'untitled' },
         { language: 'wxss', scheme: 'file' },
+        { language: 'wxss', scheme: 'untitled' },
       ],
       outputChannelName: 'glass-easel-analyzer',
       progressOnInitialization: true,

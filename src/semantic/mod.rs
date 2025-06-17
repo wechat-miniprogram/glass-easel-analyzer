@@ -6,7 +6,7 @@ use lsp_types::{
     SemanticTokensRangeParams,
 };
 
-use crate::{context::project::FileContentMetadata, ServerContext};
+use crate::{context::{project::FileContentMetadata, FileLang}, ServerContext};
 
 mod wxml;
 mod wxss;
@@ -69,10 +69,10 @@ pub(crate) async fn tokens_full(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<_> {
+            move |project, abs_path, file_lang| -> anyhow::Result<_> {
                 let data = if let Some(content) = project.cached_file_content(&abs_path) {
-                    match abs_path.extension().and_then(|x| x.to_str()) {
-                        Some("wxml") => {
+                    match file_lang {
+                        FileLang::Wxml => {
                             let template = project.get_wxml_tree(&abs_path)?;
                             let range = Position {
                                 line: 0,
@@ -83,7 +83,7 @@ pub(crate) async fn tokens_full(
                             };
                             wxml::find_wxml_semantic_tokens(content, template, range)
                         }
-                        Some("wxss") => {
+                        FileLang::Wxss => {
                             let sheet = project.get_style_sheet(&abs_path)?;
                             let range = Position {
                                 line: 0,
@@ -117,10 +117,10 @@ pub(crate) async fn tokens_range(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<_> {
+            move |project, abs_path, file_lang| -> anyhow::Result<_> {
                 let data = if let Some(content) = project.cached_file_content(&abs_path) {
-                    match abs_path.extension().and_then(|x| x.to_str()) {
-                        Some("wxml") => {
+                    match file_lang {
+                        FileLang::Wxml => {
                             let template = project.get_wxml_tree(&abs_path)?;
                             let start = Position {
                                 line: params.range.start.line,
@@ -132,7 +132,7 @@ pub(crate) async fn tokens_range(
                             };
                             wxml::find_wxml_semantic_tokens(content, template, start..end)
                         }
-                        Some("wxss") => {
+                        FileLang::Wxss => {
                             let sheet = project.get_style_sheet(&abs_path)?;
                             let start = Position {
                                 line: params.range.start.line,

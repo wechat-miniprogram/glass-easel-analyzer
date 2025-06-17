@@ -18,6 +18,14 @@ type TaskFn = Box<
         + FnOnce(&mut project::Project) -> Pin<Box<dyn 'static + Send + Future<Output = ()>>>,
 >;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum FileLang {
+    Unknown,
+    Wxml,
+    Wxss,
+    Json,
+}
+
 pub(crate) struct ServerContextOptions {
     pub(crate) ignore_paths: Vec<PathBuf>,
 }
@@ -120,7 +128,7 @@ impl ServerContext {
     >(
         &self,
         uri: &Url,
-        f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf) -> F,
+        f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf, FileLang) -> F,
     ) -> anyhow::Result<R> {
         let abs_path = uri.to_file_path();
         let sender = if let Ok(path) = abs_path.as_ref() {
@@ -132,7 +140,11 @@ impl ServerContext {
         let (ret_sender, ret_receiver) = tokio::sync::oneshot::channel();
         sender
             .send(Box::new(move |project| {
-                let fut = f(project, abs_path);
+                let file_lang = match project.cached_file_content(&abs_path) {
+                    Some(content) => content.file_lang,
+                    None => FileLang::Unknown,
+                };
+                let fut = f(project, abs_path, file_lang);
                 Box::pin(async {
                     let r = fut.await;
                     let _ = ret_sender.send(r);
@@ -146,10 +158,10 @@ impl ServerContext {
     pub(crate) async fn project_thread_task<R: 'static + Send>(
         &self,
         uri: &Url,
-        f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf) -> R,
+        f: impl 'static + Send + FnOnce(&mut project::Project, PathBuf, FileLang) -> R,
     ) -> anyhow::Result<R> {
-        self.project_thread_async_task(uri, |project, abs_path| {
-            let ret = f(project, abs_path);
+        self.project_thread_async_task(uri, |project, abs_path, file_lang| {
+            let ret = f(project, abs_path, file_lang);
             async { ret }
         })
         .await

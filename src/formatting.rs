@@ -1,7 +1,7 @@
 use glass_easel_template_compiler::stringify::{Stringifier, StringifyOptions};
 use lsp_types::{DocumentFormattingParams, TextEdit};
 
-use crate::ServerContext;
+use crate::{context::FileLang, ServerContext};
 
 pub(crate) async fn formatting(
     ctx: ServerContext,
@@ -11,9 +11,9 @@ pub(crate) async fn formatting(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Vec<TextEdit>> {
-                let ret = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<TextEdit>> {
+                let ret = match file_lang {
+                    FileLang::Wxml => {
                         let template = project.get_wxml_tree(&abs_path)?;
                         let options = StringifyOptions {
                             tab_size: params.options.tab_size,
