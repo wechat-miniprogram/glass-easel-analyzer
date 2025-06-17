@@ -1,6 +1,6 @@
 [[global-attribute]]
-name = "hidden"
-description = "Whether the element should be hidden, a.k.a. `display: none`."
+name = "tabindex"
+description = "The tab-index of the element."
 
 
 [[global-event]]
