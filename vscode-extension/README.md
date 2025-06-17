@@ -22,6 +22,10 @@ All configurations are under `glass-easel-analyzer.*`.
 
 ## Release Notes
 
+### 0.2.0
+
+Add WXML/WXSS formatting support.
+
 ### 0.1.0
 
 Basic features of the language server.
