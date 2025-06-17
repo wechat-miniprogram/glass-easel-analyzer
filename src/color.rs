@@ -3,7 +3,7 @@ use lsp_types::{
     ColorInformation, ColorPresentation, ColorPresentationParams, DocumentColorParams,
 };
 
-use crate::{utils::location_to_lsp_range, wxss::StyleSheet, ServerContext};
+use crate::{context::FileLang, utils::location_to_lsp_range, wxss::StyleSheet, ServerContext};
 
 pub(crate) async fn color_presentation(
     ctx: ServerContext,
@@ -13,7 +13,7 @@ pub(crate) async fn color_presentation(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |_project, _abs_path| -> anyhow::Result<Vec<ColorPresentation>> {
+            move |_project, _abs_path, _| -> anyhow::Result<Vec<ColorPresentation>> {
                 let mut ret = vec![];
                 let rgba = convert_lsp_color_u8(&params.color);
                 let rgba_str = if rgba.3 == 1. {
@@ -41,12 +41,12 @@ pub(crate) async fn color(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Vec<ColorInformation>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<ColorInformation>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => {
                         vec![]
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         let sheet = project.get_style_sheet(&abs_path)?;
                         collect_wxss_colors(sheet)
                     }

@@ -14,7 +14,7 @@ use lsp_types::{
 use crate::{
     context::{
         backend_configuration::MediaFeatureType,
-        project::{FileContentMetadata, Project},
+        project::{FileContentMetadata, Project}, FileLang,
     },
     wxml_utils::{
         for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken,
@@ -95,9 +95,9 @@ pub(crate) async fn completion(
         .clone()
         .project_thread_task(
             &params.text_document_position.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Option<CompletionList>> {
-                let list = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+            move |project, abs_path, file_lang| -> anyhow::Result<Option<CompletionList>> {
+                let list = match file_lang {
+                    FileLang::Wxml => {
                         let trigger = params
                             .context
                             .as_ref()
@@ -111,7 +111,7 @@ pub(crate) async fn completion(
                             trigger,
                         )
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         let trigger = params
                             .context
                             .as_ref()

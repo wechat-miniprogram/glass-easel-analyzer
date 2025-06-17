@@ -4,7 +4,7 @@ use glass_easel_template_compiler::parse::{
 };
 use lsp_types::{FoldingRange, FoldingRangeKind, FoldingRangeParams};
 
-use crate::{wxss::StyleSheet, ServerContext};
+use crate::{context::FileLang, wxss::StyleSheet, ServerContext};
 
 pub(crate) async fn folding_range(
     ctx: ServerContext,
@@ -14,13 +14,13 @@ pub(crate) async fn folding_range(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Vec<FoldingRange>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<FoldingRange>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => {
                         let template = project.get_wxml_tree(&abs_path)?;
                         collect_wxml_folding_ranges(template)
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         let template = project.get_style_sheet(&abs_path)?;
                         collect_wxss_folding_ranges(template)
                     }

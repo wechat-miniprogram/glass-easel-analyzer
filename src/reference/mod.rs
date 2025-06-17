@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use lsp_types::{GotoDefinitionParams, Location, LocationLink, ReferenceParams};
 
-use crate::{context::project::Project, ServerContext};
+use crate::{context::{project::Project, FileLang}, ServerContext};
 
 mod wxml;
 mod wxss;
@@ -17,10 +17,10 @@ pub(crate) async fn find_definition(
         .clone()
         .project_thread_task(
             uri,
-            move |project, abs_path| -> anyhow::Result<Vec<LocationLink>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => wxml::find_declaration(project, &abs_path, position, true)?,
-                    Some("wxss") => wxss::find_declaration(project, &abs_path, position)?,
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<LocationLink>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => wxml::find_declaration(project, &abs_path, position, true)?,
+                    FileLang::Wxss => wxss::find_declaration(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)
@@ -40,10 +40,10 @@ pub(crate) async fn find_declaration(
         .clone()
         .project_thread_task(
             uri,
-            move |project, abs_path| -> anyhow::Result<Vec<LocationLink>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => wxml::find_declaration(project, &abs_path, position, false)?,
-                    Some("wxss") => wxss::find_declaration(project, &abs_path, position)?,
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<LocationLink>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => wxml::find_declaration(project, &abs_path, position, false)?,
+                    FileLang::Wxss => wxss::find_declaration(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)
@@ -63,10 +63,10 @@ pub(crate) async fn find_references(
         .clone()
         .project_thread_task(
             &uri,
-            move |project, abs_path| -> anyhow::Result<Vec<Location>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => wxml::find_references(project, &abs_path, position)?,
-                    Some("wxss") => wxss::find_references(project, &abs_path, position)?,
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<Location>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => wxml::find_references(project, &abs_path, position)?,
+                    FileLang::Wxss => wxss::find_references(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)

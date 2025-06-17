@@ -13,18 +13,21 @@ use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
 use crate::wxss::{self, StyleSheet};
+use super::FileLang;
 
 #[derive(Debug)]
 pub(crate) struct FileContentMetadata {
     opened: bool,
+    pub(crate) file_lang: FileLang,
     pub(crate) content: String,
     pub(crate) line_starts: Vec<usize>,
 }
 
 impl FileContentMetadata {
-    fn new(content: String) -> Self {
+    fn new(content: String, file_lang: FileLang) -> Self {
         FileContentMetadata {
             opened: false,
+            file_lang,
             content,
             line_starts: vec![],
         }
@@ -217,14 +220,14 @@ impl Project {
     pub(crate) fn file_removed(&mut self, abs_path: &Path) {
         if let Some(content_meta) = self.file_contents.get(abs_path) {
             if !content_meta.opened {
-                match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+                match content_meta.file_lang {
+                    FileLang::Wxml => {
                         let _ = self.cleanup_wxml(abs_path);
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         let _ = self.cleanup_wxss(abs_path);
                     }
-                    Some("json") => {
+                    FileLang::Json => {
                         let _ = self.cleanup_json(abs_path);
                     }
                     _ => {}
@@ -346,7 +349,7 @@ impl Project {
             }
         }
         self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Json));
         Ok(ret)
     }
 
@@ -385,7 +388,7 @@ impl Project {
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let (ss, err_list) = StyleSheet::parse_str(&content);
         self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Wxss));
         self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
         let diagnostics = err_list
             .into_iter()
@@ -434,7 +437,7 @@ impl Project {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         let err_list = self.template_group.add_tmpl(&tmpl_path, &content);
         self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content));
+            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Wxml));
         let diagnostics = err_list
             .into_iter()
             .filter_map(diagnostic_from_wxml_parse_error)

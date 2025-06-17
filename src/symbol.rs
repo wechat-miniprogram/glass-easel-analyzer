@@ -2,12 +2,10 @@ use glass_easel_template_compiler::parse::{Template, TemplateStructure};
 use lsp_types::{DocumentSymbol, DocumentSymbolParams, SymbolKind};
 
 use crate::{
-    utils::location_to_lsp_range,
-    wxss::{
+    context::FileLang, utils::location_to_lsp_range, wxss::{
         keyframe::Keyframe, token::BraceOrSemicolon, CSSParse, List, Rule, RuleOrProperty,
         StyleSheet,
-    },
-    ServerContext,
+    }, ServerContext
 };
 
 pub(crate) async fn document_symbol(
@@ -18,13 +16,13 @@ pub(crate) async fn document_symbol(
         .clone()
         .project_thread_task(
             &params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Vec<DocumentSymbol>> {
-                let ranges = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => {
+            move |project, abs_path, file_lang| -> anyhow::Result<Vec<DocumentSymbol>> {
+                let ranges = match file_lang {
+                    FileLang::Wxml => {
                         let template = project.get_wxml_tree(&abs_path)?;
                         collect_wxml_symbol_list(template)
                     }
-                    Some("wxss") => {
+                    FileLang::Wxss => {
                         let template = project.get_style_sheet(&abs_path)?;
                         collect_wxss_symbol_list(template)
                     }

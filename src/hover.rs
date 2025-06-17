@@ -4,7 +4,7 @@ use glass_easel_template_compiler::parse::{tag::ElementKind, Position};
 use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind, Url};
 
 use crate::{
-    context::{backend_configuration::*, project::Project},
+    context::{backend_configuration::*, project::Project, FileLang},
     utils::location_to_lsp_range,
     wxml_utils::{ScopeKind, Token as WxmlToken},
     wxss::CSSParse,
@@ -21,15 +21,15 @@ pub(crate) async fn hover(
         .clone()
         .project_thread_task(
             &params.text_document_position_params.text_document.uri,
-            move |project, abs_path| -> anyhow::Result<Option<Hover>> {
-                let hover = match abs_path.extension().and_then(|x| x.to_str()) {
-                    Some("wxml") => hover_wxml(
+            move |project, abs_path, file_lang| -> anyhow::Result<Option<Hover>> {
+                let hover = match file_lang {
+                    FileLang::Wxml => hover_wxml(
                         project,
                         &backend_config,
                         &abs_path,
                         params.text_document_position_params.position,
                     ),
-                    Some("wxss") => hover_wxss(
+                    FileLang::Wxss => hover_wxss(
                         project,
                         &backend_config,
                         &abs_path,
