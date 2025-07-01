@@ -1,0 +1,10 @@
+// ====== SNAPSHOT 0 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "color"
+      kind = "Property"
+      label = "color"
+      sortText = "color"
+

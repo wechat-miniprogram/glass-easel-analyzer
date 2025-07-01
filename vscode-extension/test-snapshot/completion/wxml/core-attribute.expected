@@ -12,6 +12,13 @@
     [Object]
       insertText = [Object]
         e = 1
+        value = "class:${1|hello-class|}$0"
+      kind = "Keyword"
+      label = "class:"
+      sortText = "class:"
+    [Object]
+      insertText = [Object]
+        e = 1
         value = "data:$1=\"$0\""
       kind = "Keyword"
       label = "data:"
@@ -58,6 +65,13 @@
       kind = "Keyword"
       label = "style"
       sortText = "style"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "style:${1|color,display|}=\"$0\""
+      kind = "Keyword"
+      label = "style:"
+      sortText = "style:"
     [Object]
       insertText = [Object]
         e = 1

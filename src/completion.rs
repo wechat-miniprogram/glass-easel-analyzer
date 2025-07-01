@@ -296,31 +296,74 @@ fn completion_wxml(
                     }
                 }
             }
-            if let ClassAttribute::None = class {
+            {
                 let name = "class";
                 let item_set = collect_classes_in_wxss(project, abs_path);
                 if item_set.is_empty() {
+                    if let ClassAttribute::None = class {
+                        items.push(snippet_completion_item(
+                            name,
+                            format!("{}=\"$0\"", name),
+                            CompletionItemKind::KEYWORD,
+                            false,
+                        ));
+                    }
+                    items.push(snippet_completion_item(
+                        "class:",
+                        format!("{}:$0", name),
+                        CompletionItemKind::KEYWORD,
+                        false,
+                    ));
+                } else {
+                    let choices = item_set
+                        .into_iter()
+                        .filter(|x| {
+                            match class {
+                                ClassAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
+                                _ => true,
+                            }
+                        })
+                        .join(",");
+                    if let ClassAttribute::None = class {
+                        items.push(snippet_completion_item(
+                            name,
+                            format!("{}=\"${{1|{}|}}\"$0", name, choices),
+                            CompletionItemKind::KEYWORD,
+                            false,
+                        ));
+                    }
+                    items.push(snippet_completion_item(
+                        "class:",
+                        format!("{}:${{1|{}|}}$0", name, choices),
+                        CompletionItemKind::KEYWORD,
+                        false,
+                    ));
+                }
+            }
+            {
+                let name = "style";
+                if let StyleAttribute::None = style {
                     items.push(snippet_completion_item(
                         name,
                         format!("{}=\"$0\"", name),
                         CompletionItemKind::KEYWORD,
                         false,
                     ));
-                } else {
-                    let choices = item_set.into_iter().join(",");
-                    items.push(snippet_completion_item(
-                        name,
-                        format!("{}=\"${{1|{}|}}\"$0", name, choices),
-                        CompletionItemKind::KEYWORD,
-                        false,
-                    ));
                 }
-            }
-            if let StyleAttribute::None = style {
-                let name = "style";
+                let choices = backend_config
+                    .style_property
+                    .iter()
+                    .map(|x| &x.name)
+                    .filter(|x| {
+                        match style {
+                            StyleAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
+                            _ => true,
+                        }
+                    })
+                    .join(",");
                 items.push(snippet_completion_item(
-                    name,
-                    format!("{}=\"$0\"", name),
+                    "style:",
+                    format!("{}:${{1|{}|}}=\"$0\"", name, choices),
                     CompletionItemKind::KEYWORD,
                     false,
                 ));
@@ -617,6 +660,56 @@ fn completion_wxml(
         WxmlToken::ModelAttributeName(_attr_name, elem) => handle_attr(elem, true),
         WxmlToken::ChangeAttributeName(_attr_name, elem) => handle_attr(elem, true),
         WxmlToken::AttributeKeyword(_loc, elem) => handle_attr(elem, false),
+        WxmlToken::StaticClassName(_loc, _name, elem) => {
+            match &elem.kind {
+                ElementKind::Normal { class, .. } => {
+                    let items = collect_classes_in_wxss(project, abs_path)
+                        .into_iter()
+                        .filter(|x| {
+                            match class {
+                                ClassAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
+                                _ => true,
+                            }
+                        })
+                        .map(|x| {
+                            simple_completion_item(
+                                x,
+                                CompletionItemKind::PROPERTY,
+                                false,
+                            )
+                        })
+                        .collect();
+                    Some(CompletionList { is_incomplete: false, items })
+                }
+                _ => None,
+            }
+        }
+        WxmlToken::StaticStylePropertyName(_, elem) => {
+            match &elem.kind {
+                ElementKind::Normal { style, .. } => {
+                    let items = backend_config
+                        .style_property
+                        .iter()
+                        .map(|x| &x.name)
+                        .filter(|x| {
+                            match style {
+                                StyleAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
+                                _ => true,
+                            }
+                        })
+                        .map(|x| {
+                            simple_completion_item(
+                                x,
+                                CompletionItemKind::PROPERTY,
+                                false,
+                            )
+                        })
+                        .collect();
+                    Some(CompletionList { is_incomplete: false, items })
+                }
+                _ => None,
+            }
+        }
         WxmlToken::EventName(_event_name, elem) => {
             let mut items: Vec<CompletionItem> = vec![];
             let has_event = |common: &CommonElementAttributes, name: &str| {

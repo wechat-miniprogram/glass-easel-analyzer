@@ -211,7 +211,7 @@ pub(super) fn find_declaration(
                     }
                 }
             }
-            Token::StaticId(loc, _) | Token::StaticClassName(loc, _) => {
+            Token::StaticId(loc, _) | Token::StaticClassName(loc, _, _) => {
                 ret.push(LocationLink {
                     origin_selection_range: Some(location_to_lsp_range(&loc)),
                     target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
@@ -473,7 +473,7 @@ pub(super) fn find_references(
                     ret.append(&mut x);
                 }
             }
-            Token::StaticClassName(_, class_name) => {
+            Token::StaticClassName(_, class_name, _) => {
                 let mut x = find_elements_matching_class(project, abs_path, template, class_name);
                 ret.append(&mut x);
                 let wxss_path = abs_path.with_extension("wxss");

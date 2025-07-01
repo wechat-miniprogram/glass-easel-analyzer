@@ -131,6 +131,28 @@ fn hover_wxml(
                 range: Some(location_to_lsp_range(&tag_name.location)),
             })
         }
+        WxmlToken::StaticStylePropertyName(x, _) => backend_config
+            .style_property
+            .iter()
+            .find(|config| config.name == x.name)
+            .map(|config| {
+                let StylePropertyConfig {
+                    name,
+                    options: _,
+                    description,
+                    reference,
+                } = config;
+                let contents = md_str_hover_contents(format!(
+                    "**{}** *property*\n\n{}{}",
+                    name,
+                    description,
+                    reference_args_str(reference)
+                ));
+                Hover {
+                    contents,
+                    range: Some(location_to_lsp_range(&x.location)),
+                }
+            }),
         WxmlToken::AttributeName(attr_name, elem) => {
             let tag_name = match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => Some(tag_name),

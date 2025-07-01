@@ -39,8 +39,8 @@ pub(crate) enum Token<'a> {
     AttributeName(&'a Ident, &'a Element),
     ModelAttributeName(&'a Ident, &'a Element),
     ChangeAttributeName(&'a Ident, &'a Element),
-    StaticClassName(Range<Position>, &'a str),
-    StaticStylePropertyName(&'a Ident),
+    StaticClassName(Range<Position>, &'a str, &'a Element),
+    StaticStylePropertyName(&'a Ident, &'a Element),
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
@@ -425,7 +425,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
                                                 return match ret {
                                                     Token::StaticValuePart(loc, name) => {
-                                                        Token::StaticClassName(loc.clone(), name)
+                                                        Token::StaticClassName(loc.clone(), name, &elem)
                                                     }
                                                     x => x,
                                                 };
@@ -437,6 +437,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                                     return Token::StaticClassName(
                                                         name.location.clone(),
                                                         &name.name,
+                                                        &elem,
                                                     );
                                                 }
                                                 if let Some(ret) = find_in_option_value(v, pos, scopes) {
@@ -459,7 +460,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         StyleAttribute::Multiple(list) => {
                                             for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
-                                                    return Token::StaticStylePropertyName(name);
+                                                    return Token::StaticStylePropertyName(name, &elem);
                                                 }
                                                 if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;

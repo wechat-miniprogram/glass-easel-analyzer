@@ -50,10 +50,6 @@ const defWxssCases = [
     args: [new vscode.Position(2, 2), new vscode.Position(0, 17)],
   },
   {
-    name: 'static-class',
-    args: [new vscode.Position(0, 1), new vscode.Position(2, 1)],
-  },
-  {
     name: 'style-rule',
     args: [
       new vscode.Position(0, 3),

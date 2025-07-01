@@ -11,6 +11,8 @@ const wxmlCases = [
   'meta-tag',
   'event-binding',
   'slot-value',
+  'static-class',
+  'static-style',
   'wx-for',
   'wx-if',
   'import',
