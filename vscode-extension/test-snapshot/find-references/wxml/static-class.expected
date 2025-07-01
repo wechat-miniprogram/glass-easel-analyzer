@@ -1,0 +1,42 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 23
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/static-class.wxml"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 12
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/static-class.wxss"
+
+// ====== SNAPSHOT 1 ======
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 30
+        line = 0
+      [Object]
+        character = 44
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/static-class.wxml"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 0
+        line = 2
+      [Object]
+        character = 15
+        line = 2
+    uri = [Object] "../../test-fixture/wxml/static-class.wxss"
+

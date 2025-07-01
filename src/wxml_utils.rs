@@ -7,7 +7,7 @@ use glass_easel_template_compiler::parse::{
         NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation,
         UnknownMetaTag, Value,
     },
-    Position, Template,
+    Position, Template, TemplateStructure,
 };
 
 use crate::utils::{exclusive_contains, inclusive_contains};
@@ -40,7 +40,7 @@ pub(crate) enum Token<'a> {
     ModelAttributeName(&'a Ident, &'a Element),
     ChangeAttributeName(&'a Ident, &'a Element),
     StaticClassName(Range<Position>, &'a str),
-    StyleName(&'a Ident),
+    StaticStylePropertyName(&'a Ident),
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
@@ -432,14 +432,14 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             }
                                         }
                                         ClassAttribute::Multiple(list) => {
-                                            for (name, v) in list {
+                                            for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
                                                     return Token::StaticClassName(
                                                         name.location.clone(),
                                                         &name.name,
                                                     );
                                                 }
-                                                if let Some(ret) = find_in_value(v, pos, scopes) {
+                                                if let Some(ret) = find_in_option_value(v, pos, scopes) {
                                                     return ret;
                                                 }
                                             }
@@ -457,9 +457,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             }
                                         }
                                         StyleAttribute::Multiple(list) => {
-                                            for (name, v) in list {
+                                            for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
-                                                    return Token::StyleName(name);
+                                                    return Token::StaticStylePropertyName(name);
                                                 }
                                                 if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;
@@ -928,8 +928,10 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                             f(value, scopes);
                         }
                         ClassAttribute::Multiple(v) => {
-                            for (_, value) in v {
-                                f(value, scopes);
+                            for (_, _, value) in v {
+                                if let Some(value) = value.as_ref() {
+                                    f(value, scopes);
+                                }
                             }
                         }
                         _ => {}
@@ -940,7 +942,7 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                             f(value, scopes);
                         }
                         StyleAttribute::Multiple(v) => {
-                            for (_, value) in v {
+                            for (_, _, value) in v {
                                 f(value, scopes);
                             }
                         }
@@ -1101,6 +1103,7 @@ pub(crate) fn for_each_static_class_name_in_element<'a>(
 ) {
     if let ElementKind::Normal { class, .. } = &elem.kind {
         match class {
+            ClassAttribute::None => {}
             ClassAttribute::String(_, value) => {
                 fn rec_expr<'a>(
                     expr: &'a Expression,
@@ -1146,6 +1149,11 @@ pub(crate) fn for_each_static_class_name_in_element<'a>(
                         rec_expr(&expression, true, true, &mut check_str);
                     }
                     _ => {}
+                }
+            }
+            ClassAttribute::Multiple(x) => {
+                for (_, name, _) in x.iter() {
+                    f(&name.name, name.location());
                 }
             }
             _ => {}

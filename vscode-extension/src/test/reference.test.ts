@@ -15,6 +15,10 @@ const defWxmlCases = [
     name: 'import',
     args: [new vscode.Position(0, 13), new vscode.Position(5, 20), new vscode.Position(3, 21)],
   },
+  {
+    name: 'static-class',
+    args: [new vscode.Position(0, 15), new vscode.Position(0, 30)],
+  },
   { name: 'template', args: [new vscode.Position(4, 16)] },
   {
     name: 'wxs',
@@ -44,6 +48,10 @@ const defWxssCases = [
   {
     name: 'import',
     args: [new vscode.Position(2, 2), new vscode.Position(0, 17)],
+  },
+  {
+    name: 'static-class',
+    args: [new vscode.Position(0, 1), new vscode.Position(2, 1)],
   },
   {
     name: 'style-rule',

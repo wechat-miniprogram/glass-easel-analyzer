@@ -1,0 +1,1 @@
+<view class:hello-class class:-hello-class-2="{{ false }}" />

@@ -1,0 +1,52 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 23
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 23
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 23
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/static-class.wxml"
+
+// ====== SNAPSHOT 1 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 30
+        line = 0
+      [Object]
+        character = 44
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 30
+        line = 0
+      [Object]
+        character = 44
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 30
+        line = 0
+      [Object]
+        character = 44
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/static-class.wxml"
+

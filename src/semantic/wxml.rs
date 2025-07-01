@@ -4,7 +4,7 @@ use glass_easel_template_compiler::parse::{
         ClassAttribute, CommonElementAttributes, ElementKind, Ident, Node, NormalAttributePrefix,
         Script, StrName, StyleAttribute, Value,
     },
-    Position, Template,
+    Position, Template, TemplateStructure,
 };
 
 use super::*;
@@ -245,9 +245,20 @@ pub(super) fn find_wxml_semantic_tokens(
                                 collect_in_value(tokens, value);
                             }
                             ClassAttribute::Multiple(list) => {
-                                for (key, value) in list {
-                                    tokens.push(key.into());
-                                    collect_in_value(tokens, value);
+                                for (prefix_location, key, value) in list {
+                                    tokens.push(WxmlToken {
+                                        location: prefix_location.clone(),
+                                        ty: TokenType::Keyword,
+                                        modifier: 0,
+                                    });
+                                    tokens.push(WxmlToken {
+                                        location: key.location(),
+                                        ty: TokenType::Property,
+                                        modifier: 0,
+                                    });
+                                    if let Some(value) = value.as_ref() {
+                                        collect_in_value(tokens, value);
+                                    }
                                 }
                             }
                             _ => {}
@@ -263,8 +274,17 @@ pub(super) fn find_wxml_semantic_tokens(
                                 collect_in_value(tokens, value);
                             }
                             StyleAttribute::Multiple(list) => {
-                                for (key, value) in list {
-                                    tokens.push(key.into());
+                                for (prefix_location, key, value) in list {
+                                    tokens.push(WxmlToken {
+                                        location: prefix_location.clone(),
+                                        ty: TokenType::Keyword,
+                                        modifier: 0,
+                                    });
+                                    tokens.push(WxmlToken {
+                                        location: key.location(),
+                                        ty: TokenType::Property,
+                                        modifier: 0,
+                                    });
                                     collect_in_value(tokens, value);
                                 }
                             }
