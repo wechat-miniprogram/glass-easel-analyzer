@@ -40,6 +40,13 @@
     [Object]
       insertText = [Object]
         e = 1
+        value = "let:$1=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "let:"
+      sortText = "let:"
+    [Object]
+      insertText = [Object]
+        e = 1
         value = "mark:$1=\"$0\""
       kind = "Keyword"
       label = "mark:"

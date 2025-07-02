@@ -1,0 +1,78 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 16
+        line = 0
+      [Object]
+        character = 17
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/let-var.wxml"
+
+// ====== SNAPSHOT 1 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/let-var.wxml"
+
+// ====== SNAPSHOT 2 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 5
+        line = 1
+      [Object]
+        character = 6
+        line = 1
+    targetRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 26
+        line = 0
+      [Object]
+        character = 27
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/let-var.wxml"
+

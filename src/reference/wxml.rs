@@ -267,6 +267,16 @@ pub(super) fn find_declaration(
                         });
                     }
                 }
+                ScopeKind::LetVar(v, _elem) => {
+                    ret.push(LocationLink {
+                        origin_selection_range: Some(location_to_lsp_range(&loc)),
+                        target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                        target_range: location_to_lsp_range(&v.name.location),
+                        target_selection_range: location_to_lsp_range(
+                            &v.name.location,
+                        ),
+                    });
+                }
             },
             Token::TemplateName(name)
             | Token::ScriptModule(name)
@@ -277,6 +287,14 @@ pub(super) fn find_declaration(
                     target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
                     target_range: location_to_lsp_range(&name.location),
                     target_selection_range: location_to_lsp_range(&name.location),
+                });
+            }
+            Token::LetVarDefinition(def, _) => {
+                ret.push(LocationLink {
+                    origin_selection_range: Some(location_to_lsp_range(&def.name.location)),
+                    target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                    target_range: location_to_lsp_range(&def.name.location),
+                    target_selection_range: location_to_lsp_range(&def.name.location),
                 });
             }
             Token::SlotValueScope(name, key, parent) => {
@@ -499,6 +517,19 @@ pub(super) fn find_references(
                 for_each_scope_ref(template, |loc, kind| match kind {
                     ScopeKind::ForScope(x, target_elem) => {
                         if x.name_eq(name) && elem as *const _ == target_elem as *const _ {
+                            ret.push(Location {
+                                uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
+                                range: location_to_lsp_range(&loc),
+                            });
+                        }
+                    }
+                    _ => {}
+                });
+            }
+            Token::LetVarDefinition(def, _elem) => {
+                for_each_scope_ref(template, |loc, kind| match kind {
+                    ScopeKind::LetVar(x, _target_elem) => {
+                        if x as *const _ == def as *const _ {
                             ret.push(Location {
                                 uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
                                 range: location_to_lsp_range(&loc),

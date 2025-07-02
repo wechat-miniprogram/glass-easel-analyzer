@@ -13,6 +13,7 @@ const wxmlCases = [
   'slot-value',
   'static-class',
   'static-style',
+  'let-var',
   'wx-for',
   'wx-if',
   'import',

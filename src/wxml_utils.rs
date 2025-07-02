@@ -3,9 +3,7 @@ use std::ops::Range;
 use glass_easel_template_compiler::parse::{
     expr::Expression,
     tag::{
-        ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node,
-        NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation,
-        UnknownMetaTag, Value,
+        Attribute, ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value
     },
     Position, Template, TemplateStructure,
 };
@@ -53,6 +51,7 @@ pub(crate) enum Token<'a> {
     ForItem(&'a StrName, &'a Element),
     ForIndex(&'a StrName, &'a Element),
     ForKey(&'a StrName, &'a Element),
+    LetVarDefinition(&'a Attribute, &'a Element),
 }
 
 impl<'a> Token<'a> {
@@ -70,6 +69,7 @@ pub(crate) enum ScopeKind<'a> {
     Script(&'a Script),
     ForScope(&'a StrName, &'a Element),
     SlotValue(&'a StaticAttribute, &'a Element),
+    LetVar(&'a Attribute, &'a Element),
 }
 
 impl<'a> ScopeKind<'a> {
@@ -91,6 +91,13 @@ impl<'a> ScopeKind<'a> {
             }
             ScopeKind::SlotValue(a, a_elem) => {
                 if let ScopeKind::SlotValue(b, b_elem) = other {
+                    a as *const _ == b as *const _ && a_elem as *const _ == b_elem as *const _
+                } else {
+                    false
+                }
+            }
+            ScopeKind::LetVar(a, a_elem) => {
+                if let ScopeKind::LetVar(b, b_elem) = other {
                     a as *const _ == b as *const _ && a_elem as *const _ == b_elem as *const _
                 } else {
                     false
@@ -133,7 +140,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     fn find_in_expr<'a>(
         expr: &'a Expression,
         pos: Position,
-        scopes: &mut Vec<ScopeKind<'a>>,
+        scopes: &[ScopeKind<'a>],
         has_static_parts: bool,
     ) -> Token<'a> {
         let mut next_has_static_parts = false;
@@ -181,7 +188,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     fn find_in_value<'a>(
         v: &'a Value,
         pos: Position,
-        scopes: &mut Vec<ScopeKind<'a>>,
+        scopes: &[ScopeKind<'a>],
     ) -> Option<Token<'a>> {
         match v {
             Value::Static {
@@ -226,7 +233,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     fn find_in_option_value<'a>(
         v: &'a Option<Value>,
         pos: Position,
-        scopes: &mut Vec<ScopeKind<'a>>,
+        scopes: &[ScopeKind<'a>],
     ) -> Option<Token<'a>> {
         if let Some(v) = v {
             find_in_value(v, pos, scopes)
@@ -238,7 +245,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
         parent: Option<&'a Element>,
         nodes: &'a [Node],
         pos: Position,
-        scopes: &mut Vec<ScopeKind<'a>>,
+        scopes: &[ScopeKind<'a>],
     ) -> Token<'a> {
         for node in nodes {
             match node {
@@ -252,6 +259,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                 }
                 Node::Element(elem) => {
                     if tag_contains(&elem.tag_location, pos) {
+                        let mut scopes = scopes.to_vec();
                         if let Some(attrs) = elem.slot_value_refs() {
                             if let Some(parent) = parent {
                                 for attr in attrs {
@@ -259,6 +267,25 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 }
                             }
                         }
+                        if let Some(attrs) = elem.let_var_refs() {
+                            for attr in attrs {
+                                if ident_contains(&attr.name, pos) {
+                                    return Token::LetVarDefinition(&attr, elem);
+                                }
+                                if let Some(ret) =
+                                    find_in_option_value(&attr.value, pos, &scopes)
+                                {
+                                    if let Token::StaticValuePart(loc, v) = ret {
+                                        return Token::AttributeStaticValue(
+                                            loc, v, &attr.name, elem,
+                                        );
+                                    }
+                                    return ret;
+                                }
+                                scopes.push(ScopeKind::LetVar(attr, elem));
+                            }
+                        }
+                        let scopes = &mut scopes;
                         fn find_in_slot_value_refs<'a>(
                             parent: Option<&'a Element>,
                             slot_value_refs: &'a [StaticAttribute],
@@ -296,7 +323,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             elem: &'a Element,
                             common: &'a CommonElementAttributes,
                             pos: Position,
-                            scopes: &mut Vec<ScopeKind<'a>>,
+                            scopes: &[ScopeKind<'a>],
                         ) -> Token<'a> {
                             if let Some((loc, v)) = common.id.as_ref() {
                                 if inclusive_contains(loc, pos) {
@@ -360,6 +387,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 children,
                                 generics,
                                 extra_attr: _,
+                                let_vars: _,
                                 common,
                                 ..
                             } => {
@@ -479,6 +507,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                             }
                             ElementKind::Pure {
                                 children,
+                                let_vars: _,
                                 slot,
                                 slot_value_refs,
                                 ..
@@ -743,7 +772,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
     }
 
     // find in sub templates
-    let mut scopes = template
+    let scopes: Vec<_> = template
         .globals
         .scripts
         .iter()
@@ -757,11 +786,11 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
             if str_name_contains(&i.name, pos) {
                 return Token::TemplateName(&i.name);
             }
-            return find_in_nodes(None, &i.content, pos, &mut scopes);
+            return find_in_nodes(None, &i.content, pos, &scopes);
         }
     }
 
-    find_in_nodes(None, &template.content, pos, &mut scopes)
+    find_in_nodes(None, &template.content, pos, &scopes)
 }
 
 pub(crate) fn for_each_template_root<'a>(
@@ -795,19 +824,28 @@ pub(crate) fn insert_element_scopes<'a>(scopes: &mut Vec<ScopeKind<'a>>, elem: &
             scopes.push(ScopeKind::ForScope(&index_name.1, elem));
         }
         ElementKind::Normal {
-            common: CommonElementAttributes {
-                slot_value_refs, ..
-            },
-            ..
-        }
-        | ElementKind::Slot {
+            let_vars,
             common: CommonElementAttributes {
                 slot_value_refs, ..
             },
             ..
         }
         | ElementKind::Pure {
+            let_vars,
             slot_value_refs, ..
+        } => {
+            for attr in slot_value_refs {
+                scopes.push(ScopeKind::SlotValue(attr, elem));
+            }
+            for attr in let_vars {
+                scopes.push(ScopeKind::LetVar(attr, elem));
+            }
+        }
+        ElementKind::Slot {
+            common: CommonElementAttributes {
+                slot_value_refs, ..
+            },
+            ..
         } => {
             for attr in slot_value_refs {
                 scopes.push(ScopeKind::SlotValue(attr, elem));
@@ -910,6 +948,7 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                     children: _,
                     generics: _,
                     extra_attr: _,
+                    let_vars,
                     common,
                     ..
                 } => {
@@ -949,14 +988,25 @@ pub(crate) fn for_each_template_value_in_subtree<'a>(
                         }
                         _ => {}
                     }
+                    for attr in let_vars.iter() {
+                        if let Some(value) = attr.value.as_ref() {
+                            f(value, scopes);
+                        }
+                    }
                     handle_common(common, scopes, &mut f);
                 }
                 ElementKind::Pure {
                     children: _,
+                    let_vars,
                     slot,
                     slot_value_refs: _,
                     ..
                 } => {
+                    for attr in let_vars.iter() {
+                        if let Some(value) = attr.value.as_ref() {
+                            f(value, scopes);
+                        }
+                    }
                     if let Some((_, value)) = slot {
                         f(value, scopes);
                     }

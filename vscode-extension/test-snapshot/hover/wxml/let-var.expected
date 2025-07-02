@@ -1,0 +1,13 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 5
+        line = 1
+      [Object]
+        character = 6
+        line = 1
+

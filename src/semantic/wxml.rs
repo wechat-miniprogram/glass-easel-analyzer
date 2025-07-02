@@ -161,6 +161,7 @@ pub(super) fn find_wxml_semantic_tokens(
                         children,
                         generics,
                         extra_attr,
+                        let_vars,
                         common,
                         ..
                     } => {
@@ -202,7 +203,7 @@ pub(super) fn find_wxml_semantic_tokens(
                                 collect_in_value(tokens, value);
                             }
                         }
-                        for attr in change_attributes.iter() {
+                        for attr in change_attributes.iter().chain(let_vars.iter()) {
                             if let Some(p) = attr.prefix_location.as_ref() {
                                 tokens.push(WxmlToken {
                                     location: p.clone(),

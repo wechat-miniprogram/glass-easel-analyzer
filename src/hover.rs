@@ -86,6 +86,7 @@ fn hover_wxml(
                 ScopeKind::Script(_) => plain_str_hover_contents("wxs script"),
                 ScopeKind::ForScope(_, _) => plain_str_hover_contents("wx:for scope"),
                 ScopeKind::SlotValue(_, _) => plain_str_hover_contents("slot value"),
+                ScopeKind::LetVar(_, _) => plain_str_hover_contents("variable"),
             };
             Some(Hover {
                 contents,

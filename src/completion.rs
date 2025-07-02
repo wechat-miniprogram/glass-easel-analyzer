@@ -257,7 +257,7 @@ fn completion_wxml(
                         if choices.len() > 0 {
                             items.push(snippet_completion_item(
                                 name,
-                                format!("{}${{1|{}|}}=\"$0\"", name, choices),
+                                format!("{}${{1|{}|}}=\"{{{{ $0 }}}}\"", name, choices),
                                 CompletionItemKind::KEYWORD,
                                 false,
                             ));
@@ -288,7 +288,7 @@ fn completion_wxml(
                         if choices.len() > 0 {
                             items.push(snippet_completion_item(
                                 name,
-                                format!("{}${{1|{}|}}=\"$0\"", name, choices),
+                                format!("{}${{1|{}|}}=\"{{{{ $0 }}}}\"", name, choices),
                                 CompletionItemKind::KEYWORD,
                                 false,
                             ));
@@ -415,6 +415,12 @@ fn completion_wxml(
                     }
                 }
             }
+            items.push(snippet_completion_item(
+                "let:",
+                "let:$1=\"{{ $0 }}\"",
+                CompletionItemKind::KEYWORD,
+                false,
+            ));
         } else if let ElementKind::Pure { .. } = &elem.kind {
             for name in ["wx:if", "wx:elif", "wx:else", "wx:for"] {
                 items.push(snippet_completion_item(
@@ -424,6 +430,12 @@ fn completion_wxml(
                     false,
                 ));
             }
+            items.push(snippet_completion_item(
+                "let:",
+                "let:$1=\"{{ $0 }}\"",
+                CompletionItemKind::KEYWORD,
+                false,
+            ));
         } else if let ElementKind::For {
             list,
             item_name,

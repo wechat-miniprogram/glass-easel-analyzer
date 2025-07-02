@@ -19,6 +19,10 @@ const defWxmlCases = [
     name: 'static-class',
     args: [new vscode.Position(0, 15), new vscode.Position(0, 30)],
   },
+  {
+    name: 'let-var',
+    args: [new vscode.Position(0, 16), new vscode.Position(0, 26), new vscode.Position(1, 5)],
+  },
   { name: 'template', args: [new vscode.Position(4, 16)] },
   {
     name: 'wxs',

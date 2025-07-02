@@ -95,6 +95,13 @@
     [Object]
       insertText = [Object]
         e = 1
+        value = "let:$1=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "let:"
+      sortText = "let:"
+    [Object]
+      insertText = [Object]
+        e = 1
         value = "mark:$1=\"$0\""
       kind = "Keyword"
       label = "mark:"
@@ -308,6 +315,13 @@
       kind = "Keyword"
       label = "id"
       sortText = "id"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "let:$1=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "let:"
+      sortText = "let:"
     [Object]
       insertText = [Object]
         e = 1
@@ -639,7 +653,7 @@
     [Object]
       insertText = [Object]
         e = 1
-        value = "change:${1|tabindex|}=\"$0\""
+        value = "change:${1|tabindex|}=\"{{ $0 }}\""
       kind = "Keyword"
       label = "change:"
       sortText = "change:"
@@ -681,6 +695,13 @@
     [Object]
       insertText = [Object]
         e = 1
+        value = "let:$1=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "let:"
+      sortText = "let:"
+    [Object]
+      insertText = [Object]
+        e = 1
         value = "mark:$1=\"$0\""
       kind = "Keyword"
       label = "mark:"
@@ -688,7 +709,7 @@
     [Object]
       insertText = [Object]
         e = 1
-        value = "model:${1|tabindex|}=\"$0\""
+        value = "model:${1|tabindex|}=\"{{ $0 }}\""
       kind = "Keyword"
       label = "model:"
       sortText = "model:"
