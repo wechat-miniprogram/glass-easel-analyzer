@@ -2,10 +2,13 @@ use glass_easel_template_compiler::parse::{Template, TemplateStructure};
 use lsp_types::{DocumentSymbol, DocumentSymbolParams, SymbolKind};
 
 use crate::{
-    context::FileLang, utils::location_to_lsp_range, wxss::{
+    context::FileLang,
+    utils::location_to_lsp_range,
+    wxss::{
         keyframe::Keyframe, token::BraceOrSemicolon, CSSParse, List, Rule, RuleOrProperty,
         StyleSheet,
-    }, ServerContext
+    },
+    ServerContext,
 };
 
 pub(crate) async fn document_symbol(

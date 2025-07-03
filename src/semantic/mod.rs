@@ -6,7 +6,10 @@ use lsp_types::{
     SemanticTokensRangeParams,
 };
 
-use crate::{context::{project::FileContentMetadata, FileLang}, ServerContext};
+use crate::{
+    context::{project::FileContentMetadata, FileLang},
+    ServerContext,
+};
 
 mod wxml;
 mod wxss;

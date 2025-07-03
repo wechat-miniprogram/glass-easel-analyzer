@@ -2,7 +2,10 @@ use std::path::{Path, PathBuf};
 
 use lsp_types::{GotoDefinitionParams, Location, LocationLink, ReferenceParams};
 
-use crate::{context::{project::Project, FileLang}, ServerContext};
+use crate::{
+    context::{project::Project, FileLang},
+    ServerContext,
+};
 
 mod wxml;
 mod wxss;

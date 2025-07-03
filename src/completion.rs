@@ -14,7 +14,8 @@ use lsp_types::{
 use crate::{
     context::{
         backend_configuration::MediaFeatureType,
-        project::{FileContentMetadata, Project}, FileLang,
+        project::{FileContentMetadata, Project},
+        FileLang,
     },
     wxml_utils::{
         for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken,
@@ -317,11 +318,11 @@ fn completion_wxml(
                 } else {
                     let choices = item_set
                         .into_iter()
-                        .filter(|x| {
-                            match class {
-                                ClassAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
-                                _ => true,
+                        .filter(|x| match class {
+                            ClassAttribute::Multiple(arr) => {
+                                arr.iter().find(|y| y.1.name == x).is_none()
                             }
+                            _ => true,
                         })
                         .join(",");
                     if let ClassAttribute::None = class {
@@ -354,11 +355,11 @@ fn completion_wxml(
                     .style_property
                     .iter()
                     .map(|x| &x.name)
-                    .filter(|x| {
-                        match style {
-                            StyleAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
-                            _ => true,
+                    .filter(|x| match style {
+                        StyleAttribute::Multiple(arr) => {
+                            arr.iter().find(|y| y.1.name == x).is_none()
                         }
+                        _ => true,
                     })
                     .join(",");
                 items.push(snippet_completion_item(
@@ -672,56 +673,46 @@ fn completion_wxml(
         WxmlToken::ModelAttributeName(_attr_name, elem) => handle_attr(elem, true),
         WxmlToken::ChangeAttributeName(_attr_name, elem) => handle_attr(elem, true),
         WxmlToken::AttributeKeyword(_loc, elem) => handle_attr(elem, false),
-        WxmlToken::StaticClassName(_loc, _name, elem) => {
-            match &elem.kind {
-                ElementKind::Normal { class, .. } => {
-                    let items = collect_classes_in_wxss(project, abs_path)
-                        .into_iter()
-                        .filter(|x| {
-                            match class {
-                                ClassAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
-                                _ => true,
-                            }
-                        })
-                        .map(|x| {
-                            simple_completion_item(
-                                x,
-                                CompletionItemKind::PROPERTY,
-                                false,
-                            )
-                        })
-                        .collect();
-                    Some(CompletionList { is_incomplete: false, items })
-                }
-                _ => None,
+        WxmlToken::StaticClassName(_loc, _name, elem) => match &elem.kind {
+            ElementKind::Normal { class, .. } => {
+                let items = collect_classes_in_wxss(project, abs_path)
+                    .into_iter()
+                    .filter(|x| match class {
+                        ClassAttribute::Multiple(arr) => {
+                            arr.iter().find(|y| y.1.name == x).is_none()
+                        }
+                        _ => true,
+                    })
+                    .map(|x| simple_completion_item(x, CompletionItemKind::PROPERTY, false))
+                    .collect();
+                Some(CompletionList {
+                    is_incomplete: false,
+                    items,
+                })
             }
-        }
-        WxmlToken::StaticStylePropertyName(_, elem) => {
-            match &elem.kind {
-                ElementKind::Normal { style, .. } => {
-                    let items = backend_config
-                        .style_property
-                        .iter()
-                        .map(|x| &x.name)
-                        .filter(|x| {
-                            match style {
-                                StyleAttribute::Multiple(arr) => arr.iter().find(|y| y.1.name == x).is_none(),
-                                _ => true,
-                            }
-                        })
-                        .map(|x| {
-                            simple_completion_item(
-                                x,
-                                CompletionItemKind::PROPERTY,
-                                false,
-                            )
-                        })
-                        .collect();
-                    Some(CompletionList { is_incomplete: false, items })
-                }
-                _ => None,
+            _ => None,
+        },
+        WxmlToken::StaticStylePropertyName(_, elem) => match &elem.kind {
+            ElementKind::Normal { style, .. } => {
+                let items = backend_config
+                    .style_property
+                    .iter()
+                    .map(|x| &x.name)
+                    .filter(|x| match style {
+                        StyleAttribute::Multiple(arr) => {
+                            arr.iter().find(|y| y.1.name == x).is_none()
+                        }
+                        _ => true,
+                    })
+                    .map(|x| simple_completion_item(x, CompletionItemKind::PROPERTY, false))
+                    .collect();
+                Some(CompletionList {
+                    is_incomplete: false,
+                    items,
+                })
             }
-        }
+            _ => None,
+        },
         WxmlToken::EventName(_event_name, elem) => {
             let mut items: Vec<CompletionItem> = vec![];
             let has_event = |common: &CommonElementAttributes, name: &str| {

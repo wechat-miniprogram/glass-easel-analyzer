@@ -3,7 +3,9 @@ use std::ops::Range;
 use glass_easel_template_compiler::parse::{
     expr::Expression,
     tag::{
-        Attribute, ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident, Node, NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation, UnknownMetaTag, Value
+        Attribute, ClassAttribute, Comment, CommonElementAttributes, Element, ElementKind, Ident,
+        Node, NormalAttributePrefix, Script, StaticAttribute, StrName, StyleAttribute, TagLocation,
+        UnknownMetaTag, Value,
     },
     Position, Template, TemplateStructure,
 };
@@ -272,9 +274,7 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                 if ident_contains(&attr.name, pos) {
                                     return Token::LetVarDefinition(&attr, elem);
                                 }
-                                if let Some(ret) =
-                                    find_in_option_value(&attr.value, pos, &scopes)
-                                {
+                                if let Some(ret) = find_in_option_value(&attr.value, pos, &scopes) {
                                     if let Token::StaticValuePart(loc, v) = ret {
                                         return Token::AttributeStaticValue(
                                             loc, v, &attr.name, elem,
@@ -453,7 +453,11 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
                                                 return match ret {
                                                     Token::StaticValuePart(loc, name) => {
-                                                        Token::StaticClassName(loc.clone(), name, &elem)
+                                                        Token::StaticClassName(
+                                                            loc.clone(),
+                                                            name,
+                                                            &elem,
+                                                        )
                                                     }
                                                     x => x,
                                                 };
@@ -468,7 +472,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                                         &elem,
                                                     );
                                                 }
-                                                if let Some(ret) = find_in_option_value(v, pos, scopes) {
+                                                if let Some(ret) =
+                                                    find_in_option_value(v, pos, scopes)
+                                                {
                                                     return ret;
                                                 }
                                             }
@@ -488,7 +494,9 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                         StyleAttribute::Multiple(list) => {
                                             for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
-                                                    return Token::StaticStylePropertyName(name, &elem);
+                                                    return Token::StaticStylePropertyName(
+                                                        name, &elem,
+                                                    );
                                                 }
                                                 if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;
@@ -832,7 +840,8 @@ pub(crate) fn insert_element_scopes<'a>(scopes: &mut Vec<ScopeKind<'a>>, elem: &
         }
         | ElementKind::Pure {
             let_vars,
-            slot_value_refs, ..
+            slot_value_refs,
+            ..
         } => {
             for attr in slot_value_refs {
                 scopes.push(ScopeKind::SlotValue(attr, elem));

@@ -4,7 +4,11 @@ use lsp_types::{
     FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent,
 };
 
-use crate::{context::{project::Project, FileLang}, utils::log_if_err, ServerContext};
+use crate::{
+    context::{project::Project, FileLang},
+    utils::log_if_err,
+    ServerContext,
+};
 
 fn apply_content_changes_to_content(
     content: &str,
@@ -68,33 +72,38 @@ pub(crate) async fn did_change(
     let uri = params.text_document.uri.clone();
     log_if_err(
         ctx.clone()
-            .project_thread_task(&params.text_document.uri, move |project, abs_path, file_lang| {
-                if let Some(content) = project.cached_file_content(&abs_path) {
-                    let new_content =
-                        apply_content_changes_to_content(&content.content, params.content_changes);
-                    let diag = match file_lang {
-                        FileLang::Wxml => project.open_wxml(&abs_path, new_content),
-                        FileLang::Wxss => project.open_wxss(&abs_path, new_content),
-                        FileLang::Json => project.open_json(&abs_path, new_content),
-                        _ => return,
-                    };
-                    match diag {
-                        Ok(diagnostics) => {
-                            log_if_err(ctx.send_notification(
-                                "textDocument/publishDiagnostics",
-                                PublishDiagnosticsParams {
-                                    uri,
-                                    diagnostics,
-                                    version: None,
-                                },
-                            ));
-                        }
-                        Err(err) => {
-                            log::error!("{}", err);
+            .project_thread_task(
+                &params.text_document.uri,
+                move |project, abs_path, file_lang| {
+                    if let Some(content) = project.cached_file_content(&abs_path) {
+                        let new_content = apply_content_changes_to_content(
+                            &content.content,
+                            params.content_changes,
+                        );
+                        let diag = match file_lang {
+                            FileLang::Wxml => project.open_wxml(&abs_path, new_content),
+                            FileLang::Wxss => project.open_wxss(&abs_path, new_content),
+                            FileLang::Json => project.open_json(&abs_path, new_content),
+                            _ => return,
+                        };
+                        match diag {
+                            Ok(diagnostics) => {
+                                log_if_err(ctx.send_notification(
+                                    "textDocument/publishDiagnostics",
+                                    PublishDiagnosticsParams {
+                                        uri,
+                                        diagnostics,
+                                        version: None,
+                                    },
+                                ));
+                            }
+                            Err(err) => {
+                                log::error!("{}", err);
+                            }
                         }
                     }
-                }
-            })
+                },
+            )
             .await,
     );
     Ok(())

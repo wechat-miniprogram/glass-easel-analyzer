@@ -272,9 +272,7 @@ pub(super) fn find_declaration(
                         origin_selection_range: Some(location_to_lsp_range(&loc)),
                         target_uri: lsp_types::Url::from_file_path(abs_path).unwrap(),
                         target_range: location_to_lsp_range(&v.name.location),
-                        target_selection_range: location_to_lsp_range(
-                            &v.name.location,
-                        ),
+                        target_selection_range: location_to_lsp_range(&v.name.location),
                     });
                 }
             },

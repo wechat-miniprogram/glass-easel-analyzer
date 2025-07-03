@@ -12,8 +12,8 @@ use glass_easel_template_compiler::{
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
-use crate::wxss::{self, StyleSheet};
 use super::FileLang;
+use crate::wxss::{self, StyleSheet};
 
 #[derive(Debug)]
 pub(crate) struct FileContentMetadata {
@@ -348,8 +348,10 @@ impl Project {
                     .insert(abs_path.to_path_buf(), Default::default());
             }
         }
-        self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Json));
+        self.file_contents.insert(
+            abs_path.to_path_buf(),
+            FileContentMetadata::new(content, FileLang::Json),
+        );
         Ok(ret)
     }
 
@@ -387,8 +389,10 @@ impl Project {
 
     fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let (ss, err_list) = StyleSheet::parse_str(&content);
-        self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Wxss));
+        self.file_contents.insert(
+            abs_path.to_path_buf(),
+            FileContentMetadata::new(content, FileLang::Wxss),
+        );
         self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
         let diagnostics = err_list
             .into_iter()
@@ -436,8 +440,10 @@ impl Project {
     fn update_wxml(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         let err_list = self.template_group.add_tmpl(&tmpl_path, &content);
-        self.file_contents
-            .insert(abs_path.to_path_buf(), FileContentMetadata::new(content, FileLang::Wxml));
+        self.file_contents.insert(
+            abs_path.to_path_buf(),
+            FileContentMetadata::new(content, FileLang::Wxml),
+        );
         let diagnostics = err_list
             .into_iter()
             .filter_map(diagnostic_from_wxml_parse_error)
