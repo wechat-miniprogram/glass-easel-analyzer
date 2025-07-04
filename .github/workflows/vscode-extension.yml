@@ -31,9 +31,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'npm'
+          cache-dependency-path: ./vscode-extension
       - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
+      - run: npm ci
+        working-directory: ./vscode-extension
       - run: vscode-extension/build/init.sh
         if: ${{ matrix.platform != 'win32' }}
       - run: vscode-extension\build\init.bat
@@ -58,6 +62,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'npm'
+          cache-dependency-path: ./vscode-extension
+      - run: npm ci
+        working-directory: ./vscode-extension
       - run: vscode-extension/build/init.sh
       - uses: actions/download-artifact@v4
         with:

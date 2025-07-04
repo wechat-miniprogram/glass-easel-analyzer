@@ -5,4 +5,3 @@ cd ..
 
 mkdir -p packages
 rm packages/*.vsix
-npm install

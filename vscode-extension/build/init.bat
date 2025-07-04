@@ -6,6 +6,5 @@ cd ..
 
 if not exist "packages" mkdir "packages"
 del packages\*.vsix
-npm install
 
 cd /D "%PWD%"
