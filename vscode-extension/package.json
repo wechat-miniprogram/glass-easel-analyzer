@@ -26,9 +26,7 @@
     "workspaceContains:app.json",
     "workspaceContains:*/app.json",
     "workspaceContains:app.wxss",
-    "workspaceContains:*/app.wxss",
-    "onLanguage:wxml",
-    "onLanguage:wxss"
+    "workspaceContains:*/app.wxss"
   ],
   "contributes": {
     "languages": [
