@@ -401,19 +401,25 @@ fn completion_wxml(
                 "capture-mut-bind:",
                 "capture-catch:",
             ] {
-                if let Some(choices) = backend_config.list_events(&tag_name.name) {
-                    let choices = choices
+                let choices = if let Some(choices) = backend_config.list_events(&tag_name.name) {
+                    choices
                         .map(|x| &x.name)
                         .filter(|x| !has_event(common, x))
-                        .join(",");
-                    if choices.len() > 0 {
-                        items.push(snippet_completion_item(
-                            name,
-                            format!("{}${{1|{}|}}=\"$0\"", name, choices),
-                            CompletionItemKind::KEYWORD,
-                            false,
-                        ));
-                    }
+                        .join(",")
+                } else {
+                    let choices = backend_config.list_global_events();
+                    choices
+                        .map(|x| &x.name)
+                        .filter(|x| !has_event(common, x))
+                        .join(",")
+                };
+                if choices.len() > 0 {
+                    items.push(snippet_completion_item(
+                        name,
+                        format!("{}${{1|{}|}}=\"$0\"", name, choices),
+                        CompletionItemKind::KEYWORD,
+                        false,
+                    ));
                 }
             }
             items.push(snippet_completion_item(

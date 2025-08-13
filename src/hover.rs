@@ -221,7 +221,7 @@ fn hover_wxml(
                 if let Some(_target_path) =
                     project.get_target_component_path(abs_path, &tag_name.name)
                 {
-                    plain_str_hover_contents("custom component property")
+                    plain_str_hover_contents("custom component event")
                 } else if let Some(ev) =
                     backend_config.search_event(&tag_name.name, &event_name.name)
                 {

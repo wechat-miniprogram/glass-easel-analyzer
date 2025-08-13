@@ -5,6 +5,41 @@
     [Object]
       insertText = [Object]
         e = 1
+        value = "bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "bind:"
+      sortText = "bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-bind:"
+      sortText = "capture-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-catch:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-catch:"
+      sortText = "capture-catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "capture-mut-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "capture-mut-bind:"
+      sortText = "capture-mut-bind:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "catch:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "catch:"
+      sortText = "catch:"
+    [Object]
+      insertText = [Object]
+        e = 1
         value = "class=\"${1|hello-class|}\"$0"
       kind = "Keyword"
       label = "class"
@@ -51,6 +86,13 @@
       kind = "Keyword"
       label = "mark:"
       sortText = "mark:"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "mut-bind:${1|tap,canceltap|}=\"$0\""
+      kind = "Keyword"
+      label = "mut-bind:"
+      sortText = "mut-bind:"
     [Object]
       insertText = [Object]
         e = 1
