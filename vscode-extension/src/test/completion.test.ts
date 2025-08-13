@@ -56,6 +56,8 @@ const defWxssCases = [
     name: 'style-rule',
     args: [
       new vscode.Position(1, 7),
+      new vscode.Position(4, 5),
+      new vscode.Position(4, 14),
       new vscode.Position(5, 4),
       new vscode.Position(11, 1),
       new vscode.Position(13, 1),

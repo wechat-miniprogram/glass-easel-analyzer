@@ -955,6 +955,28 @@ fn completion_wxss(
                 })
             }
         }
+        WxssToken::IncompletePseudoClass(_) | WxssToken::PseudoClass(_, _) => {
+            let item_set = backend_config
+                .pseudo_class
+                .iter()
+                .map(|x| simple_completion_item(&x.name, CompletionItemKind::OPERATOR, false))
+                .collect();
+            Some(CompletionList {
+                is_incomplete: false,
+                items: item_set,
+            })
+        }
+        WxssToken::IncompletePseudoElement(_, _) | WxssToken::PseudoElement(_, _, _) => {
+            let item_set = backend_config
+                .pseudo_element
+                .iter()
+                .map(|x| simple_completion_item(&x.name, CompletionItemKind::OPERATOR, false))
+                .collect();
+            Some(CompletionList {
+                is_incomplete: false,
+                items: item_set,
+            })
+        }
         _ => None,
     }
 }

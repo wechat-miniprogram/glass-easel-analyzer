@@ -32,7 +32,9 @@ pub(crate) enum Token<'a> {
     Class(&'a Operator, &'a Ident),
     IncompleteClass(&'a Operator),
     PseudoClass(&'a Colon, &'a IdentOrFunction),
+    IncompletePseudoClass(&'a Colon),
     PseudoElement(&'a Colon, &'a Colon, &'a IdentOrFunction),
+    IncompletePseudoElement(&'a Colon, &'a Colon),
     PropertyName(&'a Ident),
     StyleRuleUnknownIdent(&'a Ident),
     FontFacePropertyName(&'a Ident),
@@ -222,6 +224,8 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
         Selector::PseudoElement(op1, op2, x) => Token::PseudoElement(op1, op2, x),
         Selector::IncompleteId(op) => Token::IncompleteId(op),
         Selector::IncompleteClass(op) => Token::IncompleteClass(op),
+        Selector::IncompletePseudoClass(op) => Token::IncompletePseudoClass(op),
+        Selector::IncompletePseudoElement(op1, op2) => Token::IncompletePseudoElement(op1, op2),
         Selector::NextSibling(_)
         | Selector::Child(_)
         | Selector::Column(_, _)

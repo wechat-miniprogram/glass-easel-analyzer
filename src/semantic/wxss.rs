@@ -273,6 +273,10 @@ fn find_in_style_rule(ret: &mut SemanticTokenRet, style_rule: &StyleRule) -> boo
                     && ret.push(y.location(), TokenType::Operator, 0)
                     && find_in_name_or_function(ret, name)
             }
+            Selector::IncompletePseudoClass(x) => ret.push(x.location(), TokenType::Type, 0),
+            Selector::IncompletePseudoElement(op1, op2) => {
+                ret.push(op1.location().start..op2.location().end, TokenType::Type, 0)
+            }
         });
         if !r {
             return false;

@@ -18,6 +18,36 @@
   isIncomplete = false
   items = [Array]
     [Object]
+      insertText = "active"
+      kind = "Operator"
+      label = "active"
+      sortText = "active"
+    [Object]
+      insertText = "hover"
+      kind = "Operator"
+      label = "hover"
+      sortText = "hover"
+
+// ====== SNAPSHOT 2 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "after"
+      kind = "Operator"
+      label = "after"
+      sortText = "after"
+    [Object]
+      insertText = "before"
+      kind = "Operator"
+      label = "before"
+      sortText = "before"
+
+// ====== SNAPSHOT 3 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
       insertText = "color"
       kind = "Property"
       label = "color"
@@ -28,7 +58,7 @@
       label = "display"
       sortText = "display"
 
-// ====== SNAPSHOT 2 ======
+// ====== SNAPSHOT 4 ======
 [Object]
   isIncomplete = false
   items = [Array]
@@ -38,7 +68,7 @@
       label = "a"
       sortText = "a"
 
-// ====== SNAPSHOT 3 ======
+// ====== SNAPSHOT 5 ======
 [Object]
   isIncomplete = false
   items = [Array]

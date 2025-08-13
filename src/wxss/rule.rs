@@ -53,7 +53,9 @@ pub(crate) enum Selector {
     SubsequentSibling(Operator),
     Namespace(Operator),
     PseudoClass(Colon, IdentOrFunction),
+    IncompletePseudoClass(Colon),
     PseudoElement(Colon, Colon, IdentOrFunction),
+    IncompletePseudoElement(Colon, Colon),
 }
 
 impl CSSParse for Selector {
@@ -122,16 +124,13 @@ impl CSSParse for Selector {
                         {
                             Self::PseudoElement(op, op2, CSSParse::css_parse(ps)?)
                         } else {
-                            Self::Unknown(List::from_vec(vec![
-                                TokenTree::Colon(op),
-                                TokenTree::Colon(op2),
-                            ]))
+                            Self::IncompletePseudoElement(op, op2)
                         }
                     } else {
-                        Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
+                        Self::IncompletePseudoClass(op)
                     }
                 } else {
-                    Self::Unknown(List::from_vec(vec![TokenTree::Colon(op)]))
+                    Self::IncompletePseudoClass(op)
                 }
             }
             TokenTree::Ident(_) => Self::TagName(CSSParse::css_parse(ps)?),
@@ -168,7 +167,9 @@ impl CSSParse for Selector {
             Self::SubsequentSibling(x) => x.location(),
             Self::Namespace(x) => x.location(),
             Self::PseudoClass(op, x) => op.location().start..x.location().end,
+            Self::IncompletePseudoClass(op) => op.location(),
             Self::PseudoElement(op, _, x) => op.location().start..x.location().end,
+            Self::IncompletePseudoElement(op1, op2) => op1.location().start..op2.location().end,
         }
     }
 }
