@@ -48,8 +48,8 @@
           character = 0
           line = 13
         [Object]
-          character = 7
-          line = 13
+          character = 1
+          line = 15
       uri = [Object] "../../test-fixture/wxss/style-rule.wxss"
     name = ".b-c"
 

@@ -41,6 +41,7 @@ fn server_capabilities() -> lsp_types::ServerCapabilities {
                 String::from("@"),
                 String::from("#"),
                 String::from("."),
+                String::from(":"),
             ]),
             all_commit_characters: None,
             work_done_progress_options: lsp_types::WorkDoneProgressOptions {

@@ -78,3 +78,33 @@
       label = "b-c"
       sortText = "b-c"
 
+// ====== SNAPSHOT 6 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "block"
+      kind = "Property"
+      label = "block"
+      sortText = "block"
+    [Object]
+      insertText = "flex"
+      kind = "Property"
+      label = "flex"
+      sortText = "flex"
+    [Object]
+      insertText = "inline"
+      kind = "Property"
+      label = "inline"
+      sortText = "inline"
+    [Object]
+      insertText = "inline-block"
+      kind = "Property"
+      label = "inline-block"
+      sortText = "inline-block"
+    [Object]
+      insertText = "none"
+      kind = "Property"
+      label = "none"
+      sortText = "none"
+

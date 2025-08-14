@@ -61,6 +61,7 @@ const defWxssCases = [
       new vscode.Position(5, 4),
       new vscode.Position(11, 1),
       new vscode.Position(13, 1),
+      new vscode.Position(14, 13),
     ],
   },
   {

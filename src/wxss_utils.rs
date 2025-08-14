@@ -36,6 +36,8 @@ pub(crate) enum Token<'a> {
     PseudoElement(&'a Colon, &'a Colon, &'a IdentOrFunction),
     IncompletePseudoElement(&'a Colon, &'a Colon),
     PropertyName(&'a Ident),
+    SimplePropertyValue(&'a TokenTree, &'a Ident),
+    IncompletePropertyValue(&'a Ident),
     StyleRuleUnknownIdent(&'a Ident),
     FontFacePropertyName(&'a Ident),
     MediaType(&'a Ident),
@@ -242,16 +244,21 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
 }
 
 fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token> {
-    x.iter().find_map(|x| match x {
+    let index = x.partition_point(|x| x.location().start < pos).min(x.len()).saturating_sub(1);
+    match &x[index] {
         RuleOrProperty::Rule(x) => find_in_rule(x, pos),
         RuleOrProperty::Property(x) => {
             if inclusive_contains(&x.name.location, pos) {
                 Some(Token::PropertyName(&x.name))
+            } else if x.value.is_empty() {
+                Some(Token::IncompletePropertyValue(&x.name))
+            } else if x.value.len() == 1 {
+                Some(Token::SimplePropertyValue(&x.value[0], &x.name))
             } else {
                 find_in_token_tree_list(&x.value, pos)
             }
         }
-    })
+    }
 }
 
 fn find_in_option_brace_or_semicolon_properties(

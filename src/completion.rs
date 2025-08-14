@@ -20,7 +20,7 @@ use crate::{
     wxml_utils::{
         for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken,
     },
-    wxss::rule::Selector,
+    wxss::{rule::Selector, token::TokenTree},
     wxss_utils::{for_each_selector_in_style_sheet, Token as WxssToken},
     BackendConfig, ServerContext,
 };
@@ -868,6 +868,25 @@ fn completion_wxss(
                 is_incomplete: false,
                 items,
             })
+        }
+        WxssToken::IncompletePropertyValue(name) | WxssToken::SimplePropertyValue(_, name) => {
+            if let Some(config) = backend_config.style_property.iter().find(|x| x.name == name.content) {
+                if config.options.len() > 0 {
+                    let mut items: Vec<CompletionItem> = vec![];
+                    for option in config.options.iter() {
+                        items.push(simple_completion_item(
+                            option,
+                            CompletionItemKind::PROPERTY,
+                            false,
+                        ));
+                    }
+                    Some(CompletionList { is_incomplete: false, items })
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
         }
         WxssToken::PropertyName(_) => {
             let mut items: Vec<CompletionItem> = vec![];
