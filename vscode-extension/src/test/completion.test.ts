@@ -35,7 +35,7 @@ const defWxmlCases = [
   },
   {
     name: 'static-style',
-    args: [new vscode.Position(0, 13)],
+    args: [new vscode.Position(0, 13), new vscode.Position(0, 22)],
   },
   {
     name: 'template',

@@ -8,3 +8,33 @@
       label = "color"
       sortText = "color"
 
+// ====== SNAPSHOT 1 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "block"
+      kind = "Value"
+      label = "block"
+      sortText = "block"
+    [Object]
+      insertText = "flex"
+      kind = "Value"
+      label = "flex"
+      sortText = "flex"
+    [Object]
+      insertText = "inline"
+      kind = "Value"
+      label = "inline"
+      sortText = "inline"
+    [Object]
+      insertText = "inline-block"
+      kind = "Value"
+      label = "inline-block"
+      sortText = "inline-block"
+    [Object]
+      insertText = "none"
+      kind = "Value"
+      label = "none"
+      sortText = "none"
+

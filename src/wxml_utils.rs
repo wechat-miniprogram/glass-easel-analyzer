@@ -41,6 +41,7 @@ pub(crate) enum Token<'a> {
     ChangeAttributeName(&'a Ident, &'a Element),
     StaticClassName(Range<Position>, &'a str, &'a Element),
     StaticStylePropertyName(&'a Ident, &'a Element),
+    StaticStylePropertyValue(Range<Position>, &'a str, &'a Ident, &'a Element),
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
@@ -495,10 +496,20 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                             for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
                                                     return Token::StaticStylePropertyName(
-                                                        name, &elem,
+                                                        name,
+                                                        &elem,
                                                     );
                                                 }
-                                                if let Some(ret) = find_in_value(v, pos, scopes) {
+                                                if let Value::Static { value, location, .. } = v {
+                                                    if inclusive_contains(location, pos) {
+                                                        return Token::StaticStylePropertyValue(
+                                                            location.clone(),
+                                                            value,
+                                                            name,
+                                                            &elem,
+                                                        );
+                                                    }
+                                                } else if let Some(ret) = find_in_value(v, pos, scopes) {
                                                     return ret;
                                                 }
                                             }

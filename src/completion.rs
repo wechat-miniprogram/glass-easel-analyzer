@@ -20,7 +20,7 @@ use crate::{
     wxml_utils::{
         for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken,
     },
-    wxss::{rule::Selector, token::TokenTree},
+    wxss::rule::Selector,
     wxss_utils::{for_each_selector_in_style_sheet, Token as WxssToken},
     BackendConfig, ServerContext,
 };
@@ -719,6 +719,24 @@ fn completion_wxml(
             }
             _ => None,
         },
+        WxmlToken::StaticStylePropertyValue(_, _, name, _) => {
+            if let Some(config) = backend_config.style_property.iter().find(|x| x.name == name.name) {
+                let mut items = vec![];
+                for option in config.options.iter() {
+                    items.push(simple_completion_item(
+                        option,
+                        CompletionItemKind::VALUE,
+                        false,
+                    ));
+                }
+                Some(CompletionList {
+                    is_incomplete: false,
+                    items,
+                })
+            } else {
+                None
+            }
+        }
         WxmlToken::EventName(_event_name, elem) => {
             let mut items: Vec<CompletionItem> = vec![];
             let has_event = |common: &CommonElementAttributes, name: &str| {
