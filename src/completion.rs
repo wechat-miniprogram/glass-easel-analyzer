@@ -18,7 +18,7 @@ use crate::{
         FileLang,
     },
     wxml_utils::{
-        for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken,
+        for_each_static_class_name_in_element, for_each_template_element, Token as WxmlToken, TokenStaticStyleValuePart,
     },
     wxss::rule::Selector,
     wxss_utils::{for_each_selector_in_style_sheet, Token as WxssToken},
@@ -735,6 +735,69 @@ fn completion_wxml(
                 })
             } else {
                 None
+            }
+        }
+        WxmlToken::StaticStyleValuePart(part, elem) => {
+            match part {
+                TokenStaticStyleValuePart::PropertyName(_, _)
+                | TokenStaticStyleValuePart::UnknownIdent(_, _) => match &elem.kind {
+                    ElementKind::Normal { style, .. } => {
+                        let items = backend_config
+                            .style_property
+                            .iter()
+                            .filter(|x| match style {
+                                StyleAttribute::Multiple(arr) => {
+                                    arr.iter().find(|y| y.1.name == x.name).is_none()
+                                }
+                                _ => true,
+                            })
+                            .map(|config| {
+                                let name = &config.name;
+                                if config.options.len() > 0 {
+                                    let options_str = config.options.join(",");
+                                    snippet_completion_item(
+                                        name,
+                                        format!("{}: ${{1|{}|}};", name, options_str),
+                                        CompletionItemKind::PROPERTY,
+                                        false,
+                                    )
+                                } else {
+                                    snippet_completion_item(
+                                        name,
+                                        format!("{}: $0;", name),
+                                        CompletionItemKind::PROPERTY,
+                                        false,
+                                    )
+                                }
+                            })
+                            .collect();
+                        Some(CompletionList {
+                            is_incomplete: false,
+                            items,
+                        })
+                    }
+                    _ => None,
+                },
+                TokenStaticStyleValuePart::SimplePropertyValue(_, name)
+                | TokenStaticStyleValuePart::IncompletePropertyValue(_, name) => {
+                    if let Some(config) = backend_config.style_property.iter().find(|x| x.name == name) {
+                        let mut items = vec![];
+                        for option in config.options.iter() {
+                            items.push(simple_completion_item(
+                                option,
+                                CompletionItemKind::VALUE,
+                                false,
+                            ));
+                        }
+                        Some(CompletionList {
+                            is_incomplete: false,
+                            items,
+                        })
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
             }
         }
         WxmlToken::EventName(_event_name, elem) => {

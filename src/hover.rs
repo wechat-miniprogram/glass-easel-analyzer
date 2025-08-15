@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{ops::Range, path::Path};
 
 use glass_easel_template_compiler::parse::{tag::ElementKind, Position};
 use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind, Url};
@@ -6,7 +6,7 @@ use lsp_types::{Hover, HoverContents, HoverParams, MarkupContent, MarkupKind, Ur
 use crate::{
     context::{backend_configuration::*, project::Project, FileLang},
     utils::location_to_lsp_range,
-    wxml_utils::{ScopeKind, Token as WxmlToken},
+    wxml_utils::{ScopeKind, Token as WxmlToken, TokenStaticStyleValuePart},
     wxss::CSSParse,
     wxss_utils::Token as WxssToken,
     BackendConfig, ServerContext,
@@ -64,6 +64,31 @@ fn reference_args_str(reference: &Option<Url>) -> String {
     } else {
         format!("")
     }
+}
+
+fn property_name_hint(backend_config: &BackendConfig, name: &str, loc: Range<Position>) -> Option<Hover> {
+    backend_config
+        .style_property
+        .iter()
+        .find(|config| config.name == name)
+        .map(|config| {
+            let StylePropertyConfig {
+                name,
+                options: _,
+                description,
+                reference,
+            } = config;
+            let contents = md_str_hover_contents(format!(
+                "**{}** *property*\n\n{}{}",
+                name,
+                description,
+                reference_args_str(reference)
+            ));
+            Hover {
+                contents,
+                range: Some(location_to_lsp_range(&loc)),
+            }
+        })
 }
 
 fn hover_wxml(
@@ -132,28 +157,17 @@ fn hover_wxml(
                 range: Some(location_to_lsp_range(&tag_name.location)),
             })
         }
-        WxmlToken::StaticStylePropertyName(x, _) => backend_config
-            .style_property
-            .iter()
-            .find(|config| config.name == x.name)
-            .map(|config| {
-                let StylePropertyConfig {
-                    name,
-                    options: _,
-                    description,
-                    reference,
-                } = config;
-                let contents = md_str_hover_contents(format!(
-                    "**{}** *property*\n\n{}{}",
-                    name,
-                    description,
-                    reference_args_str(reference)
-                ));
-                Hover {
-                    contents,
-                    range: Some(location_to_lsp_range(&x.location)),
+        WxmlToken::StaticStylePropertyName(x, _) => {
+            property_name_hint(backend_config, &x.name, x.location.clone())
+        }
+        WxmlToken::StaticStyleValuePart(part, _) => {
+            match part {
+                TokenStaticStyleValuePart::PropertyName(loc, name) => {
+                    property_name_hint(backend_config, &name, loc.clone())
                 }
-            }),
+                _ => None,
+            }
+        }
         WxmlToken::AttributeName(attr_name, elem) => {
             let tag_name = match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => Some(tag_name),

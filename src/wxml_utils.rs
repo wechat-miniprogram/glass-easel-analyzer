@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use compact_str::{CompactString, ToCompactString};
 use glass_easel_template_compiler::parse::{
     expr::Expression,
     tag::{
@@ -10,7 +11,77 @@ use glass_easel_template_compiler::parse::{
     Position, Template, TemplateStructure,
 };
 
-use crate::utils::{exclusive_contains, inclusive_contains};
+use crate::{utils::{exclusive_contains, inclusive_contains}, wxss::CSSParse};
+
+fn relative_position_from_position(full_pos: Position, base: Position) -> Position {
+    if full_pos.line == base.line {
+        Position { line: 0, utf16_col: full_pos.utf16_col - base.utf16_col }
+    } else {
+        Position { line: full_pos.line - base.line, utf16_col: full_pos.utf16_col }
+    }
+}
+
+fn position_join(base: Position, pos: Position) -> Position {
+    if pos.line == 0 {
+        Position { line: base.line, utf16_col: base.utf16_col + pos.utf16_col }
+    } else {
+        Position { line: base.line + pos.line, utf16_col: pos.utf16_col }
+    }
+}
+
+fn location_join(base: Position, loc: Range<Position>) -> Range<Position> {
+    position_join(base, loc.start)..position_join(base, loc.end)
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+pub(crate) enum TokenStaticStyleValuePart {
+    Unknown,
+    UnknownIdent(Range<Position>, CompactString),
+    PropertyName(Range<Position>, CompactString),
+    SimplePropertyValue(Range<Position>, CompactString),
+    IncompletePropertyValue(Range<Position>, CompactString),
+}
+
+impl TokenStaticStyleValuePart {
+    fn parse_and_find(s: &str, whole_range: Range<Position>, pos: Position) -> Self {
+        let (props, unknown_tokens) = crate::wxss::StyleSheet::parse_inline_style(s);
+        if props.is_empty() && unknown_tokens.is_empty() {
+            return Self::Unknown;
+        }
+        let rel_pos = relative_position_from_position(pos, whole_range.start);
+        if !props.is_empty() {
+            let index = props
+                .partition_point(|x| x.name.location.start < pos).min(props.len())
+                .saturating_sub(1);
+            let prop = &props[index];
+            if inclusive_contains(&prop.location(), rel_pos) {
+                let name_loc = location_join(whole_range.start, prop.name.location.clone());
+                if inclusive_contains(&prop.name.location, rel_pos) {
+                    return Self::PropertyName(name_loc, prop.name.content.to_compact_string());
+                }
+                if prop.value.is_empty() {
+                    return Self::IncompletePropertyValue(name_loc, prop.name.content.to_compact_string());
+                }
+                if prop.value.len() == 1 {
+                    return Self::SimplePropertyValue(name_loc, prop.name.content.to_compact_string());
+                }
+            }
+        }
+        if !unknown_tokens.is_empty() {
+            let index = unknown_tokens
+                .partition_point(|x| x.location().start < pos).min(unknown_tokens.len())
+                .saturating_sub(1);
+            if let crate::wxss::token::TokenTree::Ident(ident) = &unknown_tokens[index] {
+                if inclusive_contains(&ident.location, rel_pos) {
+                    let name_loc = location_join(whole_range.start, ident.location.clone());
+                    return Self::UnknownIdent(name_loc, ident.content.to_compact_string())
+                }
+            }
+        }
+        Self::Unknown
+    }
+}
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -42,6 +113,7 @@ pub(crate) enum Token<'a> {
     StaticClassName(Range<Position>, &'a str, &'a Element),
     StaticStylePropertyName(&'a Ident, &'a Element),
     StaticStylePropertyValue(Range<Position>, &'a str, &'a Ident, &'a Element),
+    StaticStyleValuePart(TokenStaticStyleValuePart, &'a Element),
     EventHandler(&'a StrName, &'a Ident),
     GenericRef(&'a StrName, &'a Ident),
     SlotValueDefinition(&'a Ident),
@@ -489,6 +561,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
                                                 return Token::AttributeKeyword(loc.clone(), &elem);
                                             }
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
+                                                if let Token::StaticValuePart(loc, value) = ret {
+                                                    let part = TokenStaticStyleValuePart::parse_and_find(value, loc, pos);
+                                                    return Token::StaticStyleValuePart(part, &elem);
+                                                }
                                                 return ret;
                                             }
                                         }

@@ -66,6 +66,25 @@ impl StyleSheet {
         let warnings = pso.extract_warnings();
         (ret, warnings)
     }
+
+    pub(crate) fn parse_inline_style(src: &str) -> (Vec<property::Property>, Vec<TokenTree>) {
+        let mut pso = ParseStateOwned::new(src.to_string());
+        let mut items: Vec<property::Property> = vec![];
+        let mut unknown_tokens = vec![];
+        pso.run(|mut ps| {
+            loop {
+                if let (Some(TokenTree::Ident(..)), Some(TokenTree::Colon(..))) = ps.peek2() {
+                    if let Some(prop) = property::Property::css_parse(&mut ps) {
+                        items.push(prop);
+                        continue;
+                    }
+                }
+                let Some(next) = ps.next() else { break };
+                unknown_tokens.push(next);
+            }
+        });
+        (items, unknown_tokens)
+    }
 }
 
 #[derive(Debug, Clone)]

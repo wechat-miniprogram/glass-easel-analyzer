@@ -23,6 +23,7 @@ const defWxmlCases = [
       new vscode.Position(8, 8),
     ],
   },
+  { name: 'core-attribute', args: [new vscode.Position(0, 55)] },
   { name: 'static-style', args: [new vscode.Position(0, 15)] },
   { name: 'let-var', args: [new vscode.Position(1, 5)] },
   { name: 'slot-value', args: [new vscode.Position(3, 9), new vscode.Position(3, 17)] },

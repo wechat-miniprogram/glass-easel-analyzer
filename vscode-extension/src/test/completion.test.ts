@@ -23,7 +23,7 @@ const defWxmlCases = [
   },
   {
     name: 'core-attribute',
-    args: [new vscode.Position(4, 6)],
+    args: [new vscode.Position(4, 6), new vscode.Position(0, 55), new vscode.Position(0, 63)],
   },
   {
     name: 'import',

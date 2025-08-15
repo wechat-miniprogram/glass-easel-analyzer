@@ -1,4 +1,4 @@
-<view id="abc" slot="def" class="hello-class" style="width: auto;">
+<view id="abc" slot="def" class="hello-class" style="display: block;">
   TEST
 </view>
 

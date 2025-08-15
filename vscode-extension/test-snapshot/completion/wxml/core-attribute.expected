@@ -171,3 +171,52 @@
       label = "wx:key"
       sortText = "wx:key"
 
+// ====== SNAPSHOT 1 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "color: $0;"
+      kind = "Property"
+      label = "color"
+      sortText = "color"
+    [Object]
+      insertText = [Object]
+        e = 1
+        value = "display: ${1|block,inline,inline-block,flex,none|};"
+      kind = "Property"
+      label = "display"
+      sortText = "display"
+
+// ====== SNAPSHOT 2 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
+      insertText = "block"
+      kind = "Value"
+      label = "block"
+      sortText = "block"
+    [Object]
+      insertText = "flex"
+      kind = "Value"
+      label = "flex"
+      sortText = "flex"
+    [Object]
+      insertText = "inline"
+      kind = "Value"
+      label = "inline"
+      sortText = "inline"
+    [Object]
+      insertText = "inline-block"
+      kind = "Value"
+      label = "inline-block"
+      sortText = "inline-block"
+    [Object]
+      insertText = "none"
+      kind = "Value"
+      label = "none"
+      sortText = "none"
+
