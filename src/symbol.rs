@@ -26,7 +26,7 @@ pub(crate) async fn document_symbol(
                         collect_wxml_symbol_list(template)
                     }
                     FileLang::Wxss => {
-                        let template = project.get_style_sheet(&abs_path)?;
+                        let template = project.get_style_sheet(&abs_path, false)?;
                         collect_wxss_symbol_list(template)
                     }
                     _ => vec![],

@@ -41,6 +41,7 @@ pub(crate) async fn did_open(
                     "wxml" => project.open_wxml(&abs_path, params.text_document.text),
                     "wxss" => project.open_wxss(&abs_path, params.text_document.text),
                     "json" => project.open_json(&abs_path, params.text_document.text),
+                    "css" | "less" | "scss" => project.open_other_ss(&abs_path, params.text_document.text),
                     _ => return,
                 };
                 match diag {

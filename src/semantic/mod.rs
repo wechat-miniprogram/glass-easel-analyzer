@@ -87,7 +87,7 @@ pub(crate) async fn tokens_full(
                             wxml::find_wxml_semantic_tokens(content, template, range)
                         }
                         FileLang::Wxss => {
-                            let sheet = project.get_style_sheet(&abs_path)?;
+                            let sheet = project.get_style_sheet(&abs_path, false)?;
                             let range = Position {
                                 line: 0,
                                 utf16_col: 0,
@@ -136,7 +136,7 @@ pub(crate) async fn tokens_range(
                             wxml::find_wxml_semantic_tokens(content, template, start..end)
                         }
                         FileLang::Wxss => {
-                            let sheet = project.get_style_sheet(&abs_path)?;
+                            let sheet = project.get_style_sheet(&abs_path, false)?;
                             let start = Position {
                                 line: params.range.start.line,
                                 utf16_col: params.range.start.character,

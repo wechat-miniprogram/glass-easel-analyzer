@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{ops::Range, path::{Path, PathBuf}};
 
 use glass_easel_template_compiler::parse::{ParseErrorLevel, Position as _Position};
 use state::{ParseState, ParseStateOwned};
@@ -38,6 +38,7 @@ impl<C: CSSParse> CSSParse for Box<C> {
 
 #[derive(Debug, Clone)]
 pub(crate) struct StyleSheet {
+    pub(crate) path: PathBuf,
     pub(crate) items: Vec<Rule>,
     pub(crate) comments: Vec<Comment>,
     pub(crate) special_locations: StyleSheetSpecialLocations,
@@ -50,7 +51,7 @@ pub(crate) struct StyleSheetSpecialLocations {
 }
 
 impl StyleSheet {
-    pub(crate) fn parse_str(src: &str) -> (Self, Vec<ParseError>) {
+    pub(crate) fn parse_str(path: &Path, src: &str) -> (Self, Vec<ParseError>) {
         let mut pso = ParseStateOwned::new(src.to_string());
         let mut items: Vec<Rule> = vec![];
         pso.run(|mut ps| {
@@ -59,6 +60,7 @@ impl StyleSheet {
             }
         });
         let ret = Self {
+            path: path.to_path_buf(),
             items,
             comments: pso.extract_comments(),
             special_locations: pso.extract_special_locations(),

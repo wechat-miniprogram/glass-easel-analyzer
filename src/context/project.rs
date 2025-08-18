@@ -244,7 +244,7 @@ impl Project {
             }
             Some("wxss") => {
                 let content = std::fs::read_to_string(abs_path)?;
-                self.update_wxss(abs_path, content)?;
+                self.update_wxss(abs_path, content, false)?;
             }
             Some("json") => {
                 let content = std::fs::read_to_string(abs_path)?;
@@ -289,7 +289,7 @@ impl Project {
                                 let _ = project.update_wxml(&abs_path, content);
                             }
                             "wxss" => {
-                                let _ = project.update_wxss(&abs_path, content);
+                                let _ = project.update_wxss(&abs_path, content, false);
                             }
                             "json" => {
                                 let _ = project.update_json(&abs_path, content);
@@ -387,11 +387,11 @@ impl Project {
         self.json_config_map.get(abs_path)
     }
 
-    fn update_wxss(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
-        let (ss, err_list) = StyleSheet::parse_str(&content);
+    fn update_wxss(&mut self, abs_path: &Path, content: String, is_other_ss: bool) -> anyhow::Result<Vec<Diagnostic>> {
+        let (ss, err_list) = StyleSheet::parse_str(abs_path, &content);
         self.file_contents.insert(
             abs_path.to_path_buf(),
-            FileContentMetadata::new(content, FileLang::Wxss),
+            FileContentMetadata::new(content, if is_other_ss { FileLang::OtherSs } else { FileLang::Wxss }),
         );
         self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
         let diagnostics = err_list
@@ -412,7 +412,7 @@ impl Project {
         abs_path: &Path,
         content: String,
     ) -> anyhow::Result<Vec<Diagnostic>> {
-        let diagnostics = self.update_wxss(abs_path, content)?;
+        let diagnostics = self.update_wxss(abs_path, content, false)?;
         if let Some(x) = self.file_contents.get_mut(abs_path) {
             x.open();
         }
@@ -429,10 +429,34 @@ impl Project {
         Ok(())
     }
 
-    pub(crate) fn get_style_sheet(&self, abs_path: &Path) -> anyhow::Result<&StyleSheet> {
+    pub(crate) fn open_other_ss(
+        &mut self,
+        abs_path: &Path,
+        content: String,
+    ) -> anyhow::Result<Vec<Diagnostic>> {
+        if self.get_wxml_tree(&abs_path.with_extension("wxml")).is_ok() {
+            let diagnostics = self.update_wxss(abs_path, content, true)?;
+            if let Some(x) = self.file_contents.get_mut(abs_path) {
+                x.open();
+            }
+            return Ok(diagnostics);
+        }
+        Ok(vec![])
+    }
+
+    pub(crate) fn get_style_sheet(&self, abs_path: &Path, allow_other_ss: bool) -> anyhow::Result<&StyleSheet> {
         let tree = self
             .style_sheet_map
             .get(abs_path)
+            .or_else(|| {
+                if allow_other_ss {
+                    self.style_sheet_map.get(&abs_path.with_extension("css"))
+                        .or_else(|| self.style_sheet_map.get(&abs_path.with_extension("less")))
+                        .or_else(|| self.style_sheet_map.get(&abs_path.with_extension("scss")))
+                } else {
+                    None
+                }
+            })
             .ok_or_else(|| anyhow::Error::msg("no such style sheet"))?;
         Ok(tree)
     }
@@ -615,7 +639,7 @@ impl Project {
             crate::wxss_utils::for_each_import_in_style_sheet(sheet, |rel| {
                 if let Some(p) = project.find_rel_path_for_file(abs_path, rel) {
                     if let Some(imported_path) = crate::utils::ensure_file_extension(&p, "wxss") {
-                        if let Ok(sheet) = project.get_style_sheet(&imported_path) {
+                        if let Ok(sheet) = project.get_style_sheet(&imported_path, false) {
                             rec_import_style_sheets(visited, project, &imported_path, sheet, f);
                         }
                     }

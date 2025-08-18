@@ -474,9 +474,9 @@ pub(super) fn find_references(
                     find_elements_matching_tag_name(project, abs_path, template, &ident.name);
                 ret.append(&mut x);
                 let wxss_path = abs_path.with_extension("wxss");
-                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path, true) {
                     let mut x =
-                        wxss::find_tag_name_selectors(project, &wxss_path, sheet, &ident.name);
+                        wxss::find_tag_name_selectors(project, &sheet.path, sheet, &ident.name);
                     ret.append(&mut x);
                 }
             }
@@ -484,8 +484,8 @@ pub(super) fn find_references(
                 let mut x = find_elements_matching_id(project, abs_path, template, id);
                 ret.append(&mut x);
                 let wxss_path = abs_path.with_extension("wxss");
-                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
-                    let mut x = wxss::find_id_selectors(project, &wxss_path, sheet, id);
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path, true) {
+                    let mut x = wxss::find_id_selectors(project, &sheet.path, sheet, id);
                     ret.append(&mut x);
                 }
             }
@@ -493,8 +493,8 @@ pub(super) fn find_references(
                 let mut x = find_elements_matching_class(project, abs_path, template, class_name);
                 ret.append(&mut x);
                 let wxss_path = abs_path.with_extension("wxss");
-                if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
-                    let mut x = wxss::find_class_selectors(project, &wxss_path, sheet, class_name);
+                if let Ok(sheet) = project.get_style_sheet(&wxss_path, true) {
+                    let mut x = wxss::find_class_selectors(project, &sheet.path, sheet, class_name);
                     ret.append(&mut x);
                 }
             }

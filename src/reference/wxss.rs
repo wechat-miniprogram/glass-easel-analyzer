@@ -82,7 +82,8 @@ pub(super) fn find_declaration(
     abs_path: &Path,
     pos: lsp_types::Position,
 ) -> anyhow::Result<Vec<LocationLink>> {
-    let sheet = project.get_style_sheet(abs_path)?;
+    let sheet = project.get_style_sheet(abs_path, false)?;
+    let abs_path = &sheet.path;
     let mut ret = vec![];
     let token = find_token_in_position(
         sheet,
@@ -152,7 +153,8 @@ pub(super) fn find_references(
     abs_path: &Path,
     pos: lsp_types::Position,
 ) -> anyhow::Result<Vec<Location>> {
-    let sheet = project.get_style_sheet(abs_path)?;
+    let sheet = project.get_style_sheet(abs_path, false)?;
+    let abs_path = &sheet.path;
     let token = find_token_in_position(
         sheet,
         Position {

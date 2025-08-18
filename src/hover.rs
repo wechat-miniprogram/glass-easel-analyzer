@@ -318,7 +318,7 @@ fn hover_wxss(
     abs_path: &Path,
     pos: lsp_types::Position,
 ) -> Option<Hover> {
-    let sheet = project.get_style_sheet(abs_path).ok()?;
+    let sheet = project.get_style_sheet(abs_path, false).ok()?;
     let token = crate::wxss_utils::find_token_in_position(
         sheet,
         Position {

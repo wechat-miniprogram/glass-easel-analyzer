@@ -60,7 +60,7 @@ fn collect_classes_in_wxml(project: &Project, abs_path: &Path) -> HashSet<String
 fn collect_ids_in_wxss(project: &Project, abs_path: &Path) -> HashSet<String> {
     let mut item_set = HashSet::new();
     let wxss_path = abs_path.with_extension("wxss");
-    if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+    if let Ok(sheet) = project.get_style_sheet(&wxss_path, true) {
         project.import_style_sheets(abs_path, sheet, |_, sheet| {
             for_each_selector_in_style_sheet(sheet, |sel| {
                 if let Selector::Id(x) = sel {
@@ -75,7 +75,7 @@ fn collect_ids_in_wxss(project: &Project, abs_path: &Path) -> HashSet<String> {
 fn collect_classes_in_wxss(project: &Project, abs_path: &Path) -> HashSet<String> {
     let mut item_set = HashSet::new();
     let wxss_path = abs_path.with_extension("wxss");
-    if let Ok(sheet) = project.get_style_sheet(&wxss_path) {
+    if let Ok(sheet) = project.get_style_sheet(&wxss_path, true) {
         project.import_style_sheets(abs_path, sheet, |_, sheet| {
             for_each_selector_in_style_sheet(sheet, |sel| {
                 if let Selector::Class(_, x) = sel {
@@ -915,7 +915,7 @@ fn completion_wxss(
     pos: lsp_types::Position,
     _trigger: &str,
 ) -> Option<CompletionList> {
-    let template = project.get_style_sheet(abs_path).ok()?;
+    let template = project.get_style_sheet(abs_path, false).ok()?;
     let token = crate::wxss_utils::find_token_in_position(
         template,
         Position {

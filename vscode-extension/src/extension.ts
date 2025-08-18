@@ -13,7 +13,10 @@ const startLanguageServer = async () => {
   const ignorePaths = vscode.workspace
     .getConfiguration('glass-easel-analyzer')
     .get('ignorePaths') as string[]
-  const options = { serverPath, backendConfigPath, ignorePaths }
+  const analyzeOtherStylesheets = vscode.workspace
+    .getConfiguration('glass-easel-analyzer')
+    .get('analyzeOtherStylesheets') as boolean
+  const options = { serverPath, backendConfigPath, ignorePaths, analyzeOtherStylesheets }
   languageServer = new Client(options)
   await languageServer.start()
 }
@@ -37,7 +40,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const changed =
       ev.affectsConfiguration('glass-easel-analyzer.serverPath') ||
       ev.affectsConfiguration('glass-easel-analyzer.backendConfigurationPath') ||
-      ev.affectsConfiguration('glass-easel-analyzer.ignorePaths')
+      ev.affectsConfiguration('glass-easel-analyzer.ignorePaths') ||
+      ev.affectsConfiguration('glass-easel-analyzer.analyzeOtherStylesheets')
     if (changed) {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises, promise/catch-or-return
       vscode.window

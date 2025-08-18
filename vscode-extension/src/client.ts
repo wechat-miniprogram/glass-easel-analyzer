@@ -12,6 +12,7 @@ export type ClientOptions = {
   serverPath: string
   backendConfigPath: string
   ignorePaths: string[]
+  analyzeOtherStylesheets: boolean
 }
 
 export class Client {
@@ -96,6 +97,16 @@ export class Client {
         },
       },
     }
+    const stylesheetSelectors = this.options.analyzeOtherStylesheets
+      ? [
+          { language: 'css', scheme: 'file' },
+          { language: 'css', scheme: 'untitled' },
+          { language: 'less', scheme: 'file' },
+          { language: 'less', scheme: 'untitled' },
+          { language: 'scss', scheme: 'file' },
+          { language: 'scss', scheme: 'untitled' },
+        ]
+      : []
     const languageClientOptions: LanguageClientOptions = {
       initializationOptions: {
         backendConfig,
@@ -107,6 +118,7 @@ export class Client {
         { language: 'wxml', scheme: 'untitled' },
         { language: 'wxss', scheme: 'file' },
         { language: 'wxss', scheme: 'untitled' },
+        ...stylesheetSelectors,
       ],
       outputChannelName: 'glass-easel-analyzer',
       progressOnInitialization: true,

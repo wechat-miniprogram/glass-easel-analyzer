@@ -21,7 +21,7 @@ pub(crate) async fn folding_range(
                         collect_wxml_folding_ranges(template)
                     }
                     FileLang::Wxss => {
-                        let template = project.get_style_sheet(&abs_path)?;
+                        let template = project.get_style_sheet(&abs_path, false)?;
                         collect_wxss_folding_ranges(template)
                     }
                     _ => vec![],

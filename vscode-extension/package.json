@@ -97,6 +97,12 @@
           "enum": ["CSS", "LESS", "SCSS", "disabled"],
           "default": "CSS",
           "description": "The diagnostics information used for WXSS."
+        },
+        "glass-easel-analyzer.analyzeOtherStylesheets": {
+          "scope": "window",
+          "type": "boolean",
+          "default": false,
+          "description": "Also analyze any CSS/LESS/SCSS file inside a project if corresponding WXML file can be found."
         }
       }
     },
@@ -124,7 +130,7 @@
     "@types/diff": "^7.0.0",
     "@types/mocha": "^10.0.9",
     "@types/node": "~22.9.0",
-    "@types/vscode": "^1.63.0",
+    "@types/vscode": "^1.78.0",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
     "chalk": "^4.1.2",

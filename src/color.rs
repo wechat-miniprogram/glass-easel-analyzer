@@ -47,7 +47,7 @@ pub(crate) async fn color(
                         vec![]
                     }
                     FileLang::Wxss => {
-                        let sheet = project.get_style_sheet(&abs_path)?;
+                        let sheet = project.get_style_sheet(&abs_path, false)?;
                         collect_wxss_colors(sheet)
                     }
                     _ => vec![],

@@ -23,7 +23,7 @@ pub(crate) async fn find_definition(
             move |project, abs_path, file_lang| -> anyhow::Result<Vec<LocationLink>> {
                 let ranges = match file_lang {
                     FileLang::Wxml => wxml::find_declaration(project, &abs_path, position, true)?,
-                    FileLang::Wxss => wxss::find_declaration(project, &abs_path, position)?,
+                    FileLang::Wxss | FileLang::OtherSs => wxss::find_declaration(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)
@@ -46,7 +46,7 @@ pub(crate) async fn find_declaration(
             move |project, abs_path, file_lang| -> anyhow::Result<Vec<LocationLink>> {
                 let ranges = match file_lang {
                     FileLang::Wxml => wxml::find_declaration(project, &abs_path, position, false)?,
-                    FileLang::Wxss => wxss::find_declaration(project, &abs_path, position)?,
+                    FileLang::Wxss | FileLang::OtherSs => wxss::find_declaration(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)
@@ -69,7 +69,7 @@ pub(crate) async fn find_references(
             move |project, abs_path, file_lang| -> anyhow::Result<Vec<Location>> {
                 let ranges = match file_lang {
                     FileLang::Wxml => wxml::find_references(project, &abs_path, position)?,
-                    FileLang::Wxss => wxss::find_references(project, &abs_path, position)?,
+                    FileLang::Wxss | FileLang::OtherSs => wxss::find_references(project, &abs_path, position)?,
                     _ => vec![],
                 };
                 Ok(ranges)

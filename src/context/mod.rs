@@ -24,6 +24,7 @@ pub(crate) enum FileLang {
     Wxml,
     Wxss,
     Json,
+    OtherSs,
 }
 
 pub(crate) struct ServerContextOptions {
