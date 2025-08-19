@@ -21,4 +21,4 @@ copy "..\target\%TARGET_TRIPLE%\release\glass-easel-analyzer.exe" "dist\"
 copy "..\backend-configuration\web\web.toml" "dist\"
 
 :: packaging
-npx vsce package --target %TARGET_NAME% -o packages
+pnpm vsce package --target %TARGET_NAME% -o packages --no-dependencies

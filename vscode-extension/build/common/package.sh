@@ -21,4 +21,4 @@ cp ../backend-configuration/web/web.toml dist/
 
 # packaging
 mkdir -p packages
-npx vsce package --target ${TARGET_NAME} -o packages
+pnpm vsce package --target ${TARGET_NAME} -o packages --no-dependencies

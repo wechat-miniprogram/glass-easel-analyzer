@@ -14,7 +14,7 @@ It handles MiniProgram code structure, i.e. WXML/WXSS files.
 * Open this project in Visual Studio Code.
 * Ensure all extensions in [.vscode/extensions.json](.vscode/extensions.json) been installed.
 
-Furthermore, please read through [extension publishing guide for VSCode](https://code.visualstudio.com/api/working-with-extensions/publishing-extension) and install `vsce` globally.
+Furthermore, please read through [extension publishing guide for VSCode](https://code.visualstudio.com/api/working-with-extensions/publishing-extension).
 
 ### Initialize Development
 

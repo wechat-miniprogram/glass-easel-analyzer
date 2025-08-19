@@ -17,4 +17,4 @@ else
   exit -1
 fi
 
-npx vsce publish --packagePath packages/*-${VERSION}.vsix
+pnpm vsce publish --packagePath packages/*-${VERSION}.vsix --no-dependencies
