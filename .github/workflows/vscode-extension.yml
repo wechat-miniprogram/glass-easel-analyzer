@@ -28,16 +28,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: 'npm'
-          cache-dependency-path: ./vscode-extension
       - uses: dtolnay/rust-toolchain@v1
         with:
           toolchain: stable
-      - run: npm ci
-        working-directory: ./vscode-extension
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: PNPM install
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
       - run: vscode-extension/build/init.sh
         if: ${{ matrix.platform != 'win32' }}
       - run: vscode-extension\build\init.bat
@@ -59,13 +63,17 @@ jobs:
     if: success() && startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: 'npm'
-          cache-dependency-path: ./vscode-extension
-      - run: npm ci
-        working-directory: ./vscode-extension
+          node-version: 20
+      - name: PNPM install
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+          run_install: |
+            - recursive: true
+              args: [--frozen-lockfile, --strict-peer-dependencies]
       - run: vscode-extension/build/init.sh
       - uses: actions/download-artifact@v4
         with:
