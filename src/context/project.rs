@@ -12,7 +12,7 @@ use glass_easel_template_compiler::{
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
-use super::FileLang;
+use super::{FileLang, ServerContextOptions};
 use crate::wxss::{self, StyleSheet};
 
 #[derive(Debug)]
@@ -103,6 +103,7 @@ pub(crate) struct Project {
     json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
     style_sheet_map: HashMap<PathBuf, StyleSheet>,
+    enable_other_ss: bool,
 }
 
 impl Default for Project {
@@ -113,18 +114,20 @@ impl Default for Project {
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
             style_sheet_map: HashMap::new(),
+            enable_other_ss: false,
         }
     }
 }
 
 impl Project {
-    pub(crate) async fn search_projects(root: &Path, ignore: &[PathBuf]) -> Vec<Self> {
+    pub(crate) async fn search_projects(root: &Path, options: &ServerContextOptions) -> Vec<Self> {
         async fn rec(
             ret: Arc<AsyncMutex<&mut Vec<Project>>>,
             p: &Path,
-            ignore: &[PathBuf],
+            options: &ServerContextOptions,
         ) -> anyhow::Result<()> {
-            if ignore
+            if options
+                .ignore_paths
                 .iter()
                 .map(|x| x.as_path())
                 .find(|x| *x == p)
@@ -143,7 +146,7 @@ impl Project {
                     .map(|x| x.is_file())
                     .unwrap_or(false);
             if contains {
-                ret.lock().await.push(Project::new(p));
+                ret.lock().await.push(Project::new(p, options));
                 return Ok(());
             }
             let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
@@ -156,7 +159,7 @@ impl Project {
                     };
                     let abs_path = entry.path();
                     if ty.is_dir() {
-                        let _ = rec(ret, &abs_path, ignore).await;
+                        let _ = rec(ret, &abs_path, options).await;
                         return;
                     }
                 }
@@ -165,17 +168,18 @@ impl Project {
             Ok(())
         }
         let mut ret = vec![];
-        let _ = rec(Arc::new(AsyncMutex::new(&mut ret)), root, ignore).await;
+        let _ = rec(Arc::new(AsyncMutex::new(&mut ret)), root, options).await;
         ret
     }
 
-    pub(crate) fn new(root: &Path) -> Self {
+    pub(crate) fn new(root: &Path, options: &ServerContextOptions) -> Self {
         Self {
             root: Some(root.to_path_buf()),
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
             style_sheet_map: HashMap::new(),
+            enable_other_ss: options.enable_other_ss,
         }
     }
 
@@ -256,7 +260,7 @@ impl Project {
     }
 
     async fn load_all_files_from_fs(&mut self) -> anyhow::Result<()> {
-        async fn rec(project: Arc<AsyncMutex<&mut Project>>, p: &Path) -> anyhow::Result<()> {
+        async fn rec(project: Arc<AsyncMutex<&mut Project>>, p: &Path, enable_other_ss: bool) -> anyhow::Result<()> {
             let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
             dir.for_each_concurrent(None, |entry| {
                 let project = project.clone();
@@ -267,7 +271,7 @@ impl Project {
                     };
                     let abs_path = entry.path();
                     if ty.is_dir() {
-                        let _ = rec(project, &abs_path).await;
+                        let _ = rec(project, &abs_path, enable_other_ss).await;
                         return;
                     }
                     if ty.is_file() {
@@ -276,6 +280,7 @@ impl Project {
                         };
                         match ext {
                             "wxml" | "wxss" | "json" => {}
+                            "css" | "less" | "scss" if enable_other_ss => {}
                             _ => {
                                 return;
                             }
@@ -294,6 +299,11 @@ impl Project {
                             "json" => {
                                 let _ = project.update_json(&abs_path, content);
                             }
+                            "css" | "less" | "scss" if enable_other_ss => {
+                                if tokio::fs::try_exists(abs_path.with_extension("wxml")).await.is_ok_and(|x| x) {
+                                    let _ = project.update_wxss(&abs_path, content, true);
+                                }
+                            }
                             _ => unreachable!(),
                         }
                     }
@@ -304,8 +314,9 @@ impl Project {
         }
         if let Some(root) = self.root() {
             let root = root.to_path_buf();
+            let enable_other_ss = self.enable_other_ss;
             let proj = Arc::new(AsyncMutex::new(self));
-            rec(proj, &root).await?;
+            rec(proj, &root, enable_other_ss).await?;
         }
         Ok(())
     }

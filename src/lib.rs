@@ -211,7 +211,10 @@ struct InitializationOptions {
     #[serde(default)]
     backend_config: String,
     workspace_folders: Vec<String>,
+    #[serde(default)]
     ignore_paths: Vec<String>,
+    #[serde(default)]
+    enable_other_ss: bool,
 }
 
 async fn serve() -> anyhow::Result<()> {
@@ -289,6 +292,11 @@ async fn serve() -> anyhow::Result<()> {
         .iter()
         .map(|x| std::path::PathBuf::from(x))
         .collect();
+    let enable_other_ss = initialize_params.initialization_options.enable_other_ss;
+    let server_context_options = ServerContextOptions {
+        ignore_paths,
+        enable_other_ss,
+    };
     for uri in initialize_params
         .initialization_options
         .workspace_folders
@@ -313,7 +321,7 @@ async fn serve() -> anyhow::Result<()> {
                 },
             ))
             .unwrap();
-        let found_projects = Project::search_projects(&p, &ignore_paths).await;
+        let found_projects = Project::search_projects(&p, &server_context_options).await;
         if found_projects.len() == 0 {
             continue;
         }
@@ -417,7 +425,6 @@ async fn serve() -> anyhow::Result<()> {
         sender: lsp_sender,
         receiver: lsp_receiver,
     } = connection;
-    let server_context_options = ServerContextOptions { ignore_paths };
     let (server_context, sender) = {
         let (sender, mut receiver) = tokio::sync::mpsc::unbounded_channel();
         let lsp_sender = lsp_sender.clone();
@@ -427,7 +434,7 @@ async fn serve() -> anyhow::Result<()> {
             }
         });
         let server_context =
-            ServerContext::new(&sender, backend_config, projects, server_context_options);
+            ServerContext::new(&sender, backend_config, projects, server_context_options.clone());
         (server_context, sender)
     };
     logger::set_trace(

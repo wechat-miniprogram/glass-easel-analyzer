@@ -85,6 +85,7 @@ pub(crate) async fn did_change(
                             FileLang::Wxml => project.open_wxml(&abs_path, new_content),
                             FileLang::Wxss => project.open_wxss(&abs_path, new_content),
                             FileLang::Json => project.open_json(&abs_path, new_content),
+                            FileLang::OtherSs => project.open_other_ss(&abs_path, new_content),
                             _ => return,
                         };
                         match diag {
@@ -182,7 +183,7 @@ pub(crate) async fn did_change_workspace_folders(
     for folder in params.event.added.iter() {
         let p = lsp_types::Url::to_file_path(&folder.uri)
             .unwrap_or_else(|_| crate::utils::generate_non_fs_fake_path(&folder.uri));
-        let found_projects = Project::search_projects(&p, &ctx.options().ignore_paths).await;
+        let found_projects = Project::search_projects(&p, ctx.options()).await;
         for project in found_projects {
             ctx.add_project(project);
         }

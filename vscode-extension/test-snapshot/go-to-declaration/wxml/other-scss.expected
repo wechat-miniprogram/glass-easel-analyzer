@@ -1,0 +1,26 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 15
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 15
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 15
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxml/other-scss.wxml"
+

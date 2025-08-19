@@ -1,0 +1,26 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 4
+        line = 0
+    targetRange = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 4
+        line = 0
+    targetSelectionRange = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 4
+        line = 0
+    targetUri = [Object] "../../test-fixture/wxss/other-less.less"
+

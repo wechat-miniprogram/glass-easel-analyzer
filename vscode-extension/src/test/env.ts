@@ -113,7 +113,7 @@ export class Env {
   async casesWith<T>(
     ctx: Mocha.Context,
     sub: string,
-    cases: { name: string; args: T }[],
+    cases: { name: string; args: T; ext?: string }[],
     extName: string,
     f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
   ) {
@@ -121,8 +121,8 @@ export class Env {
     const testId = normalizeTitle(testName)
     let snapshotFails = 0
     // eslint-disable-next-line no-restricted-syntax
-    for (const { name, args } of cases) {
-      const absPath = path.resolve(TEST_FIXTURE_DIR, sub, `${name}.${extName}`)
+    for (const { name, args, ext } of cases) {
+      const absPath = path.resolve(TEST_FIXTURE_DIR, sub, `${name}.${ext ?? extName}`)
       const uri = vscode.Uri.file(absPath)
       // eslint-disable-next-line no-await-in-loop
       snapshotFails += await this.wrapExpect(
@@ -147,7 +147,7 @@ export class Env {
 
   async wxssCasesWith<T>(
     ctx: Mocha.Context,
-    cases: { name: string; args: T }[],
+    cases: { name: string; args: T; ext?: string }[],
     f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
   ) {
     await this.casesWith(ctx, 'wxss', cases, 'wxss', f)

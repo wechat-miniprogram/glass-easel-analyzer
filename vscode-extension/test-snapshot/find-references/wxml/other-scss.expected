@@ -1,0 +1,21 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 0
+        line = 0
+      [Object]
+        character = 4
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/other-scss.scss"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 12
+        line = 0
+      [Object]
+        character = 15
+        line = 0
+    uri = [Object] "../../test-fixture/wxml/other-scss.wxml"
+

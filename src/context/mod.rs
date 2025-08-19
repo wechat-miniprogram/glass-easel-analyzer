@@ -27,8 +27,10 @@ pub(crate) enum FileLang {
     OtherSs,
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct ServerContextOptions {
     pub(crate) ignore_paths: Vec<PathBuf>,
+    pub(crate) enable_other_ss: bool,
 }
 
 #[derive(Clone)]

@@ -1,3 +1,4 @@
 {
-    "glass-easel-analyzer.backendConfigurationPath": "../../backend-configuration/sample.toml"
+    "glass-easel-analyzer.backendConfigurationPath": "../../backend-configuration/sample.toml",
+    "glass-easel-analyzer.analyzeOtherStylesheets": true
 }

@@ -46,6 +46,18 @@ const defWxmlCases = [
       new vscode.Position(2, 26),
     ],
   },
+  {
+    name: 'other-css',
+    args: [new vscode.Position(0, 13)],
+  },
+  {
+    name: 'other-less',
+    args: [new vscode.Position(0, 13)],
+  },
+  {
+    name: 'other-scss',
+    args: [new vscode.Position(0, 13)],
+  },
 ]
 
 const defWxssCases = [
@@ -63,6 +75,21 @@ const defWxssCases = [
       new vscode.Position(11, 0),
       new vscode.Position(13, 0),
     ],
+  },
+  {
+    name: 'other-css',
+    ext: 'css',
+    args: [new vscode.Position(0, 1)],
+  },
+  {
+    name: 'other-less',
+    ext: 'less',
+    args: [new vscode.Position(0, 1)],
+  },
+  {
+    name: 'other-scss',
+    ext: 'scss',
+    args: [new vscode.Position(0, 1)],
   },
 ]
 

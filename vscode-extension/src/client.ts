@@ -112,6 +112,7 @@ export class Client {
         backendConfig,
         workspaceFolders,
         ignorePaths,
+        enableOtherSs: this.options.analyzeOtherStylesheets,
       },
       documentSelector: [
         { language: 'wxml', scheme: 'file' },
