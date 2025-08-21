@@ -19,6 +19,7 @@ const wxmlCases = [
   'import',
   'template',
   'wxs',
+  'wxs-inline',
 ]
 
 const wxssCases = [
