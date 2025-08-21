@@ -866,8 +866,17 @@ pub(super) fn find_wxml_semantic_tokens(
         t.modifier = TokenModifier::Definition as u32;
         tokens.push(t);
         match i {
-            Script::Inline { .. } => {
-                // TODO pass to wxs ls
+            Script::Inline { content: src, content_location, .. } => {
+                crate::wxs::ScriptMeta::parse(src, content_location.clone(), content, |token_type, location, replace| {
+                    if replace {
+                        tokens.pop();
+                    }
+                    tokens.push(WxmlToken {
+                        ty: token_type,
+                        location,
+                        modifier: 0,
+                    });
+                })
             }
             Script::GlobalRef {
                 src_location, src, ..

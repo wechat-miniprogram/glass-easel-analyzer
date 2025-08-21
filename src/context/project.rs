@@ -84,6 +84,12 @@ impl FileContentMetadata {
         }
         self.content.len()
     }
+
+    pub(crate) fn line_utf16_col_for_content_index(&self, index: usize) -> (u32, u32) {
+        let line = self.line_starts.partition_point(|x| index >= *x) - 1;
+        let utf16_col = self.content[self.line_starts[line]..index].encode_utf16().count();
+        (line as u32, utf16_col as u32)
+    }
 }
 
 #[derive(Debug, Clone, Default, serde::Deserialize)]

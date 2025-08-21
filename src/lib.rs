@@ -16,6 +16,7 @@ mod semantic;
 mod symbol;
 mod utils;
 mod wxml_utils;
+mod wxs;
 mod wxss;
 mod wxss_utils;
 

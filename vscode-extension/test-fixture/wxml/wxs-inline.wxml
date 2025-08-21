@@ -1,0 +1,6 @@
+<wxs module="js">
+  let a = 1;
+  const b = `{a} and {b}`;
+  var c = /test/g;
+  console.info(b.length)
+</wxs>

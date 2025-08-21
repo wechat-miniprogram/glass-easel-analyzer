@@ -14,7 +14,7 @@ use crate::{
 mod wxml;
 mod wxss;
 
-pub(crate) const TOKEN_TYPES: [SemanticTokenType; 12] = [
+pub(crate) const TOKEN_TYPES: [SemanticTokenType; 13] = [
     SemanticTokenType::TYPE,
     SemanticTokenType::VARIABLE,
     SemanticTokenType::PROPERTY,
@@ -27,12 +27,13 @@ pub(crate) const TOKEN_TYPES: [SemanticTokenType; 12] = [
     SemanticTokenType::NUMBER,
     SemanticTokenType::OPERATOR,
     SemanticTokenType::MACRO,
+    SemanticTokenType::REGEXP,
 ];
 
 // this list MUST matches the list above
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u16)]
-enum TokenType {
+pub(crate) enum TokenType {
     Type = 0,
     Variable,
     Property,
@@ -45,6 +46,7 @@ enum TokenType {
     Number,
     Operator,
     Macro,
+    RegExp,
 }
 
 pub(crate) const TOKEN_MODIFIERS: [SemanticTokenModifier; 3] = [
