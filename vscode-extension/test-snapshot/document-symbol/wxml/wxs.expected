@@ -1,3 +1,29 @@
 // ====== SNAPSHOT 0 ======
-null
+[Array]
+  [Object]
+    containerName = ""
+    kind = "Namespace"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 0
+        [Object]
+          character = 6
+          line = 4
+      uri = [Object] "../../test-fixture/wxml/wxs.wxml"
+    name = "helloScript"
+  [Object]
+    containerName = ""
+    kind = "Namespace"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 6
+        [Object]
+          character = 49
+          line = 6
+      uri = [Object] "../../test-fixture/wxml/wxs.wxml"
+    name = "helloExternalScript"
 

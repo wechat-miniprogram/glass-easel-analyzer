@@ -66,6 +66,30 @@ fn collect_wxml_symbol_list(template: &Template) -> Vec<DocumentSymbol> {
             children: None,
         });
     }
+    for script in &template.globals.scripts {
+        let module = script.module_name();
+        let name_loc = module.location();
+        let tag_location = script.tag_location();
+        let tag_start_pos = tag_location.start.0.start.clone();
+        let tag_end_pos = tag_location
+            .end
+            .as_ref()
+            .unwrap_or(&tag_location.start)
+            .1
+            .end
+            .clone();
+        #[allow(deprecated)]
+        ret.push(DocumentSymbol {
+            name: module.name.to_string(),
+            detail: Some(format!("<wxs module={:?}>", module.name)),
+            kind: SymbolKind::MODULE,
+            tags: Default::default(),
+            deprecated: Default::default(),
+            selection_range: location_to_lsp_range(&name_loc),
+            range: location_to_lsp_range(&(tag_start_pos..tag_end_pos)),
+            children: None,
+        });
+    }
     ret
 }
 

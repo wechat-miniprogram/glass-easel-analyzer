@@ -1,3 +1,16 @@
 // ====== SNAPSHOT 0 ======
-null
+[Array]
+  [Object]
+    containerName = ""
+    kind = "Namespace"
+    location = [Object]
+      range = [Array]
+        [Object]
+          character = 0
+          line = 0
+        [Object]
+          character = 6
+          line = 5
+      uri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
+    name = "js"
 
