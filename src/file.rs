@@ -1,7 +1,10 @@
+use std::path::Path;
+
+use glass_easel_template_compiler::parse::tag::Script;
 use lsp_types::{
     DidChangeTextDocumentParams, DidChangeWatchedFilesParams, DidChangeWorkspaceFoldersParams,
     DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
-    FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent,
+    FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent, Url,
 };
 
 use crate::{
@@ -28,6 +31,47 @@ fn apply_content_changes_to_content(
     ret
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct InlineWxsScripts<'a> {
+    uri: &'a str,
+    list: Vec<InlineWxsScript<'a>>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct InlineWxsScript<'a> {
+    start_line: u32,
+    start_column: u32,
+    end_line: u32,
+    end_column: u32,
+    content: &'a str,
+}
+
+fn update_inline_wxs_list(ctx: &ServerContext, project: &Project, uri: &Url, abs_path: &Path) {
+    if let Ok(x) = project.get_wxml_tree(&abs_path) {
+        let scripts = x.globals.scripts.iter().filter_map(|x| {
+            match x {
+                Script::Inline { content, content_location, .. } => {
+                    let script = InlineWxsScript {
+                        start_line: content_location.start.line as u32,
+                        start_column: content_location.start.utf16_col as u32,
+                        end_line: content_location.end.line as u32,
+                        end_column: content_location.end.utf16_col as u32,
+                        content,
+                    };
+                    Some(script)
+                }
+                _ => None,
+            }
+        }).collect();
+        log_if_err(ctx.send_notification(
+            "glassEaselAnalyzer/inlineWxsScripts",
+            InlineWxsScripts { uri: uri.as_str(), list: scripts },
+        ));
+    }
+}
+
 pub(crate) async fn did_open(
     ctx: ServerContext,
     params: DidOpenTextDocumentParams,
@@ -38,7 +82,11 @@ pub(crate) async fn did_open(
         ctx.clone()
             .project_thread_task(&params.text_document.uri, move |project, abs_path, _| {
                 let diag = match params.text_document.language_id.as_str() {
-                    "wxml" => project.open_wxml(&abs_path, params.text_document.text),
+                    "wxml" => {
+                        let diag = project.open_wxml(&abs_path, params.text_document.text);
+                        update_inline_wxs_list(&ctx, project, &uri, &abs_path);
+                        diag
+                    }
                     "wxss" => project.open_wxss(&abs_path, params.text_document.text),
                     "json" => project.open_json(&abs_path, params.text_document.text),
                     "css" | "less" | "scss" => project.open_other_ss(&abs_path, params.text_document.text),
@@ -82,7 +130,11 @@ pub(crate) async fn did_change(
                             params.content_changes,
                         );
                         let diag = match file_lang {
-                            FileLang::Wxml => project.open_wxml(&abs_path, new_content),
+                            FileLang::Wxml => {
+                                let diag = project.open_wxml(&abs_path, new_content);
+                                update_inline_wxs_list(&ctx, project, &uri, &abs_path);
+                                diag
+                            }
                             FileLang::Wxss => project.open_wxss(&abs_path, new_content),
                             FileLang::Json => project.open_json(&abs_path, new_content),
                             FileLang::OtherSs => project.open_other_ss(&abs_path, new_content),

@@ -6,7 +6,7 @@ import {
   LanguageClient,
   type LanguageClientOptions,
 } from 'vscode-languageclient/node'
-import middleware from './middleware'
+import { middleware, updateInlineWxsScripts } from './middleware'
 
 export type ClientOptions = {
   serverPath: string
@@ -131,6 +131,9 @@ export class Client {
       { run, debug },
       languageClientOptions,
     )
+    this.client.onNotification('glassEaselAnalyzer/inlineWxsScripts', (msg) => {
+      updateInlineWxsScripts(msg)
+    })
     await this.client.start()
   }
 

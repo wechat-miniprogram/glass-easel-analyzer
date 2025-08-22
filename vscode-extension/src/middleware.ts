@@ -39,7 +39,81 @@ const selectCssLanguageService = (): LanguageService | null => {
   return null
 }
 
-const middleware: Middleware = {
+type InlineWxsSegs = {
+  index: number
+  start: vscode.Position
+  end: vscode.Position
+  maskedContent: string
+}
+
+type InlineWxsScript = {
+  startLine: number
+  startColumn: number
+  endLine: number
+  endColumn: number
+  content: string
+}
+
+const inlineWxsSegsMap = new Map<string, InlineWxsSegs[]>()
+
+vscode.workspace.registerTextDocumentContentProvider('glass-easel-analyzer', {
+  provideTextDocumentContent(uri) {
+    if (uri.authority === 'wxs' && uri.path.endsWith('.js')) {
+      const p = uri.path.slice(1, -3)
+      const dotPos = p.lastIndexOf('.')
+      const originalUri = p.slice(0, dotPos)
+      const indexStr = p.slice(dotPos + 1)
+      const decodedUri = decodeURIComponent(originalUri || '')
+      const index = Number(indexStr) || 0
+      const seg = inlineWxsSegsMap.get(decodedUri)?.[index]
+      return seg?.maskedContent || null
+    }
+    return null
+  },
+})
+
+const generateInlineWxsUri = (uri: vscode.Uri, index: number) =>
+  vscode.Uri.parse(`glass-easel-analyzer://wxs/${encodeURIComponent(uri.toString())}.${index}.js`)
+
+export const updateInlineWxsScripts = (info: { uri: string; list: InlineWxsScript[] }) => {
+  const segs = info.list.map((item, index) => {
+    const start = new vscode.Position(item.startLine, item.startColumn)
+    const end = new vscode.Position(item.endLine, item.endColumn)
+    const maskedContent = '\n'.repeat(start.line) + ' '.repeat(start.character) + item.content
+    return { index, start, end, maskedContent }
+  })
+  inlineWxsSegsMap.set(info.uri, segs)
+}
+
+const searchInlineWxsScript = (uri: vscode.Uri, position: vscode.Position) => {
+  const segs = inlineWxsSegsMap.get(uri.toString())
+  if (!segs) return null
+  for (const seg of segs) {
+    if (position.isAfterOrEqual(seg.start) && position.isBeforeOrEqual(seg.end)) {
+      return seg
+    }
+  }
+  return null
+}
+
+const forEachInlineWxsScript = async (
+  uri: vscode.Uri,
+  f: (seg: InlineWxsSegs) => Promise<void>,
+) => {
+  const segs = inlineWxsSegsMap.get(uri.toString())
+  if (!segs) return null
+  for (const seg of segs) {
+    await f(seg)
+  }
+  return null
+}
+
+export const middleware: Middleware = {
+  async didClose(document, next) {
+    inlineWxsSegsMap.delete(document.uri.toString())
+    await next(document)
+  },
+
   handleDiagnostics(uri, diagnostics, next) {
     if (path.extname(uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
@@ -76,6 +150,41 @@ const middleware: Middleware = {
       }
     }
     return next(document, options, token)
+  },
+
+  async provideHover(document, position, token, next) {
+    if (document.languageId === 'wxml') {
+      const script = searchInlineWxsScript(document.uri, position)
+      if (script) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.exec',
+          generateInlineWxsUri(document.uri, script.index),
+          position,
+        )
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return (ret as any[])?.[0]
+      }
+    }
+    const ret = await next(document, position, token)
+    return ret
+  },
+
+  async provideCompletionItem(document, position, context, token, next) {
+    if (document.languageId === 'wxml') {
+      const script = searchInlineWxsScript(document.uri, position)
+      if (script) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeCompletionItemProvider',
+          generateInlineWxsUri(document.uri, script.index),
+          position,
+          context.triggerCharacter,
+        )
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return ret as any
+      }
+    }
+    const ret = await next(document, position, context, token)
+    return ret
   },
 }
 

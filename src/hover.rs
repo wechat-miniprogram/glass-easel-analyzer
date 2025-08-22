@@ -305,9 +305,6 @@ fn hover_wxml(
                 None
             }
         }
-        // Token::ScriptContent(..) => {
-        //     // TODO pass to wxs ls
-        // }
         _ => None,
     }
 }

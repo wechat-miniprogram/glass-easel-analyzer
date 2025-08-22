@@ -99,7 +99,7 @@ pub(crate) enum Token<'a> {
     Src(&'a StrName),
     ScriptModule(&'a StrName),
     ScriptSrc(&'a StrName),
-    ScriptContent(Range<Position>),
+    ScriptContent(&'a str, Range<Position>),
     TemplateName(&'a StrName),
     TemplateRef(&'a str, Range<Position>),
     Comment(&'a Comment),
@@ -844,10 +844,10 @@ pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Toke
             }
             match i {
                 Script::Inline {
-                    content_location, ..
+                    content, content_location, ..
                 } => {
                     if inclusive_contains(content_location, pos) {
-                        return Token::ScriptContent(content_location.clone());
+                        return Token::ScriptContent(content, content_location.clone());
                     }
                 }
                 Script::GlobalRef {

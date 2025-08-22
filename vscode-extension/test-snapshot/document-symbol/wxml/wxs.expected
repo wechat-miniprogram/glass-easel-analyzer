@@ -2,7 +2,7 @@
 [Array]
   [Object]
     containerName = ""
-    kind = "Namespace"
+    kind = "Module"
     location = [Object]
       range = [Array]
         [Object]
@@ -15,7 +15,7 @@
     name = "helloScript"
   [Object]
     containerName = ""
-    kind = "Namespace"
+    kind = "Module"
     location = [Object]
       range = [Array]
         [Object]

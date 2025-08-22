@@ -901,9 +901,6 @@ fn completion_wxml(
                 items,
             })
         }
-        // Token::ScriptContent(..) => {
-        //     // TODO pass to wxs ls
-        // }
         _ => None,
     }
 }
