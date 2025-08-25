@@ -58,6 +58,10 @@ const defWxmlCases = [
     name: 'other-scss',
     args: [new vscode.Position(0, 13)],
   },
+  {
+    name: 'wxs-inline',
+    args: [new vscode.Position(3, 24)],
+  },
 ]
 
 const defWxssCases = [

@@ -1,7 +1,7 @@
 <wxs module="js">
   let a = 1;
-  const b = `{a} and {b}`;
-  var c = /test/g;
+  const b = `= {a}`;
+  var c = /test/g.test(b);
   console.info(
     [
       a,

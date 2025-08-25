@@ -8,6 +8,8 @@ import {
   type LanguageService,
 } from 'vscode-css-languageservice'
 
+const MANAGED_URI_SCHEME = 'glass-easel-analyzer'
+
 const cssLangService = getCSSLanguageService()
 const lessLangService = getLESSLanguageService()
 const scssLangService = getSCSSLanguageService()
@@ -56,16 +58,12 @@ type InlineWxsScript = {
 
 const inlineWxsSegsMap = new Map<string, InlineWxsSegs[]>()
 
-vscode.workspace.registerTextDocumentContentProvider('glass-easel-analyzer', {
+vscode.workspace.registerTextDocumentContentProvider(MANAGED_URI_SCHEME, {
   provideTextDocumentContent(uri) {
-    if (uri.authority === 'wxs' && uri.path.endsWith('.js')) {
-      const p = uri.path.slice(1, -3)
-      const dotPos = p.lastIndexOf('.')
-      const originalUri = p.slice(0, dotPos)
-      const indexStr = p.slice(dotPos + 1)
-      const decodedUri = decodeURIComponent(originalUri || '')
-      const index = Number(indexStr) || 0
-      const seg = inlineWxsSegsMap.get(decodedUri)?.[index]
+    const parsedUri = parseInlineWxsUri(uri)
+    if (parsedUri) {
+      const [decodedUri, index] = parsedUri
+      const seg = inlineWxsSegsMap.get(decodedUri.toString())?.[index]
       return seg?.maskedContent || null
     }
     return null
@@ -73,13 +71,28 @@ vscode.workspace.registerTextDocumentContentProvider('glass-easel-analyzer', {
 })
 
 const generateInlineWxsUri = (uri: vscode.Uri, index: number) =>
-  vscode.Uri.parse(`glass-easel-analyzer://wxs/${encodeURIComponent(uri.toString())}.${index}.js`)
+  vscode.Uri.parse(`${MANAGED_URI_SCHEME}://wxs/${encodeURIComponent(uri.toString())}.${index}.js`)
+
+const parseInlineWxsUri = (uri: vscode.Uri): [vscode.Uri, number] | null => {
+  if (uri.authority === 'wxs' && uri.path.endsWith('.js')) {
+    const p = uri.path.slice(1, -3)
+    const dotPos = p.lastIndexOf('.')
+    const originalUri = p.slice(0, dotPos)
+    const indexStr = p.slice(dotPos + 1)
+    const decodedUri = decodeURIComponent(originalUri || '')
+    const index = Number(indexStr) || 0
+    return [vscode.Uri.parse(decodedUri), index]
+  }
+  return null
+}
 
 export const updateInlineWxsScripts = (info: { uri: string; list: InlineWxsScript[] }) => {
   const segs = info.list.map((item, index) => {
     const start = new vscode.Position(item.startLine, item.startColumn)
     const end = new vscode.Position(item.endLine, item.endColumn)
     const maskedContent = '\n'.repeat(start.line) + ' '.repeat(start.character) + item.content
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    vscode.workspace.openTextDocument(generateInlineWxsUri(vscode.Uri.parse(info.uri), index))
     return { index, start, end, maskedContent }
   })
   inlineWxsSegsMap.set(info.uri, segs)
@@ -92,18 +105,6 @@ const searchInlineWxsScript = (uri: vscode.Uri, position: vscode.Position) => {
     if (position.isAfterOrEqual(seg.start) && position.isBeforeOrEqual(seg.end)) {
       return seg
     }
-  }
-  return null
-}
-
-const forEachInlineWxsScript = async (
-  uri: vscode.Uri,
-  f: (seg: InlineWxsSegs) => Promise<void>,
-) => {
-  const segs = inlineWxsSegsMap.get(uri.toString())
-  if (!segs) return null
-  for (const seg of segs) {
-    await f(seg)
   }
   return null
 }
@@ -156,13 +157,13 @@ export const middleware: Middleware = {
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
-        const ret = await vscode.commands.executeCommand(
-          'vscode.exec',
+        const ret = await vscode.commands.executeCommand<vscode.Hover[]>(
+          'vscode.executeHoverProvider',
           generateInlineWxsUri(document.uri, script.index),
           position,
         )
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (ret as any[])?.[0]
+        const item = ret?.[0]
+        return item
       }
     }
     const ret = await next(document, position, token)
@@ -184,6 +185,77 @@ export const middleware: Middleware = {
       }
     }
     const ret = await next(document, position, context, token)
+    return ret
+  },
+
+  async provideDefinition(document, position, token, next) {
+    if (document.languageId === 'wxml') {
+      const script = searchInlineWxsScript(document.uri, position)
+      if (script) {
+        const ret = await vscode.commands.executeCommand<vscode.Declaration>(
+          'vscode.executeDefinitionProvider',
+          generateInlineWxsUri(document.uri, script.index),
+          position,
+        )
+        const locations = Array.isArray(ret) ? ret : [ret]
+        locations.forEach((loc) => {
+          if ('uri' in loc && loc.uri.scheme === MANAGED_URI_SCHEME) {
+            loc.uri = parseInlineWxsUri(loc.uri)?.[0] ?? loc.uri
+          }
+          if ('targetUri' in loc && loc.targetUri.scheme === MANAGED_URI_SCHEME) {
+            loc.targetUri = parseInlineWxsUri(loc.targetUri)?.[0] ?? loc.targetUri
+          }
+        })
+        return locations
+      }
+    }
+    const ret = await next(document, position, token)
+    return ret
+  },
+
+  async provideDeclaration(document, position, token, next) {
+    if (document.languageId === 'wxml') {
+      const script = searchInlineWxsScript(document.uri, position)
+      if (script) {
+        const ret = await vscode.commands.executeCommand<vscode.Declaration>(
+          'vscode.executeDeclarationProvider',
+          generateInlineWxsUri(document.uri, script.index),
+          position,
+        )
+        const locations = Array.isArray(ret) ? ret : [ret]
+        locations.forEach((loc) => {
+          if ('uri' in loc && loc.uri.scheme === MANAGED_URI_SCHEME) {
+            loc.uri = parseInlineWxsUri(loc.uri)?.[0] ?? loc.uri
+          }
+          if ('targetUri' in loc && loc.targetUri.scheme === MANAGED_URI_SCHEME) {
+            loc.targetUri = parseInlineWxsUri(loc.targetUri)?.[0] ?? loc.targetUri
+          }
+        })
+        return locations
+      }
+    }
+    const ret = await next(document, position, token)
+    return ret
+  },
+
+  async provideReferences(document, position, options, token, next) {
+    if (document.languageId === 'wxml') {
+      const script = searchInlineWxsScript(document.uri, position)
+      if (script) {
+        const locations = await vscode.commands.executeCommand<vscode.Location[]>(
+          'vscode.executeReferenceProvider',
+          generateInlineWxsUri(document.uri, script.index),
+          position,
+        )
+        locations.forEach((loc) => {
+          if (loc.uri.scheme === MANAGED_URI_SCHEME) {
+            loc.uri = parseInlineWxsUri(loc.uri)?.[0] ?? loc.uri
+          }
+        })
+        return locations
+      }
+    }
+    const ret = await next(document, position, options, token)
     return ret
   },
 }

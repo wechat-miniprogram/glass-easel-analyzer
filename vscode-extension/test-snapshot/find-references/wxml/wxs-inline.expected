@@ -1,0 +1,30 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    range = [Array]
+      [Object]
+        character = 8
+        line = 2
+      [Object]
+        character = 9
+        line = 2
+    uri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 23
+        line = 3
+      [Object]
+        character = 24
+        line = 3
+    uri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
+  [Object]
+    range = [Array]
+      [Object]
+        character = 6
+        line = 7
+      [Object]
+        character = 7
+        line = 7
+    uri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
+

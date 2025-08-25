@@ -1,0 +1,26 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    originSelectionRange = [Array]
+      [Object]
+        character = 23
+        line = 3
+      [Object]
+        character = 24
+        line = 3
+    targetRange = [Array]
+      [Object]
+        character = 2
+        line = 2
+      [Object]
+        character = 20
+        line = 2
+    targetSelectionRange = [Array]
+      [Object]
+        character = 8
+        line = 2
+      [Object]
+        character = 9
+        line = 2
+    targetUri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
+
