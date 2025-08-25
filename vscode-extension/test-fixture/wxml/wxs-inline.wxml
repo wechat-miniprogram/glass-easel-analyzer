@@ -2,5 +2,11 @@
   let a = 1;
   const b = `{a} and {b}`;
   var c = /test/g;
-  console.info(b.length)
+  console.info(
+    [
+      a,
+      b,
+    ],
+    c,
+  )
 </wxs>

@@ -867,7 +867,7 @@ pub(super) fn find_wxml_semantic_tokens(
         tokens.push(t);
         match i {
             Script::Inline { content: src, content_location, .. } => {
-                crate::wxs::ScriptMeta::parse(src, content_location.clone(), content, |token_type, location, replace| {
+                crate::wxs::ScriptMeta::parse(src).collect_tokens(content_location.clone(), content, |token_type, location, replace| {
                     if replace {
                         tokens.pop();
                     }

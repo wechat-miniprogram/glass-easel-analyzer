@@ -10,7 +10,7 @@
           line = 0
         [Object]
           character = 6
-          line = 5
+          line = 11
       uri = [Object] "../../test-fixture/wxml/wxs-inline.wxml"
     name = "js"
 

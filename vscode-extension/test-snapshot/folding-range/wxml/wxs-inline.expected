@@ -1,6 +1,12 @@
 // ====== SNAPSHOT 0 ======
 [Array]
   [Object]
-    end = 4
+    end = 11
     start = 0
+  [Object]
+    end = 10
+    start = 4
+  [Object]
+    end = 8
+    start = 5
 

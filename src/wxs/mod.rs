@@ -1,8 +1,9 @@
 use std::ops::Range;
 
 use glass_easel_template_compiler::parse::Position;
+use lsp_types::FoldingRangeKind;
 use swc_common::{comments::SingleThreadedComments, BytePos};
-use swc_ecma_lexer::{token::{TokenKind, WordKind}, Lexer, StringInput};
+use swc_ecma_lexer::{token::{TokenAndSpan, TokenKind, WordKind}, Lexer, StringInput};
 
 use crate::{context::project::FileContentMetadata, semantic::TokenType};
 
@@ -18,21 +19,14 @@ fn span_to_location(
     Position { line: start_line, utf16_col: start_utf16_col }..Position { line: end_line, utf16_col: end_utf16_col }
 }
 
-pub(crate) struct ScriptMeta {}
+#[derive(Debug, Default)]
+pub(crate) struct ScriptMeta {
+    tokens: Vec<TokenAndSpan>,
+    comments: SingleThreadedComments,
+}
 
 impl ScriptMeta {
-    pub(crate) fn parse(
-        src: &str,
-        content_location: Range<Position>,
-        file_content_metadata: &FileContentMetadata,
-        mut f: impl FnMut(TokenType, Range<Position>, bool),
-    ) {
-        let src_byte_offset = file_content_metadata.content_index_for_line_utf16_col(
-            content_location.start.line,
-            content_location.start.utf16_col,
-        );
-
-        // run lexer
+    pub(crate) fn parse(src: &str) -> Self {
         let comments = SingleThreadedComments::default();
         let es_lexer = Lexer::new(
             swc_ecma_lexer::Syntax::Es(swc_ecma_lexer::EsSyntax::default()),
@@ -41,9 +35,23 @@ impl ScriptMeta {
             Some(&comments),
         );
         let Ok(tokens) = swc_ecma_lexer::lexer(es_lexer) else {
-            return;
+            return Self::default();
         };
+        Self { tokens, comments }
+    }
+
+    pub(crate) fn collect_tokens(
+        self,
+        content_location: Range<Position>,
+        file_content_metadata: &FileContentMetadata,
+        mut f: impl FnMut(TokenType, Range<Position>, bool),
+    ) {
+        let Self { tokens, comments } = self;
         let (comments_leading, comments_trailing) = comments.take_all();
+        let src_byte_offset = file_content_metadata.content_index_for_line_utf16_col(
+            content_location.start.line,
+            content_location.start.utf16_col,
+        );
 
         // collect main parts
         let mut after_dot = false;
@@ -105,6 +113,75 @@ impl ScriptMeta {
             for comment in comments {
                 let loc = span_to_location(file_content_metadata, comment.span, src_byte_offset);
                 f(TokenType::Comment, loc, false);
+            }
+        }
+    }
+
+    pub(crate) fn collect_folding_ranges(
+        self,
+        content_location: Range<Position>,
+        file_content_metadata: &FileContentMetadata,
+        mut f: impl FnMut(Range<Position>, Option<FoldingRangeKind>),
+    ) {
+        let Self { tokens, comments } = self;
+        let (comments_leading, comments_trailing) = comments.take_all();
+        let src_byte_offset = file_content_metadata.content_index_for_line_utf16_col(
+            content_location.start.line,
+            content_location.start.utf16_col,
+        );
+
+        // collect main parts
+        let mut paren_stack = vec![];
+        for token_and_span in tokens {
+            let kind = token_and_span.token.kind();
+            match kind {
+                TokenKind::LParen
+                | TokenKind::LBracket
+                | TokenKind::LBrace => {
+                    paren_stack.push(token_and_span);
+                }
+                TokenKind::RParen => {
+                    while let Some(start) = paren_stack.pop() {
+                        if start.token.kind() == TokenKind::LParen {
+                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
+                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            f(start_loc.end..loc.start, None);
+                            break;
+                        }
+                    }
+                }
+                TokenKind::RBracket => {
+                    while let Some(start) = paren_stack.pop() {
+                        if start.token.kind() == TokenKind::LBracket {
+                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
+                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            f(start_loc.end..loc.start, None);
+                            break;
+                        }
+                    }
+                }
+                TokenKind::RBrace => {
+                    while let Some(start) = paren_stack.pop() {
+                        if start.token.kind() == TokenKind::LBrace {
+                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
+                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            f(start_loc.end..loc.start, None);
+                            break;
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // collect comments
+        for pc in comments_leading.borrow().iter().chain(comments_trailing.borrow().iter()) {
+            let (_pos, comments) = pc;
+            for comment in comments {
+                let loc = span_to_location(file_content_metadata, comment.span, src_byte_offset);
+                if loc.start.line != loc.end.line {
+                    f(loc, Some(FoldingRangeKind::Comment));
+                }
             }
         }
     }
