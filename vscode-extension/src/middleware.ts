@@ -7,6 +7,8 @@ import {
   getSCSSLanguageService,
   type LanguageService,
 } from 'vscode-css-languageservice'
+import { server } from 'glass-easel-miniprogram-typescript'
+import { TsService } from './typescript'
 
 const MANAGED_URI_SCHEME = 'glass-easel-analyzer'
 
@@ -110,9 +112,38 @@ const searchInlineWxsScript = (uri: vscode.Uri, position: vscode.Position) => {
 }
 
 export const middleware: Middleware = {
+  async didOpen(document, next) {
+    await next(document)
+    const uri = document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = TsService.find(uri.fsPath)
+      if (service) {
+        service.openFile(uri.fsPath, document.getText())
+      }
+    }
+  },
+
+  async didChange(ev, next) {
+    await next(ev)
+    const uri = ev.document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = TsService.find(uri.fsPath)
+      if (service) {
+        service.updateFile(uri.fsPath, ev.document.getText())
+      }
+    }
+  },
+
   async didClose(document, next) {
     inlineWxsSegsMap.delete(document.uri.toString())
     await next(document)
+    const uri = document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = TsService.find(uri.fsPath)
+      if (service) {
+        service.closeFile(uri.fsPath)
+      }
+    }
   },
 
   handleDiagnostics(uri, diagnostics, next) {
@@ -131,6 +162,33 @@ export const middleware: Middleware = {
         next(uri, diagnostics)
       }
       return
+    }
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = TsService.find(uri.fsPath)
+      if (service) {
+        const diags = service.getDiagnostics(uri.fsPath)
+        diags.forEach((diag) => {
+          const start = new vscode.Position(diag.start.line, diag.start.character)
+          const end = new vscode.Position(diag.end.line, diag.end.character)
+          let level = vscode.DiagnosticSeverity.Hint
+          if (diag.level === server.DiagnosticLevel.Error) {
+            level = vscode.DiagnosticSeverity.Error
+          }
+          if (diag.level === server.DiagnosticLevel.Warning) {
+            level = vscode.DiagnosticSeverity.Warning
+          }
+          if (diag.level === server.DiagnosticLevel.Info) {
+            level = vscode.DiagnosticSeverity.Information
+          }
+          const vscodeDiag = new vscode.Diagnostic(
+            new vscode.Range(start, end),
+            diag.message,
+            level,
+          )
+          // TODO fix wrong diag
+          // diagnostics.push(vscodeDiag)
+        })
+      }
     }
     next(uri, diagnostics)
   },

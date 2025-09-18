@@ -1,4 +1,5 @@
 {
     "glass-easel-analyzer.backendConfigurationPath": "../../backend-configuration/sample.toml",
-    "glass-easel-analyzer.analyzeOtherStylesheets": true
+    "glass-easel-analyzer.analyzeOtherStylesheets": true,
+    "eslint.enable": false
 }

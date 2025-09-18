@@ -1,0 +1,3 @@
+<block let:def="{{ abc }}">
+  <comp a="c">{{ abc.slice() }}</comp>
+</block>
