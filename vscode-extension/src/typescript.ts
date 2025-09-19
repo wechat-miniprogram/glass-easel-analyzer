@@ -11,19 +11,34 @@ export const initTsService = (path: string) => {
 export class TsService {
   private root: string
   private services: server.Server
+  private waitInit: (() => void)[] | null = []
 
   constructor(root: string) {
     this.root = root
     this.services = new server.Server({
       projectPath: root,
+      workingDirectory: root,
+      verboseMessages: true,
       onDiagnosticsNeedUpdate: (_fullPath: string) => {
         // TODO
+      },
+      onFirstScanDone: () => {
+        this.waitInit?.forEach((f) => f())
+        this.waitInit = null
       },
     })
   }
 
-  static find(path: string): TsService | undefined {
-    return serviceList.findLast((service) => service.containsPath(path))
+  static find(path: string): Promise<TsService | undefined> {
+    const service = serviceList.findLast((service) => service.containsPath(path))
+    if (!service) return Promise.resolve(undefined)
+    if (service.waitInit) {
+      const ret = new Promise<TsService>((resolve) => {
+        service.waitInit?.push(() => resolve(service))
+      })
+      return ret
+    }
+    return Promise.resolve(service)
   }
 
   private containsPath(p: string) {

@@ -3,6 +3,7 @@
 'use strict';
 
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
 
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
@@ -20,6 +21,7 @@ const extensionConfig = {
     libraryTarget: 'commonjs2'
   },
   externals: {
+    typescript: 'commonjs ./typescript/lib/typescript.js',
     vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
     // modules added here also need to be added in the .vscodeignore file
   },
@@ -44,5 +46,12 @@ const extensionConfig = {
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "node_modules/typescript", to: "./typescript", toType: "dir" },
+      ],
+    }),
+  ],
 };
 module.exports = [ extensionConfig ];

@@ -8,7 +8,7 @@
         "lib": ["ES6", "ES7", "DOM", "ESNext"]
     },
     "include": [
-        "ts/**/*.ts",
+        "**/*.ts",
         "typings"
     ]
 }

@@ -116,7 +116,7 @@ export const middleware: Middleware = {
     await next(document)
     const uri = document.uri
     if (path.extname(uri.fsPath) === '.wxml') {
-      const service = TsService.find(uri.fsPath)
+      const service = await TsService.find(uri.fsPath)
       if (service) {
         service.openFile(uri.fsPath, document.getText())
       }
@@ -127,7 +127,7 @@ export const middleware: Middleware = {
     await next(ev)
     const uri = ev.document.uri
     if (path.extname(uri.fsPath) === '.wxml') {
-      const service = TsService.find(uri.fsPath)
+      const service = await TsService.find(uri.fsPath)
       if (service) {
         service.updateFile(uri.fsPath, ev.document.getText())
       }
@@ -139,14 +139,15 @@ export const middleware: Middleware = {
     await next(document)
     const uri = document.uri
     if (path.extname(uri.fsPath) === '.wxml') {
-      const service = TsService.find(uri.fsPath)
+      const service = await TsService.find(uri.fsPath)
       if (service) {
         service.closeFile(uri.fsPath)
       }
     }
   },
 
-  handleDiagnostics(uri, diagnostics, next) {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async handleDiagnostics(uri, diagnostics, next) {
     if (path.extname(uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
       if (ls) {
@@ -164,7 +165,7 @@ export const middleware: Middleware = {
       return
     }
     if (path.extname(uri.fsPath) === '.wxml') {
-      const service = TsService.find(uri.fsPath)
+      const service = await TsService.find(uri.fsPath)
       if (service) {
         const diags = service.getDiagnostics(uri.fsPath)
         diags.forEach((diag) => {
@@ -185,8 +186,7 @@ export const middleware: Middleware = {
             diag.message,
             level,
           )
-          // TODO fix wrong diag
-          // diagnostics.push(vscodeDiag)
+          diagnostics.push(vscodeDiag)
         })
       }
     }
