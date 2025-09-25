@@ -7,7 +7,7 @@ import {
   type LanguageClientOptions,
 } from 'vscode-languageclient/node'
 import { middleware, updateInlineWxsScripts } from './middleware'
-import { initTsService } from './typescript'
+import { TsService } from './typescript'
 
 export type ClientOptions = {
   serverPath: string
@@ -136,7 +136,7 @@ export class Client {
       updateInlineWxsScripts(msg)
     })
     this.client.onNotification('glassEaselAnalyzer/discoveredProject', (msg: { path: string }) => {
-      initTsService(msg.path)
+      TsService.initTsService(msg.path)
     })
     await this.client.start()
   }

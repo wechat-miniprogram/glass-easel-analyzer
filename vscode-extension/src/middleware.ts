@@ -7,7 +7,6 @@ import {
   getSCSSLanguageService,
   type LanguageService,
 } from 'vscode-css-languageservice'
-import { server } from 'glass-easel-miniprogram-typescript'
 import { TsService } from './typescript'
 
 const MANAGED_URI_SCHEME = 'glass-easel-analyzer'
@@ -148,6 +147,7 @@ export const middleware: Middleware = {
 
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   async handleDiagnostics(uri, diagnostics, next) {
+    // append wxss diagnostics
     if (path.extname(uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
       if (ls) {
@@ -164,30 +164,13 @@ export const middleware: Middleware = {
       }
       return
     }
+
+    // append wxml-ts diagnostics
     if (path.extname(uri.fsPath) === '.wxml') {
       const service = await TsService.find(uri.fsPath)
       if (service) {
         const diags = service.getDiagnostics(uri.fsPath)
-        diags.forEach((diag) => {
-          const start = new vscode.Position(diag.start.line, diag.start.character)
-          const end = new vscode.Position(diag.end.line, diag.end.character)
-          let level = vscode.DiagnosticSeverity.Hint
-          if (diag.level === server.DiagnosticLevel.Error) {
-            level = vscode.DiagnosticSeverity.Error
-          }
-          if (diag.level === server.DiagnosticLevel.Warning) {
-            level = vscode.DiagnosticSeverity.Warning
-          }
-          if (diag.level === server.DiagnosticLevel.Info) {
-            level = vscode.DiagnosticSeverity.Information
-          }
-          const vscodeDiag = new vscode.Diagnostic(
-            new vscode.Range(start, end),
-            diag.message,
-            level,
-          )
-          diagnostics.push(vscodeDiag)
-        })
+        diagnostics.push(...diags)
       }
     }
     next(uri, diagnostics)
@@ -212,6 +195,7 @@ export const middleware: Middleware = {
   },
 
   async provideHover(document, position, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -224,11 +208,29 @@ export const middleware: Middleware = {
         return item
       }
     }
-    const ret = await next(document, position, token)
+
+    // standard output
+    let ret = await next(document, position, token)
+
+    // post-process types in wxml-ts
+    if (path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlHoverContent(document.uri.fsPath, position)
+        if (info) {
+          const text = new vscode.MarkdownString()
+          text.appendCodeblock(info, 'typescript')
+          if (ret) ret.contents.push(text)
+          else ret = new vscode.Hover(text)
+        }
+      }
+    }
+
     return ret
   },
 
   async provideCompletionItem(document, position, context, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -242,11 +244,36 @@ export const middleware: Middleware = {
         return ret as any
       }
     }
+
+    // standard output
     const ret = await next(document, position, context, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // post-process types in wxml-ts
+    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlCompletion(document.uri.fsPath, position)
+        if (info) {
+          const items = info.items.map((item) => {
+            let kind = vscode.CompletionItemKind.Variable
+            if (item.kind === 'property') kind = vscode.CompletionItemKind.Property
+            else if (item.kind === 'method') kind = vscode.CompletionItemKind.Method
+            const newItem = new vscode.CompletionItem(item.label, kind)
+            newItem.sortText = item.sortText
+            return newItem
+          })
+          const list = new vscode.CompletionList(items, info.isIncomplete)
+          return list
+        }
+      }
+    }
+
     return ret
   },
 
   async provideDefinition(document, position, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -267,7 +294,20 @@ export const middleware: Middleware = {
         return locations
       }
     }
-    const ret = await next(document, position, token)
+
+    // standard output
+    let ret = await next(document, position, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // try types in wxml-ts
+    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlDefinition(document.uri.fsPath, position)
+        ret = info
+      }
+    }
+
     return ret
   },
 
@@ -297,6 +337,7 @@ export const middleware: Middleware = {
   },
 
   async provideReferences(document, position, options, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -313,7 +354,20 @@ export const middleware: Middleware = {
         return locations
       }
     }
-    const ret = await next(document, position, options, token)
+
+    // standard output
+    let ret = await next(document, position, options, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // try types in wxml-ts
+    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlReferences(document.uri.fsPath, position)
+        ret = info
+      }
+    }
+
     return ret
   },
 }
