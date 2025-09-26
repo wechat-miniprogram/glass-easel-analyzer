@@ -246,11 +246,11 @@ export const middleware: Middleware = {
     }
 
     // standard output
-    const ret = await next(document, position, context, token)
+    let ret = await next(document, position, context, token)
     const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
 
     // post-process types in wxml-ts
-    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+    if (path.extname(document.uri.fsPath) === '.wxml') {
       const service = await TsService.find(document.uri.fsPath)
       if (service) {
         const info = service.getWxmlCompletion(document.uri.fsPath, position)
@@ -264,7 +264,13 @@ export const middleware: Middleware = {
             return newItem
           })
           const list = new vscode.CompletionList(items, info.isIncomplete)
-          return list
+          if (!hasResult) {
+            ret = list
+          } else if (Array.isArray(ret)) {
+            ret.push(...items)
+          } else if (ret instanceof vscode.CompletionList) {
+            ret.items.push(...items)
+          }
         }
       }
     }

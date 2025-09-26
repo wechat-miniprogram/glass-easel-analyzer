@@ -4,14 +4,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "max-width: $0"
       kind = "Property"
       label = "max-width"
       sortText = "max-width"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "min-width: $0"
       kind = "Property"
       label = "min-width"
@@ -23,14 +23,14 @@
       sortText = "monochrome"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "prefers-color-scheme: ${1|light,dark|}"
       kind = "Property"
       label = "prefers-color-scheme"
       sortText = "prefers-color-scheme"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "width: $0"
       kind = "Property"
       label = "width"
@@ -42,14 +42,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "max-width: $0"
       kind = "Property"
       label = "max-width"
       sortText = "max-width"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "min-width: $0"
       kind = "Property"
       label = "min-width"
@@ -61,14 +61,14 @@
       sortText = "monochrome"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "prefers-color-scheme: ${1|light,dark|}"
       kind = "Property"
       label = "prefers-color-scheme"
       sortText = "prefers-color-scheme"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "width: $0"
       kind = "Property"
       label = "width"
@@ -80,14 +80,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "max-width: $0"
       kind = "Property"
       label = "max-width"
       sortText = "max-width"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "min-width: $0"
       kind = "Property"
       label = "min-width"
@@ -99,14 +99,14 @@
       sortText = "monochrome"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "prefers-color-scheme: ${1|light,dark|}"
       kind = "Property"
       label = "prefers-color-scheme"
       sortText = "prefers-color-scheme"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "width: $0"
       kind = "Property"
       label = "width"
@@ -118,14 +118,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "max-width: $0"
       kind = "Property"
       label = "max-width"
       sortText = "max-width"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "min-width: $0"
       kind = "Property"
       label = "min-width"
@@ -137,14 +137,14 @@
       sortText = "monochrome"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "prefers-color-scheme: ${1|light,dark|}"
       kind = "Property"
       label = "prefers-color-scheme"
       sortText = "prefers-color-scheme"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "width: $0"
       kind = "Property"
       label = "width"
@@ -156,14 +156,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "max-width: $0"
       kind = "Property"
       label = "max-width"
       sortText = "max-width"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "min-width: $0"
       kind = "Property"
       label = "min-width"
@@ -175,14 +175,14 @@
       sortText = "monochrome"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "prefers-color-scheme: ${1|light,dark|}"
       kind = "Property"
       label = "prefers-color-scheme"
       sortText = "prefers-color-scheme"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "width: $0"
       kind = "Property"
       label = "width"

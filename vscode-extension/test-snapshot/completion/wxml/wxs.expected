@@ -4,14 +4,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:for-index=\"$0\""
       kind = "Keyword"
       label = "wx:for-index"
       sortText = "wx:for-index"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:key=\"$0\""
       kind = "Keyword"
       label = "wx:key"

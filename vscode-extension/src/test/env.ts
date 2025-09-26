@@ -33,6 +33,8 @@ const wxssCases = [
   'unknown-at-rule',
 ]
 
+const wxmlTsCases = ['basic', 'special']
+
 const EXTENSION_DIR = path.resolve(__dirname, '..', '..')
 const TEST_FIXTURE_DIR = path.resolve(EXTENSION_DIR, 'test-fixture')
 const SNAPSHOT_DIR = path.resolve(EXTENSION_DIR, 'test-snapshot')
@@ -111,6 +113,13 @@ export class Env {
     await this.forEachCase(ctx, 'wxss', wxssCases, 'wxss', f)
   }
 
+  async forEachWxmlTsCase(
+    ctx: Mocha.Context,
+    f: (uri: vscode.Uri, expect: Expect) => Promise<void>,
+  ) {
+    await this.forEachCase(ctx, 'ts', wxmlTsCases, 'wxml', f)
+  }
+
   async casesWith<T>(
     ctx: Mocha.Context,
     sub: string,
@@ -152,6 +161,14 @@ export class Env {
     f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
   ) {
     await this.casesWith(ctx, 'wxss', cases, 'wxss', f)
+  }
+
+  async wxmlTsCasesWith<T>(
+    ctx: Mocha.Context,
+    cases: { name: string; args: T; ext?: string }[],
+    f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
+  ) {
+    await this.casesWith(ctx, 'ts', cases, 'wxml', f)
   }
 }
 

@@ -14,7 +14,7 @@ export class TsService {
     this.services = new server.Server({
       projectPath: root,
       workingDirectory: root,
-      verboseMessages: true,
+      verboseMessages: false,
       onDiagnosticsNeedUpdate: (_fullPath: string) => {
         // empty
       },

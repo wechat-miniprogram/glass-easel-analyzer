@@ -4,168 +4,168 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "bind:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "bind:"
       sortText = "bind:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "capture-bind:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-bind:"
       sortText = "capture-bind:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "capture-catch:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-catch:"
       sortText = "capture-catch:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "capture-mut-bind:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-mut-bind:"
       sortText = "capture-mut-bind:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "catch:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "catch:"
       sortText = "catch:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "class=\"${1|hello-class|}\"$0"
       kind = "Keyword"
       label = "class"
       sortText = "class"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "class:${1|hello-class|}$0"
       kind = "Keyword"
       label = "class:"
       sortText = "class:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "data:$1=\"$0\""
       kind = "Keyword"
       label = "data:"
       sortText = "data:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "generic:$1=\"$0\""
       kind = "Keyword"
       label = "generic:"
       sortText = "generic:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "id=\"${1|abc|}\"$0"
       kind = "Keyword"
       label = "id"
       sortText = "id"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "let:$1=\"{{ $0 }}\""
       kind = "Keyword"
       label = "let:"
       sortText = "let:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "mark:$1=\"$0\""
       kind = "Keyword"
       label = "mark:"
       sortText = "mark:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "mut-bind:${1|tap,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "mut-bind:"
       sortText = "mut-bind:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "slot=\"$0\""
       kind = "Keyword"
       label = "slot"
       sortText = "slot"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "slot:$1=\"$0\""
       kind = "Keyword"
       label = "slot:"
       sortText = "slot:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "style=\"$0\""
       kind = "Keyword"
       label = "style"
       sortText = "style"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "style:${1|color,display|}=\"$0\""
       kind = "Keyword"
       label = "style:"
       sortText = "style:"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:elif=\"$0\""
       kind = "Keyword"
       label = "wx:elif"
       sortText = "wx:elif"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:else=\"$0\""
       kind = "Keyword"
       label = "wx:else"
       sortText = "wx:else"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:for=\"$0\""
       kind = "Keyword"
       label = "wx:for"
       sortText = "wx:for"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:for-index=\"$0\""
       kind = "Keyword"
       label = "wx:for-index"
       sortText = "wx:for-index"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:for-item=\"$0\""
       kind = "Keyword"
       label = "wx:for-item"
       sortText = "wx:for-item"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:if=\"$0\""
       kind = "Keyword"
       label = "wx:if"
       sortText = "wx:if"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "wx:key=\"$0\""
       kind = "Keyword"
       label = "wx:key"
@@ -177,14 +177,14 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "color: $0;"
       kind = "Property"
       label = "color"
       sortText = "color"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "display: ${1|block,inline,inline-block,flex,none|};"
       kind = "Property"
       label = "display"

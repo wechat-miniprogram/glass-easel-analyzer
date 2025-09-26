@@ -4,56 +4,56 @@
   items = [Array]
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "anchor>$0</anchor>"
       kind = "Class"
       label = "anchor"
       sortText = "anchor"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "block>$0</block>"
       kind = "Keyword"
       label = "block"
       sortText = "block"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "div>$0</div>"
       kind = "Class"
       label = "div"
       sortText = "div"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "import src=\"$0\" />"
       kind = "Keyword"
       label = "import"
       sortText = "import"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "include src=\"$0\" />"
       kind = "Keyword"
       label = "include"
       sortText = "include"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "slot>$0</slot>"
       kind = "Keyword"
       label = "slot"
       sortText = "slot"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "template name=\"$1\">$0</template>"
       kind = "Keyword"
       label = "template name"
       sortText = "template name"
     [Object]
       insertText = [Object]
-        e = 1
+        b = 1
         value = "view>$0</view>"
       kind = "Class"
       label = "view"

@@ -1,0 +1,67 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 11
+        line = 0
+      [Object]
+        character = 14
+        line = 0
+
+// ====== SNAPSHOT 1 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 8
+        line = 1
+      [Object]
+        character = 14
+        line = 1
+
+// ====== SNAPSHOT 2 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 22
+        line = 1
+      [Object]
+        character = 25
+        line = 1
+
+// ====== SNAPSHOT 3 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 26
+        line = 1
+      [Object]
+        character = 32
+        line = 1
+
+// ====== SNAPSHOT 4 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 35
+        line = 1
+      [Object]
+        character = 38
+        line = 1
+
