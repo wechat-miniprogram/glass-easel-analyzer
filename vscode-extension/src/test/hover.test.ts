@@ -65,9 +65,10 @@ const defWxmlTsCases = [
     args: [
       new vscode.Position(0, 12),
       new vscode.Position(1, 9),
-      new vscode.Position(1, 23),
-      new vscode.Position(1, 27),
-      new vscode.Position(1, 36),
+      new vscode.Position(1, 31),
+      new vscode.Position(1, 42),
+      new vscode.Position(1, 46),
+      new vscode.Position(1, 56),
     ],
   },
 ]

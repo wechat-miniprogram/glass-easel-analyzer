@@ -6,4 +6,17 @@ export default Component()
       fieldB: true,
     }
   }))
+  .methods({
+    methodA() {
+      return 1
+    },
+  })
+  .init(({ method }) => {
+    const methodB = method(() => {
+      return 2
+    })
+    return {
+      methodB,
+    }
+  })
   .register()
