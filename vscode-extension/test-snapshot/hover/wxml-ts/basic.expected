@@ -32,10 +32,10 @@
       [Object]
     range = [Array]
       [Object]
-        character = 22
+        character = 29
         line = 1
       [Object]
-        character = 25
+        character = 36
         line = 1
 
 // ====== SNAPSHOT 3 ======
@@ -45,10 +45,10 @@
       [Object]
     range = [Array]
       [Object]
-        character = 26
+        character = 41
         line = 1
       [Object]
-        character = 32
+        character = 44
         line = 1
 
 // ====== SNAPSHOT 4 ======
@@ -56,12 +56,25 @@
   [Object]
     contents = [Array]
       [Object]
+    range = [Array]
+      [Object]
+        character = 45
+        line = 1
+      [Object]
+        character = 51
+        line = 1
+
+// ====== SNAPSHOT 5 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
       [Object]
     range = [Array]
       [Object]
-        character = 35
+        character = 54
         line = 1
       [Object]
-        character = 38
+        character = 57
         line = 1
 

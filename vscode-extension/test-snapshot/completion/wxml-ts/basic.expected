@@ -10,35 +10,35 @@
     [Object]
       insertText = [Object]
         b = 1
-        value = "bind:${1|tap,canceltap|}=\"$0\""
+        value = "bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "bind:"
       sortText = "bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-bind:${1|tap,canceltap|}=\"$0\""
+        value = "capture-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-bind:"
       sortText = "capture-bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-catch:${1|tap,canceltap|}=\"$0\""
+        value = "capture-catch:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-catch:"
       sortText = "capture-catch:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-mut-bind:${1|tap,canceltap|}=\"$0\""
+        value = "capture-mut-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-mut-bind:"
       sortText = "capture-mut-bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "catch:${1|tap,canceltap|}=\"$0\""
+        value = "catch:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "catch:"
       sortText = "catch:"
@@ -94,7 +94,7 @@
     [Object]
       insertText = [Object]
         b = 1
-        value = "mut-bind:${1|tap,canceltap|}=\"$0\""
+        value = "mut-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "mut-bind:"
       sortText = "mut-bind:"
@@ -181,6 +181,21 @@
   isIncomplete = false
   items = [Array]
     [Object]
+      insertText = "methodA"
+      kind = "Method"
+      label = "methodA"
+      sortText = "11"
+    [Object]
+      insertText = "methodB"
+      kind = "Property"
+      label = "methodB"
+      sortText = "11"
+
+// ====== SNAPSHOT 2 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
+    [Object]
       insertText = "abc"
       kind = "Property"
       label = "abc"
@@ -191,7 +206,7 @@
       label = "obj"
       sortText = "11"
 
-// ====== SNAPSHOT 2 ======
+// ====== SNAPSHOT 3 ======
 [Object]
   isIncomplete = false
   items = [Array]
@@ -205,429 +220,4 @@
       kind = "Property"
       label = "fieldB"
       sortText = "11"
-
-// ====== SNAPSHOT 3 ======
-[Object]
-  isIncomplete = false
-  items = [Array]
-    [Object]
-      insertText = "--"
-      kind = 0
-      label = "--"
-      sortText = "--"
-    [Object]
-      insertText = "----"
-      kind = 0
-      label = "----"
-      sortText = "----"
-    [Object]
-      insertText = "-hello-class-2"
-      kind = 0
-      label = "-hello-class-2"
-      sortText = "-hello-class-2"
-    [Object]
-      insertText = "a"
-      kind = 0
-      label = "a"
-      sortText = "a"
-    [Object]
-      insertText = "ABC"
-      kind = 0
-      label = "ABC"
-      sortText = "ABC"
-    [Object]
-      insertText = "abc"
-      kind = 0
-      label = "abc"
-      sortText = "abc"
-    [Object]
-      insertText = "anchor"
-      kind = 0
-      label = "anchor"
-      sortText = "anchor"
-    [Object]
-      insertText = "aria-checked"
-      kind = 0
-      label = "aria-checked"
-      sortText = "aria-checked"
-    [Object]
-      insertText = "b"
-      kind = 0
-      label = "b"
-      sortText = "b"
-    [Object]
-      insertText = "bind"
-      kind = 0
-      label = "bind"
-      sortText = "bind"
-    [Object]
-      insertText = "block"
-      kind = 0
-      label = "block"
-      sortText = "block"
-    [Object]
-      insertText = "c"
-      kind = 0
-      label = "c"
-      sortText = "c"
-    [Object]
-      insertText = "capture-bind"
-      kind = 0
-      label = "capture-bind"
-      sortText = "capture-bind"
-    [Object]
-      insertText = "capture-catch"
-      kind = 0
-      label = "capture-catch"
-      sortText = "capture-catch"
-    [Object]
-      insertText = "capture-mut-bind"
-      kind = 0
-      label = "capture-mut-bind"
-      sortText = "capture-mut-bind"
-    [Object]
-      insertText = "catch"
-      kind = 0
-      label = "catch"
-      sortText = "catch"
-    [Object]
-      insertText = "class"
-      kind = 0
-      label = "class"
-      sortText = "class"
-    [Object]
-      insertText = "click"
-      kind = 0
-      label = "click"
-      sortText = "click"
-    [Object]
-      insertText = "comment"
-      kind = 0
-      label = "comment"
-      sortText = "comment"
-    [Object]
-      insertText = "comp"
-      kind = 0
-      label = "comp"
-      sortText = "comp"
-    [Object]
-      insertText = "cond"
-      kind = 0
-      label = "cond"
-      sortText = "cond"
-    [Object]
-      insertText = "console"
-      kind = 0
-      label = "console"
-      sortText = "console"
-    [Object]
-      insertText = "const"
-      kind = 0
-      label = "const"
-      sortText = "const"
-    [Object]
-      insertText = "data"
-      kind = 0
-      label = "data"
-      sortText = "data"
-    [Object]
-      insertText = "display"
-      kind = 0
-      label = "display"
-      sortText = "display"
-    [Object]
-      insertText = "div"
-      kind = 0
-      label = "div"
-      sortText = "div"
-    [Object]
-      insertText = "elif"
-      kind = 0
-      label = "elif"
-      sortText = "elif"
-    [Object]
-      insertText = "else"
-      kind = 0
-      label = "else"
-      sortText = "else"
-    [Object]
-      insertText = "exports"
-      kind = 0
-      label = "exports"
-      sortText = "exports"
-    [Object]
-      insertText = "false"
-      kind = 0
-      label = "false"
-      sortText = "false"
-    [Object]
-      insertText = "fieldA"
-      kind = 0
-      label = "fieldA"
-      sortText = "fieldA"
-    [Object]
-      insertText = "for"
-      kind = 0
-      label = "for"
-      sortText = "for"
-    [Object]
-      insertText = "for-index"
-      kind = 0
-      label = "for-index"
-      sortText = "for-index"
-    [Object]
-      insertText = "for-item"
-      kind = 0
-      label = "for-item"
-      sortText = "for-item"
-    [Object]
-      insertText = "function"
-      kind = 0
-      label = "function"
-      sortText = "function"
-    [Object]
-      insertText = "g"
-      kind = 0
-      label = "g"
-      sortText = "g"
-    [Object]
-      insertText = "generic"
-      kind = 0
-      label = "generic"
-      sortText = "generic"
-    [Object]
-      insertText = "global"
-      kind = 0
-      label = "global"
-      sortText = "global"
-    [Object]
-      insertText = "global-template"
-      kind = 0
-      label = "global-template"
-      sortText = "global-template"
-    [Object]
-      insertText = "global2"
-      kind = 0
-      label = "global2"
-      sortText = "global2"
-    [Object]
-      insertText = "hello"
-      kind = 0
-      label = "hello"
-      sortText = "hello"
-    [Object]
-      insertText = "hello-class"
-      kind = 0
-      label = "hello-class"
-      sortText = "hello-class"
-    [Object]
-      insertText = "helloExternalScript"
-      kind = 0
-      label = "helloExternalScript"
-      sortText = "helloExternalScript"
-    [Object]
-      insertText = "helloScript"
-      kind = 0
-      label = "helloScript"
-      sortText = "helloScript"
-    [Object]
-      insertText = "hidden"
-      kind = 0
-      label = "hidden"
-      sortText = "hidden"
-    [Object]
-      insertText = "hoverstart"
-      kind = 0
-      label = "hoverstart"
-      sortText = "hoverstart"
-    [Object]
-      insertText = "href"
-      kind = 0
-      label = "href"
-      sortText = "href"
-    [Object]
-      insertText = "i"
-      kind = 0
-      label = "i"
-      sortText = "i"
-    [Object]
-      insertText = "id"
-      kind = 0
-      label = "id"
-      sortText = "id"
-    [Object]
-      insertText = "if"
-      kind = 0
-      label = "if"
-      sortText = "if"
-    [Object]
-      insertText = "import"
-      kind = 0
-      label = "import"
-      sortText = "import"
-    [Object]
-      insertText = "include"
-      kind = 0
-      label = "include"
-      sortText = "include"
-    [Object]
-      insertText = "info"
-      kind = 0
-      label = "info"
-      sortText = "info"
-    [Object]
-      insertText = "is"
-      kind = 0
-      label = "is"
-      sortText = "is"
-    [Object]
-      insertText = "js"
-      kind = 0
-      label = "js"
-      sortText = "js"
-    [Object]
-      insertText = "key"
-      kind = 0
-      label = "key"
-      sortText = "key"
-    [Object]
-      insertText = "let"
-      kind = 0
-      label = "let"
-      sortText = "let"
-    [Object]
-      insertText = "list"
-      kind = 0
-      label = "list"
-      sortText = "list"
-    [Object]
-      insertText = "mixed"
-      kind = 0
-      label = "mixed"
-      sortText = "mixed"
-    [Object]
-      insertText = "MOCK"
-      kind = 0
-      label = "MOCK"
-      sortText = "MOCK"
-    [Object]
-      insertText = "module"
-      kind = 0
-      label = "module"
-      sortText = "module"
-    [Object]
-      insertText = "mut-bind"
-      kind = 0
-      label = "mut-bind"
-      sortText = "mut-bind"
-    [Object]
-      insertText = "name"
-      kind = 0
-      label = "name"
-      sortText = "name"
-    [Object]
-      insertText = "obj"
-      kind = 0
-      label = "obj"
-      sortText = "obj"
-    [Object]
-      insertText = "onclick"
-      kind = 0
-      label = "onclick"
-      sortText = "onclick"
-    [Object]
-      insertText = "ontap"
-      kind = 0
-      label = "ontap"
-      sortText = "ontap"
-    [Object]
-      insertText = "prop-a"
-      kind = 0
-      label = "prop-a"
-      sortText = "prop-a"
-    [Object]
-      insertText = "return"
-      kind = 0
-      label = "return"
-      sortText = "return"
-    [Object]
-      insertText = "slot"
-      kind = 0
-      label = "slot"
-      sortText = "slot"
-    [Object]
-      insertText = "slot-comp"
-      kind = 0
-      label = "slot-comp"
-      sortText = "slot-comp"
-    [Object]
-      insertText = "src"
-      kind = 0
-      label = "src"
-      sortText = "src"
-    [Object]
-      insertText = "style"
-      kind = 0
-      label = "style"
-      sortText = "style"
-    [Object]
-      insertText = "t"
-      kind = 0
-      label = "t"
-      sortText = "t"
-    [Object]
-      insertText = "tap"
-      kind = 0
-      label = "tap"
-      sortText = "tap"
-    [Object]
-      insertText = "template"
-      kind = 0
-      label = "template"
-      sortText = "template"
-    [Object]
-      insertText = "TEST"
-      kind = 0
-      label = "TEST"
-      sortText = "TEST"
-    [Object]
-      insertText = "test"
-      kind = 0
-      label = "test"
-      sortText = "test"
-    [Object]
-      insertText = "unknown"
-      kind = 0
-      label = "unknown"
-      sortText = "unknown"
-    [Object]
-      insertText = "var"
-      kind = 0
-      label = "var"
-      sortText = "var"
-    [Object]
-      insertText = "view"
-      kind = 0
-      label = "view"
-      sortText = "view"
-    [Object]
-      insertText = "worklet"
-      kind = 0
-      label = "worklet"
-      sortText = "worklet"
-    [Object]
-      insertText = "world"
-      kind = 0
-      label = "world"
-      sortText = "world"
-    [Object]
-      insertText = "wx"
-      kind = 0
-      label = "wx"
-      sortText = "wx"
-    [Object]
-      insertText = "wxs"
-      kind = 0
-      label = "wxs"
-      sortText = "wxs"
 
