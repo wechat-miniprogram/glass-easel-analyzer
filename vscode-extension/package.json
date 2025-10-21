@@ -149,7 +149,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^4.2.1",
     "glass-easel-miniprogram-adapter": "^0.15.0",
-    "glass-easel-miniprogram-template": "^0.11.0",
+    "glass-easel-miniprogram-template": "^0.15.0",
     "glass-easel-miniprogram-typescript": "^0.15.0",
     "prettier": "^2.8.3",
     "ts-loader": "^9.5.1",
