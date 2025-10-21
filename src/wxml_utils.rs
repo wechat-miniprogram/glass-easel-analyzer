@@ -211,7 +211,7 @@ fn end_tag_body_contains(tag_loc: &TagLocation, pos: Position) -> bool {
     exclusive_contains(&(start..end), pos)
 }
 
-pub(crate) fn find_token_in_position(template: &Template, pos: Position) -> Token {
+pub(crate) fn find_token_in_position<'a>(template: &'a Template, pos: Position) -> Token<'a> {
     fn find_in_expr<'a>(
         expr: &'a Expression,
         pos: Position,
