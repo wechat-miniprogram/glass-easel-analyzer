@@ -7,6 +7,7 @@ import {
   getSCSSLanguageService,
   type LanguageService,
 } from 'vscode-css-languageservice'
+import { TsService } from './typescript'
 
 const MANAGED_URI_SCHEME = 'glass-easel-analyzer'
 
@@ -110,12 +111,43 @@ const searchInlineWxsScript = (uri: vscode.Uri, position: vscode.Position) => {
 }
 
 export const middleware: Middleware = {
+  async didOpen(document, next) {
+    await next(document)
+    const uri = document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = await TsService.find(uri.fsPath)
+      if (service) {
+        service.openFile(uri.fsPath, document.getText())
+      }
+    }
+  },
+
+  async didChange(ev, next) {
+    await next(ev)
+    const uri = ev.document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = await TsService.find(uri.fsPath)
+      if (service) {
+        service.updateFile(uri.fsPath, ev.document.getText())
+      }
+    }
+  },
+
   async didClose(document, next) {
     inlineWxsSegsMap.delete(document.uri.toString())
     await next(document)
+    const uri = document.uri
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = await TsService.find(uri.fsPath)
+      if (service) {
+        service.closeFile(uri.fsPath)
+      }
+    }
   },
 
-  handleDiagnostics(uri, diagnostics, next) {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  async handleDiagnostics(uri, diagnostics, next) {
+    // append wxss diagnostics
     if (path.extname(uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
       if (ls) {
@@ -131,6 +163,15 @@ export const middleware: Middleware = {
         next(uri, diagnostics)
       }
       return
+    }
+
+    // append wxml-ts diagnostics
+    if (path.extname(uri.fsPath) === '.wxml') {
+      const service = await TsService.find(uri.fsPath)
+      if (service) {
+        const diags = service.getDiagnostics(uri.fsPath)
+        diagnostics.push(...diags)
+      }
     }
     next(uri, diagnostics)
   },
@@ -154,6 +195,7 @@ export const middleware: Middleware = {
   },
 
   async provideHover(document, position, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -166,11 +208,29 @@ export const middleware: Middleware = {
         return item
       }
     }
-    const ret = await next(document, position, token)
+
+    // standard output
+    let ret = await next(document, position, token)
+
+    // post-process types in wxml-ts
+    if (path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlHoverContent(document.uri.fsPath, position)
+        if (info) {
+          const text = new vscode.MarkdownString()
+          text.appendCodeblock(info, 'typescript')
+          if (ret) ret.contents.push(text)
+          else ret = new vscode.Hover(text)
+        }
+      }
+    }
+
     return ret
   },
 
   async provideCompletionItem(document, position, context, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -184,11 +244,42 @@ export const middleware: Middleware = {
         return ret as any
       }
     }
-    const ret = await next(document, position, context, token)
+
+    // standard output
+    let ret = await next(document, position, context, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // post-process types in wxml-ts
+    if (path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlCompletion(document.uri.fsPath, position)
+        if (info) {
+          const items = info.items.map((item) => {
+            let kind = vscode.CompletionItemKind.Variable
+            if (item.kind === 'property') kind = vscode.CompletionItemKind.Property
+            else if (item.kind === 'method') kind = vscode.CompletionItemKind.Method
+            const newItem = new vscode.CompletionItem(item.label, kind)
+            newItem.sortText = item.sortText
+            return newItem
+          })
+          const list = new vscode.CompletionList(items, info.isIncomplete)
+          if (!hasResult) {
+            ret = list
+          } else if (Array.isArray(ret)) {
+            ret.push(...items)
+          } else if (ret instanceof vscode.CompletionList) {
+            ret.items.push(...items)
+          }
+        }
+      }
+    }
+
     return ret
   },
 
   async provideDefinition(document, position, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -209,7 +300,20 @@ export const middleware: Middleware = {
         return locations
       }
     }
-    const ret = await next(document, position, token)
+
+    // standard output
+    let ret = await next(document, position, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // try types in wxml-ts
+    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlDefinition(document.uri.fsPath, position)
+        ret = info
+      }
+    }
+
     return ret
   },
 
@@ -239,6 +343,7 @@ export const middleware: Middleware = {
   },
 
   async provideReferences(document, position, options, token, next) {
+    // on inline wxs
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
@@ -255,7 +360,20 @@ export const middleware: Middleware = {
         return locations
       }
     }
-    const ret = await next(document, position, options, token)
+
+    // standard output
+    let ret = await next(document, position, options, token)
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+
+    // try types in wxml-ts
+    if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
+      const service = await TsService.find(document.uri.fsPath)
+      if (service) {
+        const info = service.getWxmlReferences(document.uri.fsPath, position)
+        ret = info
+      }
+    }
+
     return ret
   },
 }

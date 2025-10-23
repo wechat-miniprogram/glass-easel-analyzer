@@ -218,6 +218,12 @@ struct InitializationOptions {
     enable_other_ss: bool,
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ProjectInfo<'a> {
+    path: &'a str,
+}
+
 async fn serve() -> anyhow::Result<()> {
     let (connection, _io_threads) = Connection::stdio();
 
@@ -420,6 +426,19 @@ async fn serve() -> anyhow::Result<()> {
         method: "client/registerCapability".to_string(),
         params: serde_json::to_value(registrations)?,
     }))?;
+
+    // send initialized projects
+    for project in projects.iter() {
+        if let Some(path) = project.root().and_then(|x| x.to_str()) {
+            connection
+                .sender
+                .send(generate_notification(
+                    "glassEaselAnalyzer/discoveredProject",
+                    ProjectInfo { path },
+                ))
+                .unwrap();
+        }
+    }
 
     // generate a `ServerContext`
     let Connection {

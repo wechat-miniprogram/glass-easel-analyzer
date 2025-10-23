@@ -80,6 +80,18 @@ const defWxssCases = [
   },
 ]
 
+const defWxmlTsCases = [
+  {
+    name: 'basic',
+    args: [
+      new vscode.Position(1, 9),
+      new vscode.Position(1, 31),
+      new vscode.Position(1, 42),
+      new vscode.Position(1, 46),
+    ],
+  },
+]
+
 suite('completion', function () {
   const env = new Env(this)
 
@@ -99,6 +111,20 @@ suite('completion', function () {
 
   test('wxss', async function () {
     await env.wxssCasesWith(this, defWxssCases, async (uri, list, expect) => {
+      await vscode.commands.executeCommand('vscode.open', uri)
+      for (const position of list) {
+        const ret = await vscode.commands.executeCommand(
+          'vscode.executeCompletionItemProvider',
+          uri,
+          position,
+        )
+        expect.snapshot(ret)
+      }
+    })
+  })
+
+  test('wxml-ts', async function () {
+    await env.wxmlTsCasesWith(this, defWxmlTsCases, async (uri, list, expect) => {
       await vscode.commands.executeCommand('vscode.open', uri)
       for (const position of list) {
         const ret = await vscode.commands.executeCommand(

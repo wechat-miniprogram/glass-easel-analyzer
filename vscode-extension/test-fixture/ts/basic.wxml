@@ -1,0 +1,3 @@
+<block let:def="{{ abc }}">
+  <comp prop-a="a" bind:tap="methodB">{{ obj.fieldA + def }}</comp>
+</block>

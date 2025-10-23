@@ -33,6 +33,8 @@ const wxssCases = [
   'unknown-at-rule',
 ]
 
+const wxmlTsCases = ['basic', 'special']
+
 const EXTENSION_DIR = path.resolve(__dirname, '..', '..')
 const TEST_FIXTURE_DIR = path.resolve(EXTENSION_DIR, 'test-fixture')
 const SNAPSHOT_DIR = path.resolve(EXTENSION_DIR, 'test-snapshot')
@@ -57,7 +59,15 @@ export class Env {
     // eslint-disable-next-line no-await-in-loop
     await f(expect)
     if (expect.failureCount > 0) {
-      if (OVERWRITE_SNAPSHOT) {
+      if (OVERWRITE_SNAPSHOT === 'display') {
+        // eslint-disable-next-line no-console
+        console.error(
+          chalk.red(
+            `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
+          ),
+        )
+        expect.displayDiff()
+      } else if (OVERWRITE_SNAPSHOT) {
         expect.overwriteExpected()
         // eslint-disable-next-line no-console
         console.warn(
@@ -111,6 +121,13 @@ export class Env {
     await this.forEachCase(ctx, 'wxss', wxssCases, 'wxss', f)
   }
 
+  async forEachWxmlTsCase(
+    ctx: Mocha.Context,
+    f: (uri: vscode.Uri, expect: Expect) => Promise<void>,
+  ) {
+    await this.forEachCase(ctx, 'ts', wxmlTsCases, 'wxml', f)
+  }
+
   async casesWith<T>(
     ctx: Mocha.Context,
     sub: string,
@@ -152,6 +169,14 @@ export class Env {
     f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
   ) {
     await this.casesWith(ctx, 'wxss', cases, 'wxss', f)
+  }
+
+  async wxmlTsCasesWith<T>(
+    ctx: Mocha.Context,
+    cases: { name: string; args: T; ext?: string }[],
+    f: (uri: vscode.Uri, args: T, expect: Expect) => Promise<void>,
+  ) {
+    await this.casesWith(ctx, 'ts', cases, 'wxml', f)
   }
 }
 
@@ -214,6 +239,20 @@ class Expect {
       } catch (_err) {
         // empty
       }
+    }
+  }
+
+  displayDiff() {
+    if (this.failureCount > 0) {
+      const patch = diff.createPatch(this.snapshotPath(), this.expectedStr, this.actualOutput)
+      // eslint-disable-next-line no-console
+      console.warn(patch)
+    }
+    try {
+      fs.unlinkSync(this.actualOutputPath())
+      fs.unlinkSync(this.diffOutputPath())
+    } catch (_err) {
+      // empty
     }
   }
 

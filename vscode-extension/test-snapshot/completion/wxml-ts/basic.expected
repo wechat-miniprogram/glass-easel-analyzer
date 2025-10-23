@@ -3,51 +3,56 @@
   isIncomplete = false
   items = [Array]
     [Object]
+      insertText = "propA"
+      kind = "Property"
+      label = "propA"
+      sortText = "11"
+    [Object]
       insertText = [Object]
         b = 1
-        value = "bind:${1|tap,canceltap|}=\"$0\""
+        value = "bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "bind:"
       sortText = "bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-bind:${1|tap,canceltap|}=\"$0\""
+        value = "capture-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-bind:"
       sortText = "capture-bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-catch:${1|tap,canceltap|}=\"$0\""
+        value = "capture-catch:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-catch:"
       sortText = "capture-catch:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "capture-mut-bind:${1|tap,canceltap|}=\"$0\""
+        value = "capture-mut-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "capture-mut-bind:"
       sortText = "capture-mut-bind:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "catch:${1|tap,canceltap|}=\"$0\""
+        value = "catch:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "catch:"
       sortText = "catch:"
     [Object]
       insertText = [Object]
         b = 1
-        value = "class=\"${1|hello-class|}\"$0"
+        value = "class=\"$0\""
       kind = "Keyword"
       label = "class"
       sortText = "class"
     [Object]
       insertText = [Object]
         b = 1
-        value = "class:${1|hello-class|}$0"
+        value = "class:$0"
       kind = "Keyword"
       label = "class:"
       sortText = "class:"
@@ -68,7 +73,7 @@
     [Object]
       insertText = [Object]
         b = 1
-        value = "id=\"${1|abc|}\"$0"
+        value = "id=\"$0\""
       kind = "Keyword"
       label = "id"
       sortText = "id"
@@ -89,7 +94,7 @@
     [Object]
       insertText = [Object]
         b = 1
-        value = "mut-bind:${1|tap,canceltap|}=\"$0\""
+        value = "mut-bind:${1|canceltap|}=\"$0\""
       kind = "Keyword"
       label = "mut-bind:"
       sortText = "mut-bind:"
@@ -176,47 +181,43 @@
   isIncomplete = false
   items = [Array]
     [Object]
-      insertText = [Object]
-        b = 1
-        value = "color: $0;"
-      kind = "Property"
-      label = "color"
-      sortText = "color"
+      insertText = "methodA"
+      kind = "Method"
+      label = "methodA"
+      sortText = "11"
     [Object]
-      insertText = [Object]
-        b = 1
-        value = "display: ${1|block,inline,inline-block,flex,none|};"
+      insertText = "methodB"
       kind = "Property"
-      label = "display"
-      sortText = "display"
+      label = "methodB"
+      sortText = "11"
 
 // ====== SNAPSHOT 2 ======
 [Object]
   isIncomplete = false
   items = [Array]
     [Object]
-      insertText = "block"
-      kind = "Value"
-      label = "block"
-      sortText = "block"
+      insertText = "abc"
+      kind = "Property"
+      label = "abc"
+      sortText = "11"
     [Object]
-      insertText = "flex"
-      kind = "Value"
-      label = "flex"
-      sortText = "flex"
+      insertText = "obj"
+      kind = "Property"
+      label = "obj"
+      sortText = "11"
+
+// ====== SNAPSHOT 3 ======
+[Object]
+  isIncomplete = false
+  items = [Array]
     [Object]
-      insertText = "inline"
-      kind = "Value"
-      label = "inline"
-      sortText = "inline"
+      insertText = "fieldA"
+      kind = "Property"
+      label = "fieldA"
+      sortText = "11"
     [Object]
-      insertText = "inline-block"
-      kind = "Value"
-      label = "inline-block"
-      sortText = "inline-block"
-    [Object]
-      insertText = "none"
-      kind = "Value"
-      label = "none"
-      sortText = "none"
+      insertText = "fieldB"
+      kind = "Property"
+      label = "fieldB"
+      sortText = "11"
 

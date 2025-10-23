@@ -49,7 +49,7 @@ pub(crate) enum Token<'a> {
     ImportUrl(&'a QuotedString),
 }
 
-pub(crate) fn find_token_in_position(sheet: &StyleSheet, pos: Position) -> Token {
+pub(crate) fn find_token_in_position(sheet: &StyleSheet, pos: Position) -> Token<'_> {
     sheet
         .items
         .iter()
@@ -57,7 +57,7 @@ pub(crate) fn find_token_in_position(sheet: &StyleSheet, pos: Position) -> Token
         .unwrap_or(Token::None)
 }
 
-fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
+fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token<'_>> {
     match rule {
         Rule::Unknown(tt_list) => match find_in_token_tree_list(&tt_list, pos) {
             Some(Token::Ident(x)) if tt_list.first().location() == x.location() => {
@@ -147,7 +147,7 @@ fn find_in_rule(rule: &Rule, pos: Position) -> Option<Token> {
     }
 }
 
-fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> {
+fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token<'_>> {
     if !inclusive_contains(&x.location(), pos) {
         return None;
     }
@@ -212,7 +212,7 @@ fn find_in_media_query_list(x: &MediaQueryList, pos: Position) -> Option<Token> 
     }
 }
 
-fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
+fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token<'_>> {
     if !inclusive_contains(&selector.location(), pos) {
         return None;
     }
@@ -243,7 +243,7 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token> {
     Some(ret)
 }
 
-fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token> {
+fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token<'_>> {
     let index = x.partition_point(|x| x.location().start < pos).min(x.len()).saturating_sub(1);
     match &x[index] {
         RuleOrProperty::Rule(x) => find_in_rule(x, pos),
@@ -264,7 +264,7 @@ fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token>
 fn find_in_option_brace_or_semicolon_properties(
     x: &Option<BraceOrSemicolon<List<RuleOrProperty>>>,
     pos: Position,
-) -> Option<Token> {
+) -> Option<Token<'_>> {
     find_in_option_brace_or_semicolon(x, pos, |x| find_in_rule_properties(x, pos))
 }
 
@@ -272,7 +272,7 @@ fn find_in_option_brace_or_semicolon<T>(
     x: &Option<BraceOrSemicolon<T>>,
     pos: Position,
     f: impl FnOnce(&T) -> Option<Token>,
-) -> Option<Token> {
+) -> Option<Token<'_>> {
     match x.as_ref()? {
         BraceOrSemicolon::Brace(x) => {
             if !inclusive_contains(&x.location(), pos) {
@@ -296,7 +296,7 @@ fn find_in_maybe_unknown<T>(
     x: &MaybeUnknown<T>,
     pos: Position,
     f: impl FnOnce(&T) -> Option<Token>,
-) -> Option<Token> {
+) -> Option<Token<'_>> {
     match x {
         MaybeUnknown::Unknown(x) => find_in_token_tree_list(&x, pos),
         MaybeUnknown::Normal(x, tt_list) => f(x).or_else(|| find_in_token_tree_list(tt_list, pos)),
@@ -311,7 +311,7 @@ fn find_in_children<'a, T: 'a, P: TokenGroupExt<T>>(
     f(p.children()).or_else(|| find_in_token_tree_list(p.trailing(), pos))
 }
 
-fn find_in_token_tree_list(tt_list: &[TokenTree], pos: Position) -> Option<Token> {
+fn find_in_token_tree_list(tt_list: &[TokenTree], pos: Position) -> Option<Token<'_>> {
     let index = tt_list.binary_search_by(|tt| exclusive_ordering(&tt.location(), pos));
     match index {
         Ok(index) => find_in_token_tree(&tt_list[index], pos),
@@ -337,7 +337,7 @@ fn find_in_token_tree_list(tt_list: &[TokenTree], pos: Position) -> Option<Token
     }
 }
 
-fn find_in_token_tree(tt: &TokenTree, pos: Position) -> Option<Token> {
+fn find_in_token_tree(tt: &TokenTree, pos: Position) -> Option<Token<'_>> {
     if !inclusive_contains(&tt.location(), pos) {
         return None;
     }
