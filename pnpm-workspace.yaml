@@ -1,7 +1,2 @@
 packages:
   - 'vscode-extension'
-  - '../glass-easel/glass-easel'
-  - '../glass-easel/glass-easel-miniprogram-adapter'
-  - '../glass-easel/glass-easel-miniprogram-typescript'
-  - '../glass-easel/glass-easel-stylesheet-compiler'
-  - '../glass-easel/glass-easel-template-compiler'
