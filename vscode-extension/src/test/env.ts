@@ -59,7 +59,15 @@ export class Env {
     // eslint-disable-next-line no-await-in-loop
     await f(expect)
     if (expect.failureCount > 0) {
-      if (OVERWRITE_SNAPSHOT) {
+      if (OVERWRITE_SNAPSHOT === 'display') {
+        // eslint-disable-next-line no-console
+        console.error(
+          chalk.red(
+            `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
+          ),
+        )
+        expect.displayDiff()
+      } else if (OVERWRITE_SNAPSHOT) {
         expect.overwriteExpected()
         // eslint-disable-next-line no-console
         console.warn(
@@ -231,6 +239,20 @@ class Expect {
       } catch (_err) {
         // empty
       }
+    }
+  }
+
+  displayDiff() {
+    if (this.failureCount > 0) {
+      const patch = diff.createPatch(this.snapshotPath(), this.expectedStr, this.actualOutput)
+      // eslint-disable-next-line no-console
+      console.warn(patch)
+    }
+    try {
+      fs.unlinkSync(this.actualOutputPath())
+      fs.unlinkSync(this.diffOutputPath())
+    } catch (_err) {
+      // empty
     }
   }
 
