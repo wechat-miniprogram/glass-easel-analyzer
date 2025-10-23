@@ -50,6 +50,7 @@ const extensionConfig = {
     new CopyPlugin({
       patterns: [
         { from: "node_modules/typescript", to: "./typescript", toType: "dir" },
+        { from: "node_modules/glass-easel-template-compiler/glass_easel_template_compiler_bg.wasm", to: ".", toType: "dir" },
       ],
     }),
   ],

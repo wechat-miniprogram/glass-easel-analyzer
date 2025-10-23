@@ -12,7 +12,7 @@ export class TsService {
   constructor(root: string) {
     this.root = root
     this.services = new server.Server({
-      projectPath: root,
+      projectPath: '.',
       workingDirectory: root,
       verboseMessages: false,
       onDiagnosticsNeedUpdate: (_fullPath: string) => {
