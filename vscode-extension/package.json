@@ -163,5 +163,10 @@
   "dependencies": {
     "typescript": "~5.2.2",
     "vscode-css-languageservice": "^6.3.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "tar-fs@>=2.0.0 <2.1.4": ">=2.1.4"
+    }
   }
 }
