@@ -148,6 +148,7 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^4.2.1",
+    "glass-easel": "^0.15.1",
     "glass-easel-miniprogram-adapter": "^0.15.1",
     "glass-easel-miniprogram-template": "^0.15.1",
     "glass-easel-miniprogram-typescript": "^0.15.1",
