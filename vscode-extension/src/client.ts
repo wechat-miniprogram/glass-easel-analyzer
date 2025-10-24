@@ -39,16 +39,14 @@ export class Client {
     return this.options.backendConfigPath
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private getHomeUri(): vscode.Uri {
     return vscode.workspace.workspaceFile && vscode.workspace.workspaceFile.scheme !== 'untitled'
       ? vscode.workspace.workspaceFile
-      : vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(process.cwd())
+      : (vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(process.cwd()))
   }
 
-  // eslint-disable-next-line class-methods-use-this
   private resolveRelativePath(homeUri: vscode.Uri, p: string): vscode.Uri {
-    const uri = path.isAbsolute(p) ? vscode.Uri.file(p) : homeUri && vscode.Uri.joinPath(homeUri, p)
+    const uri = path.isAbsolute(p) ? vscode.Uri.file(p) : vscode.Uri.joinPath(homeUri, p)
     return uri
   }
 
@@ -59,20 +57,13 @@ export class Client {
     const backendConfigUrl = backendConfigPath
       ? this.resolveRelativePath(homeUri, backendConfigPath)
       : vscode.Uri.file(`${__dirname}/web.toml`)
-    if (backendConfigUrl) {
-      try {
-        backendConfig = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(backendConfigUrl),
-        )
-      } catch (err) {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        vscode.window.showErrorMessage(
-          `Failed to read glass-easel backend configuration from ${backendConfigUrl.toString()}`,
-        )
-      }
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      vscode.window.showErrorMessage(`Invalid glass-easel backend config path ${backendConfigPath}`)
+    try {
+      backendConfig = new TextDecoder().decode(await vscode.workspace.fs.readFile(backendConfigUrl))
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      vscode.window.showErrorMessage(
+        `Failed to read glass-easel backend configuration from ${backendConfigUrl.toString()}`,
+      )
     }
     const workspaceFolders = vscode.workspace.workspaceFolders?.map((x) => x.uri.toString()) ?? []
     const ignorePaths = this.options.ignorePaths.map((x) =>

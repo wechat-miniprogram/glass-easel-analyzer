@@ -53,17 +53,15 @@ export class Env {
     this.namespace = normalizeTitle(suite.title)
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async wrapExpect(id: string, f: (expect: Expect) => Promise<void>): Promise<number> {
     const expect = new Expect(id)
-    // eslint-disable-next-line no-await-in-loop
     await f(expect)
     if (expect.failureCount > 0) {
       if (OVERWRITE_SNAPSHOT === 'display') {
         // eslint-disable-next-line no-console
         console.error(
           chalk.red(
-            `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
+            `${expect.failureCount.toFixed(0)} snapshot(s) miss match at ${expect.actualOutputPath()}`,
           ),
         )
         expect.displayDiff()
@@ -71,14 +69,16 @@ export class Env {
         expect.overwriteExpected()
         // eslint-disable-next-line no-console
         console.warn(
-          chalk.yellow(`${expect.failureCount} snapshot(s) updated ${expect.snapshotPath()}`),
+          chalk.yellow(
+            `${expect.failureCount.toFixed(0)} snapshot(s) updated ${expect.snapshotPath()}`,
+          ),
         )
       } else {
         expect.writeActualAndDiff()
         // eslint-disable-next-line no-console
         console.error(
           chalk.red(
-            `${expect.failureCount} snapshot(s) miss match at ${expect.actualOutputPath()}`,
+            `${expect.failureCount.toFixed(0)} snapshot(s) miss match at ${expect.actualOutputPath()}`,
           ),
         )
       }
@@ -138,11 +138,9 @@ export class Env {
     const testName = ctx.test?.title || '(unnamed test)'
     const testId = normalizeTitle(testName)
     let snapshotFails = 0
-    // eslint-disable-next-line no-restricted-syntax
     for (const { name, args, ext } of cases) {
       const absPath = path.resolve(TEST_FIXTURE_DIR, sub, `${name}.${ext ?? extName}`)
       const uri = vscode.Uri.file(absPath)
-      // eslint-disable-next-line no-await-in-loop
       snapshotFails += await this.wrapExpect(
         `${this.namespace}/${testId}/${name}`,
         async (expect) => {
@@ -194,8 +192,7 @@ class Expect {
       const s = fs.readFileSync(this.snapshotPath(), { encoding: 'utf8' })
       this.expectedStr = s
       let cur = s.indexOf('// ====== SNAPSHOT ', 0)
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
+      for (;;) {
         if (cur < 0) break
         cur = s.indexOf('\n', cur)
         if (cur < 0) break
@@ -269,7 +266,7 @@ class Expect {
   snapshot(actual: unknown) {
     const normalized = JSON.parse(JSON.stringify(actual ?? null)) as unknown
     const actualStr = formatData(normalized)
-    this.actualOutput += `// ====== SNAPSHOT ${this.index} ======\n`
+    this.actualOutput += `// ====== SNAPSHOT ${this.index.toFixed(0)} ======\n`
     this.actualOutput += actualStr
     this.actualOutput += '\n'
     if (this.index >= this.snapshots.length) {
@@ -281,7 +278,6 @@ class Expect {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 const customObjectFormatter = (data: { [key: string]: unknown }): string | null => {
   if (typeof data.external === 'string' && data.external.startsWith('file:///')) {
     // local URL path
@@ -331,7 +327,6 @@ const formatData = (data: unknown) => {
     } else if (typeof data === 'object') {
       const customStr = customObjectFormatter(data as { [key: string]: unknown })
       if (customStr !== null) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         out += `[Object] ${JSON.stringify(customStr)}\n`
       } else {
         const id = visited.get(data)

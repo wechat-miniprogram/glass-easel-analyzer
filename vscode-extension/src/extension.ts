@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
       ev.affectsConfiguration('glass-easel-analyzer.ignorePaths') ||
       ev.affectsConfiguration('glass-easel-analyzer.analyzeOtherStylesheets')
     if (changed) {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises, promise/catch-or-return
+      // eslint-disable-next-line promise/catch-or-return
       vscode.window
         .showWarningMessage(
           'glass-easel-analyzer needs a restart due to configuration changed',

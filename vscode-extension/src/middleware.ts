@@ -72,6 +72,7 @@ vscode.workspace.registerTextDocumentContentProvider(MANAGED_URI_SCHEME, {
 })
 
 const generateInlineWxsUri = (uri: vscode.Uri, index: number) =>
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   vscode.Uri.parse(`${MANAGED_URI_SCHEME}://wxs/${encodeURIComponent(uri.toString())}.${index}.js`)
 
 const parseInlineWxsUri = (uri: vscode.Uri): [vscode.Uri, number] | null => {
@@ -92,7 +93,6 @@ export const updateInlineWxsScripts = (info: { uri: string; list: InlineWxsScrip
     const start = new vscode.Position(item.startLine, item.startColumn)
     const end = new vscode.Position(item.endLine, item.endColumn)
     const maskedContent = '\n'.repeat(start.line) + ' '.repeat(start.character) + item.content
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     vscode.workspace.openTextDocument(generateInlineWxsUri(vscode.Uri.parse(info.uri), index))
     return { index, start, end, maskedContent }
   })
@@ -151,12 +151,10 @@ export const middleware: Middleware = {
     if (path.extname(uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
       if (ls) {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         doCssValidation(uri, ls)
-          // eslint-disable-next-line promise/no-callback-in-promise
+          // eslint-disable-next-line promise/no-callback-in-promise, @typescript-eslint/no-confusing-void-expression
           .then((diag) => next(uri, diag as any))
           .catch(() => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             vscode.window.showErrorMessage('Failed to get CSS diagnostics')
           })
       } else {
@@ -180,14 +178,10 @@ export const middleware: Middleware = {
     if (path.extname(document.uri.path) === '.wxss') {
       const ls = selectCssLanguageService()
       if (ls) {
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        const ret = doFormatting(document.uri, undefined, options, ls)
-          // eslint-disable-next-line promise/no-callback-in-promise
-          .catch(() => {
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            vscode.window.showErrorMessage('Failed to format CSS')
-            return []
-          })
+        const ret = doFormatting(document.uri, undefined, options, ls).catch(() => {
+          vscode.window.showErrorMessage('Failed to format CSS')
+          return []
+        })
         return ret
       }
     }
@@ -199,7 +193,7 @@ export const middleware: Middleware = {
     if (document.languageId === 'wxml') {
       const script = searchInlineWxsScript(document.uri, position)
       if (script) {
-        const ret = await vscode.commands.executeCommand<vscode.Hover[]>(
+        const ret = await vscode.commands.executeCommand<vscode.Hover[] | undefined>(
           'vscode.executeHoverProvider',
           generateInlineWxsUri(document.uri, script.index),
           position,
@@ -363,7 +357,7 @@ export const middleware: Middleware = {
 
     // standard output
     let ret = await next(document, position, options, token)
-    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret !== null && ret !== undefined
+    const hasResult = Array.isArray(ret) ? ret.length > 0 : ret != null
 
     // try types in wxml-ts
     if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {

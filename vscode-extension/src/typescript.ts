@@ -19,7 +19,9 @@ export class TsService {
         // empty
       },
       onFirstScanDone: () => {
-        this.waitInit?.forEach((f) => f())
+        this.waitInit?.forEach((f) => {
+          f()
+        })
         this.waitInit = null
       },
     })
@@ -30,7 +32,9 @@ export class TsService {
     if (!service) return Promise.resolve(undefined)
     if (service.waitInit) {
       const ret = new Promise<TsService>((resolve) => {
-        service.waitInit?.push(() => resolve(service))
+        service.waitInit?.push(() => {
+          resolve(service)
+        })
       })
       return ret
     }
