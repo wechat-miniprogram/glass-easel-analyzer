@@ -44,7 +44,7 @@ if (
 ;['vscode-extension'].forEach((p) => {
   console.info(`Run eslint on ${p}`)
   if (
-    childProcess.spawnSync('npx', ['eslint', '-c', 'eslint.config.js', 'src'], {
+    childProcess.spawnSync('npx', ['eslint', '-c', 'eslint.config.mjs', 'src'], {
       cwd: p,
       stdio: 'inherit',
     }).status !== 0
