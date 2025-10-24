@@ -3,7 +3,10 @@ use std::ops::Range;
 use glass_easel_template_compiler::parse::Position;
 use lsp_types::FoldingRangeKind;
 use swc_common::{comments::SingleThreadedComments, BytePos};
-use swc_ecma_lexer::{token::{TokenAndSpan, TokenKind, WordKind}, Lexer, StringInput};
+use swc_ecma_lexer::{
+    token::{TokenAndSpan, TokenKind, WordKind},
+    Lexer, StringInput,
+};
 
 use crate::{context::project::FileContentMetadata, semantic::TokenType};
 
@@ -12,11 +15,17 @@ fn span_to_location(
     span: swc_common::Span,
     offset: usize,
 ) -> Range<Position> {
-    let (start_line, start_utf16_col) = file_content_metadata
-        .line_utf16_col_for_content_index(span.lo.0 as usize + offset);
-    let (end_line, end_utf16_col) = file_content_metadata
-        .line_utf16_col_for_content_index(span.hi.0 as usize + offset);
-    Position { line: start_line, utf16_col: start_utf16_col }..Position { line: end_line, utf16_col: end_utf16_col }
+    let (start_line, start_utf16_col) =
+        file_content_metadata.line_utf16_col_for_content_index(span.lo.0 as usize + offset);
+    let (end_line, end_utf16_col) =
+        file_content_metadata.line_utf16_col_for_content_index(span.hi.0 as usize + offset);
+    Position {
+        line: start_line,
+        utf16_col: start_utf16_col,
+    }..Position {
+        line: end_line,
+        utf16_col: end_utf16_col,
+    }
 }
 
 #[derive(Debug, Default)]
@@ -74,7 +83,7 @@ impl ScriptMeta {
                     let mut loc = loc;
                     loc.start.utf16_col -= 1;
                     f(TokenType::RegExp, loc, true)
-                },
+                }
                 TokenKind::Arrow
                 | TokenKind::Hash
                 | TokenKind::At
@@ -93,12 +102,12 @@ impl ScriptMeta {
                 | TokenKind::Colon
                 | TokenKind::BinOp(_)
                 | TokenKind::AssignOp(_)
-                | TokenKind::DollarLBrace 
+                | TokenKind::DollarLBrace
                 | TokenKind::QuestionMark
                 | TokenKind::PlusPlus
                 | TokenKind::MinusMinus
                 | TokenKind::Tilde => f(TokenType::Operator, loc, false),
-                | TokenKind::Shebang => f(TokenType::Comment, loc, false),
+                TokenKind::Shebang => f(TokenType::Comment, loc, false),
                 _ => {}
             }
             after_dot = match token_and_span.token.kind() {
@@ -108,7 +117,11 @@ impl ScriptMeta {
         }
 
         // collect comments
-        for pc in comments_leading.borrow().iter().chain(comments_trailing.borrow().iter()) {
+        for pc in comments_leading
+            .borrow()
+            .iter()
+            .chain(comments_trailing.borrow().iter())
+        {
             let (_pos, comments) = pc;
             for comment in comments {
                 let loc = span_to_location(file_content_metadata, comment.span, src_byte_offset);
@@ -135,16 +148,22 @@ impl ScriptMeta {
         for token_and_span in tokens {
             let kind = token_and_span.token.kind();
             match kind {
-                TokenKind::LParen
-                | TokenKind::LBracket
-                | TokenKind::LBrace => {
+                TokenKind::LParen | TokenKind::LBracket | TokenKind::LBrace => {
                     paren_stack.push(token_and_span);
                 }
                 TokenKind::RParen => {
                     while let Some(start) = paren_stack.pop() {
                         if start.token.kind() == TokenKind::LParen {
-                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
-                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            let start_loc = span_to_location(
+                                file_content_metadata,
+                                start.span,
+                                src_byte_offset,
+                            );
+                            let loc = span_to_location(
+                                file_content_metadata,
+                                token_and_span.span,
+                                src_byte_offset,
+                            );
                             f(start_loc.end..loc.start, None);
                             break;
                         }
@@ -153,8 +172,16 @@ impl ScriptMeta {
                 TokenKind::RBracket => {
                     while let Some(start) = paren_stack.pop() {
                         if start.token.kind() == TokenKind::LBracket {
-                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
-                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            let start_loc = span_to_location(
+                                file_content_metadata,
+                                start.span,
+                                src_byte_offset,
+                            );
+                            let loc = span_to_location(
+                                file_content_metadata,
+                                token_and_span.span,
+                                src_byte_offset,
+                            );
                             f(start_loc.end..loc.start, None);
                             break;
                         }
@@ -163,8 +190,16 @@ impl ScriptMeta {
                 TokenKind::RBrace => {
                     while let Some(start) = paren_stack.pop() {
                         if start.token.kind() == TokenKind::LBrace {
-                            let start_loc = span_to_location(file_content_metadata, start.span, src_byte_offset);
-                            let loc = span_to_location(file_content_metadata, token_and_span.span, src_byte_offset);
+                            let start_loc = span_to_location(
+                                file_content_metadata,
+                                start.span,
+                                src_byte_offset,
+                            );
+                            let loc = span_to_location(
+                                file_content_metadata,
+                                token_and_span.span,
+                                src_byte_offset,
+                            );
                             f(start_loc.end..loc.start, None);
                             break;
                         }
@@ -175,7 +210,11 @@ impl ScriptMeta {
         }
 
         // collect comments
-        for pc in comments_leading.borrow().iter().chain(comments_trailing.borrow().iter()) {
+        for pc in comments_leading
+            .borrow()
+            .iter()
+            .chain(comments_trailing.borrow().iter())
+        {
             let (_pos, comments) = pc;
             for comment in comments {
                 let loc = span_to_location(file_content_metadata, comment.span, src_byte_offset);

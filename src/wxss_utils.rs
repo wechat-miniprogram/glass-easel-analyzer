@@ -244,7 +244,10 @@ fn find_in_selector(selector: &Selector, pos: Position) -> Option<Token<'_>> {
 }
 
 fn find_in_rule_properties(x: &[RuleOrProperty], pos: Position) -> Option<Token<'_>> {
-    let index = x.partition_point(|x| x.location().start < pos).min(x.len()).saturating_sub(1);
+    let index = x
+        .partition_point(|x| x.location().start < pos)
+        .min(x.len())
+        .saturating_sub(1);
     match &x[index] {
         RuleOrProperty::Rule(x) => find_in_rule(x, pos),
         RuleOrProperty::Property(x) => {

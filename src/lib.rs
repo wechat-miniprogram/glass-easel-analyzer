@@ -453,8 +453,12 @@ async fn serve() -> anyhow::Result<()> {
                 lsp_sender.send(msg).unwrap();
             }
         });
-        let server_context =
-            ServerContext::new(&sender, backend_config, projects, server_context_options.clone());
+        let server_context = ServerContext::new(
+            &sender,
+            backend_config,
+            projects,
+            server_context_options.clone(),
+        );
         (server_context, sender)
     };
     logger::set_trace(

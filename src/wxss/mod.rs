@@ -1,4 +1,7 @@
-use std::{ops::Range, path::{Path, PathBuf}};
+use std::{
+    ops::Range,
+    path::{Path, PathBuf},
+};
 
 use glass_easel_template_compiler::parse::{ParseErrorLevel, Position as _Position};
 use state::{ParseState, ParseStateOwned};
@@ -73,17 +76,15 @@ impl StyleSheet {
         let mut pso = ParseStateOwned::new(src.to_string());
         let mut items: Vec<property::Property> = vec![];
         let mut unknown_tokens = vec![];
-        pso.run(|mut ps| {
-            loop {
-                if let (Some(TokenTree::Ident(..)), Some(TokenTree::Colon(..))) = ps.peek2() {
-                    if let Some(prop) = property::Property::css_parse(&mut ps) {
-                        items.push(prop);
-                        continue;
-                    }
+        pso.run(|mut ps| loop {
+            if let (Some(TokenTree::Ident(..)), Some(TokenTree::Colon(..))) = ps.peek2() {
+                if let Some(prop) = property::Property::css_parse(&mut ps) {
+                    items.push(prop);
+                    continue;
                 }
-                let Some(next) = ps.next() else { break };
-                unknown_tokens.push(next);
             }
+            let Some(next) = ps.next() else { break };
+            unknown_tokens.push(next);
         });
         (items, unknown_tokens)
     }

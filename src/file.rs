@@ -50,9 +50,16 @@ struct InlineWxsScript<'a> {
 
 fn update_inline_wxs_list(ctx: &ServerContext, project: &Project, uri: &Url, abs_path: &Path) {
     if let Ok(x) = project.get_wxml_tree(&abs_path) {
-        let scripts = x.globals.scripts.iter().filter_map(|x| {
-            match x {
-                Script::Inline { content, content_location, .. } => {
+        let scripts = x
+            .globals
+            .scripts
+            .iter()
+            .filter_map(|x| match x {
+                Script::Inline {
+                    content,
+                    content_location,
+                    ..
+                } => {
                     let script = InlineWxsScript {
                         start_line: content_location.start.line as u32,
                         start_column: content_location.start.utf16_col as u32,
@@ -63,11 +70,14 @@ fn update_inline_wxs_list(ctx: &ServerContext, project: &Project, uri: &Url, abs
                     Some(script)
                 }
                 _ => None,
-            }
-        }).collect();
+            })
+            .collect();
         log_if_err(ctx.send_notification(
             "glassEaselAnalyzer/inlineWxsScripts",
-            InlineWxsScripts { uri: uri.as_str(), list: scripts },
+            InlineWxsScripts {
+                uri: uri.as_str(),
+                list: scripts,
+            },
         ));
     }
 }
@@ -89,7 +99,9 @@ pub(crate) async fn did_open(
                     }
                     "wxss" => project.open_wxss(&abs_path, params.text_document.text),
                     "json" => project.open_json(&abs_path, params.text_document.text),
-                    "css" | "less" | "scss" => project.open_other_ss(&abs_path, params.text_document.text),
+                    "css" | "less" | "scss" => {
+                        project.open_other_ss(&abs_path, params.text_document.text)
+                    }
                     _ => return,
                 };
                 match diag {

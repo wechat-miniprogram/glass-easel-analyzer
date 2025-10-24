@@ -87,7 +87,9 @@ impl FileContentMetadata {
 
     pub(crate) fn line_utf16_col_for_content_index(&self, index: usize) -> (u32, u32) {
         let line = self.line_starts.partition_point(|x| index >= *x) - 1;
-        let utf16_col = self.content[self.line_starts[line]..index].encode_utf16().count();
+        let utf16_col = self.content[self.line_starts[line]..index]
+            .encode_utf16()
+            .count();
         (line as u32, utf16_col as u32)
     }
 }
@@ -266,7 +268,11 @@ impl Project {
     }
 
     async fn load_all_files_from_fs(&mut self) -> anyhow::Result<()> {
-        async fn rec(project: Arc<AsyncMutex<&mut Project>>, p: &Path, enable_other_ss: bool) -> anyhow::Result<()> {
+        async fn rec(
+            project: Arc<AsyncMutex<&mut Project>>,
+            p: &Path,
+            enable_other_ss: bool,
+        ) -> anyhow::Result<()> {
             let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
             dir.for_each_concurrent(None, |entry| {
                 let project = project.clone();
@@ -306,7 +312,10 @@ impl Project {
                                 let _ = project.update_json(&abs_path, content);
                             }
                             "css" | "less" | "scss" if enable_other_ss => {
-                                if tokio::fs::try_exists(abs_path.with_extension("wxml")).await.is_ok_and(|x| x) {
+                                if tokio::fs::try_exists(abs_path.with_extension("wxml"))
+                                    .await
+                                    .is_ok_and(|x| x)
+                                {
                                     let _ = project.update_wxss(&abs_path, content, true);
                                 }
                             }
@@ -404,11 +413,23 @@ impl Project {
         self.json_config_map.get(abs_path)
     }
 
-    fn update_wxss(&mut self, abs_path: &Path, content: String, is_other_ss: bool) -> anyhow::Result<Vec<Diagnostic>> {
+    fn update_wxss(
+        &mut self,
+        abs_path: &Path,
+        content: String,
+        is_other_ss: bool,
+    ) -> anyhow::Result<Vec<Diagnostic>> {
         let (ss, err_list) = StyleSheet::parse_str(abs_path, &content);
         self.file_contents.insert(
             abs_path.to_path_buf(),
-            FileContentMetadata::new(content, if is_other_ss { FileLang::OtherSs } else { FileLang::Wxss }),
+            FileContentMetadata::new(
+                content,
+                if is_other_ss {
+                    FileLang::OtherSs
+                } else {
+                    FileLang::Wxss
+                },
+            ),
         );
         self.style_sheet_map.insert(abs_path.to_path_buf(), ss);
         let diagnostics = err_list
@@ -461,13 +482,18 @@ impl Project {
         Ok(vec![])
     }
 
-    pub(crate) fn get_style_sheet(&self, abs_path: &Path, allow_other_ss: bool) -> anyhow::Result<&StyleSheet> {
+    pub(crate) fn get_style_sheet(
+        &self,
+        abs_path: &Path,
+        allow_other_ss: bool,
+    ) -> anyhow::Result<&StyleSheet> {
         let tree = self
             .style_sheet_map
             .get(abs_path)
             .or_else(|| {
                 if allow_other_ss {
-                    self.style_sheet_map.get(&abs_path.with_extension("css"))
+                    self.style_sheet_map
+                        .get(&abs_path.with_extension("css"))
                         .or_else(|| self.style_sheet_map.get(&abs_path.with_extension("less")))
                         .or_else(|| self.style_sheet_map.get(&abs_path.with_extension("scss")))
                 } else {

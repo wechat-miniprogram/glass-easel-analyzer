@@ -11,21 +11,36 @@ use glass_easel_template_compiler::parse::{
     Position, Template, TemplateStructure,
 };
 
-use crate::{utils::{exclusive_contains, inclusive_contains}, wxss::CSSParse};
+use crate::{
+    utils::{exclusive_contains, inclusive_contains},
+    wxss::CSSParse,
+};
 
 fn relative_position_from_position(full_pos: Position, base: Position) -> Position {
     if full_pos.line == base.line {
-        Position { line: 0, utf16_col: full_pos.utf16_col - base.utf16_col }
+        Position {
+            line: 0,
+            utf16_col: full_pos.utf16_col - base.utf16_col,
+        }
     } else {
-        Position { line: full_pos.line - base.line, utf16_col: full_pos.utf16_col }
+        Position {
+            line: full_pos.line - base.line,
+            utf16_col: full_pos.utf16_col,
+        }
     }
 }
 
 fn position_join(base: Position, pos: Position) -> Position {
     if pos.line == 0 {
-        Position { line: base.line, utf16_col: base.utf16_col + pos.utf16_col }
+        Position {
+            line: base.line,
+            utf16_col: base.utf16_col + pos.utf16_col,
+        }
     } else {
-        Position { line: base.line + pos.line, utf16_col: pos.utf16_col }
+        Position {
+            line: base.line + pos.line,
+            utf16_col: pos.utf16_col,
+        }
     }
 }
 
@@ -52,7 +67,8 @@ impl TokenStaticStyleValuePart {
         let rel_pos = relative_position_from_position(pos, whole_range.start);
         if !props.is_empty() {
             let index = props
-                .partition_point(|x| x.name.location.start < pos).min(props.len())
+                .partition_point(|x| x.name.location.start < pos)
+                .min(props.len())
                 .saturating_sub(1);
             let prop = &props[index];
             if inclusive_contains(&prop.location(), rel_pos) {
@@ -61,21 +77,28 @@ impl TokenStaticStyleValuePart {
                     return Self::PropertyName(name_loc, prop.name.content.to_compact_string());
                 }
                 if prop.value.is_empty() {
-                    return Self::IncompletePropertyValue(name_loc, prop.name.content.to_compact_string());
+                    return Self::IncompletePropertyValue(
+                        name_loc,
+                        prop.name.content.to_compact_string(),
+                    );
                 }
                 if prop.value.len() == 1 {
-                    return Self::SimplePropertyValue(name_loc, prop.name.content.to_compact_string());
+                    return Self::SimplePropertyValue(
+                        name_loc,
+                        prop.name.content.to_compact_string(),
+                    );
                 }
             }
         }
         if !unknown_tokens.is_empty() {
             let index = unknown_tokens
-                .partition_point(|x| x.location().start < pos).min(unknown_tokens.len())
+                .partition_point(|x| x.location().start < pos)
+                .min(unknown_tokens.len())
                 .saturating_sub(1);
             if let crate::wxss::token::TokenTree::Ident(ident) = &unknown_tokens[index] {
                 if inclusive_contains(&ident.location, rel_pos) {
                     let name_loc = location_join(whole_range.start, ident.location.clone());
-                    return Self::UnknownIdent(name_loc, ident.content.to_compact_string())
+                    return Self::UnknownIdent(name_loc, ident.content.to_compact_string());
                 }
             }
         }
@@ -562,8 +585,13 @@ pub(crate) fn find_token_in_position<'a>(template: &'a Template, pos: Position) 
                                             }
                                             if let Some(ret) = find_in_value(v, pos, scopes) {
                                                 if let Token::StaticValuePart(loc, value) = ret {
-                                                    let part = TokenStaticStyleValuePart::parse_and_find(value, loc, pos);
-                                                    return Token::StaticStyleValuePart(part, &elem);
+                                                    let part =
+                                                        TokenStaticStyleValuePart::parse_and_find(
+                                                            value, loc, pos,
+                                                        );
+                                                    return Token::StaticStyleValuePart(
+                                                        part, &elem,
+                                                    );
                                                 }
                                                 return ret;
                                             }
@@ -572,11 +600,13 @@ pub(crate) fn find_token_in_position<'a>(template: &'a Template, pos: Position) 
                                             for (_pos, name, v) in list {
                                                 if ident_contains(name, pos) {
                                                     return Token::StaticStylePropertyName(
-                                                        name,
-                                                        &elem,
+                                                        name, &elem,
                                                     );
                                                 }
-                                                if let Value::Static { value, location, .. } = v {
+                                                if let Value::Static {
+                                                    value, location, ..
+                                                } = v
+                                                {
                                                     if inclusive_contains(location, pos) {
                                                         return Token::StaticStylePropertyValue(
                                                             location.clone(),
@@ -585,7 +615,9 @@ pub(crate) fn find_token_in_position<'a>(template: &'a Template, pos: Position) 
                                                             &elem,
                                                         );
                                                     }
-                                                } else if let Some(ret) = find_in_value(v, pos, scopes) {
+                                                } else if let Some(ret) =
+                                                    find_in_value(v, pos, scopes)
+                                                {
                                                     return ret;
                                                 }
                                             }
@@ -844,7 +876,9 @@ pub(crate) fn find_token_in_position<'a>(template: &'a Template, pos: Position) 
             }
             match i {
                 Script::Inline {
-                    content, content_location, ..
+                    content,
+                    content_location,
+                    ..
                 } => {
                     if inclusive_contains(content_location, pos) {
                         return Token::ScriptContent(content, content_location.clone());

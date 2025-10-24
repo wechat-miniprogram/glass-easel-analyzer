@@ -66,7 +66,11 @@ fn reference_args_str(reference: &Option<Url>) -> String {
     }
 }
 
-fn property_name_hint(backend_config: &BackendConfig, name: &str, loc: Range<Position>) -> Option<Hover> {
+fn property_name_hint(
+    backend_config: &BackendConfig,
+    name: &str,
+    loc: Range<Position>,
+) -> Option<Hover> {
     backend_config
         .style_property
         .iter()
@@ -160,14 +164,12 @@ fn hover_wxml(
         WxmlToken::StaticStylePropertyName(x, _) => {
             property_name_hint(backend_config, &x.name, x.location.clone())
         }
-        WxmlToken::StaticStyleValuePart(part, _) => {
-            match part {
-                TokenStaticStyleValuePart::PropertyName(loc, name) => {
-                    property_name_hint(backend_config, &name, loc.clone())
-                }
-                _ => None,
+        WxmlToken::StaticStyleValuePart(part, _) => match part {
+            TokenStaticStyleValuePart::PropertyName(loc, name) => {
+                property_name_hint(backend_config, &name, loc.clone())
             }
-        }
+            _ => None,
+        },
         WxmlToken::AttributeName(attr_name, elem) => {
             let tag_name = match &elem.kind {
                 ElementKind::Normal { tag_name, .. } => Some(tag_name),
