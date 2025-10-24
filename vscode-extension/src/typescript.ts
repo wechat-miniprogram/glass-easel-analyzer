@@ -1,17 +1,82 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import * as vscode from 'vscode'
+import type * as ts from 'typescript'
 import { server } from 'glass-easel-miniprogram-typescript'
+import { resolveRelativePath } from './utils'
+
+declare const __non_webpack_require__: NodeRequire
 
 const serviceList: TsService[] = []
+
+export type TsServiceOptions = {
+  preferredTypescriptVersion: string
+  localTypescriptNodeModulePath: string
+}
+
+export class TsServiceHost {
+  private tsc?: typeof ts
+
+  constructor(homeUri: vscode.Uri, options: TsServiceOptions) {
+    if (options.preferredTypescriptVersion === 'disabled') {
+      this.tsc = undefined
+      return
+    }
+    let tsPath = path.join(__dirname, 'typescript')
+    if (
+      options.preferredTypescriptVersion === 'local' &&
+      homeUri.fsPath &&
+      vscode.workspace.isTrusted
+    ) {
+      if (options.localTypescriptNodeModulePath) {
+        tsPath = resolveRelativePath(homeUri, options.localTypescriptNodeModulePath).fsPath
+      } else {
+        const detect = path.join(homeUri.fsPath, 'node_modules', 'typescript')
+        if (fs.existsSync(detect)) {
+          tsPath = detect
+        }
+      }
+    }
+    const mainPath = path.join(tsPath, 'lib', 'typescript.js')
+    try {
+      this.tsc = __non_webpack_require__(mainPath) as typeof ts
+      // console.info(`Using TypeScript compiler from ${tsPath}`)
+    } catch (_err) {
+      this.tsc = undefined
+      vscode.window.showErrorMessage(
+        `TypeScript-related features are disabled due to failed to load TypeScript compiler from ${tsPath}`,
+      )
+    }
+  }
+
+  destroy() {
+    this.tsc = undefined
+    serviceList.length = 0
+  }
+
+  initTsService(path: string) {
+    if (!this.tsc) return
+    const service = new TsService(this.tsc, path)
+    serviceList.push(service)
+    vscode.window.visibleTextEditors.forEach((editor) => {
+      const uri = editor.document.uri
+      if (service.containsPath(uri.fsPath)) {
+        service.openFile(uri.fsPath, editor.document.getText())
+      }
+    })
+  }
+}
 
 export class TsService {
   private root: string
   private services: server.Server
   private waitInit: (() => void)[] | null = []
 
-  constructor(root: string) {
+  constructor(tsc: typeof ts, root: string) {
     this.root = root
     this.services = new server.Server({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      typescriptNodeModule: tsc as any,
       projectPath: '.',
       workingDirectory: root,
       verboseMessages: false,
@@ -41,18 +106,7 @@ export class TsService {
     return Promise.resolve(service)
   }
 
-  static initTsService(path: string) {
-    const service = new TsService(path)
-    serviceList.push(service)
-    vscode.window.visibleTextEditors.forEach((editor) => {
-      const uri = editor.document.uri
-      if (service.containsPath(uri.fsPath)) {
-        service.openFile(uri.fsPath, editor.document.getText())
-      }
-    })
-  }
-
-  private containsPath(p: string) {
+  containsPath(p: string) {
     return !path.relative(this.root, p).startsWith('..')
   }
 

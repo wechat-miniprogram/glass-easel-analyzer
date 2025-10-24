@@ -1,5 +1,4 @@
 import fs from 'node:fs'
-import path from 'node:path'
 import * as vscode from 'vscode'
 import {
   type Executable,
@@ -7,18 +6,22 @@ import {
   type LanguageClientOptions,
 } from 'vscode-languageclient/node'
 import { middleware, updateInlineWxsScripts } from './middleware'
-import { TsService } from './typescript'
+import { TsServiceHost } from './typescript'
+import { resolveRelativePath } from './utils'
 
 export type ClientOptions = {
   serverPath: string
   backendConfigPath: string
   ignorePaths: string[]
   analyzeOtherStylesheets: boolean
+  preferredTypescriptVersion: string
+  localTypescriptNodeModulePath: string
 }
 
 export class Client {
-  options: ClientOptions
-  client: LanguageClient | null = null
+  private options: ClientOptions
+  private client: LanguageClient | null = null
+  private tsServerHost: TsServiceHost | null = null
 
   constructor(options: ClientOptions) {
     this.options = options
@@ -45,17 +48,12 @@ export class Client {
       : (vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(process.cwd()))
   }
 
-  private resolveRelativePath(homeUri: vscode.Uri, p: string): vscode.Uri {
-    const uri = path.isAbsolute(p) ? vscode.Uri.file(p) : vscode.Uri.joinPath(homeUri, p)
-    return uri
-  }
-
   async start() {
     let backendConfig = ''
     const homeUri = this.getHomeUri()
     const backendConfigPath = this.getBackendConfigPath()
     const backendConfigUrl = backendConfigPath
-      ? this.resolveRelativePath(homeUri, backendConfigPath)
+      ? resolveRelativePath(homeUri, backendConfigPath)
       : vscode.Uri.file(`${__dirname}/web.toml`)
     try {
       backendConfig = new TextDecoder().decode(await vscode.workspace.fs.readFile(backendConfigUrl))
@@ -67,7 +65,7 @@ export class Client {
     }
     const workspaceFolders = vscode.workspace.workspaceFolders?.map((x) => x.uri.toString()) ?? []
     const ignorePaths = this.options.ignorePaths.map((x) =>
-      this.resolveRelativePath(homeUri, x).toString(),
+      resolveRelativePath(homeUri, x).toString(),
     )
     const command = this.getServerPath()
     const args: string[] = []
@@ -126,13 +124,16 @@ export class Client {
     this.client.onNotification('glassEaselAnalyzer/inlineWxsScripts', (msg) => {
       updateInlineWxsScripts(msg)
     })
+    this.tsServerHost = new TsServiceHost(homeUri, this.options)
     this.client.onNotification('glassEaselAnalyzer/discoveredProject', (msg: { path: string }) => {
-      TsService.initTsService(msg.path)
+      this.tsServerHost?.initTsService(msg.path)
     })
     await this.client.start()
   }
 
   async stop() {
+    this.tsServerHost?.destroy()
+    this.tsServerHost = null
     await this.client?.stop()
   }
 }

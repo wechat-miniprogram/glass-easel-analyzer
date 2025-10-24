@@ -108,6 +108,23 @@
           "type": "boolean",
           "default": false,
           "description": "Also analyze any CSS/LESS/SCSS file inside a project if corresponding WXML file can be found."
+        },
+        "glass-easel-analyzer.preferredTypescriptVersion": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "local",
+            "built-in",
+            "disabled"
+          ],
+          "default": "local",
+          "description": "The TypeScript compiler module to use. Set to `disabled` will disable TypeScript-related features."
+        },
+        "glass-easel-analyzer.localTypescriptNodeModulePath": {
+          "scope": "window",
+          "type": "string",
+          "default": "",
+          "description": "The path to the `typescript` node module, used to find the TypeScript compiler (default to auto-detect)."
         }
       }
     },
@@ -146,11 +163,11 @@
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-promise": "^7.2.1",
-    "glass-easel": "^0.15.1",
-    "glass-easel-miniprogram-adapter": "^0.15.1",
-    "glass-easel-miniprogram-template": "^0.15.1",
-    "glass-easel-miniprogram-typescript": "^0.15.1",
-    "glass-easel-template-compiler": "^0.15.1",
+    "glass-easel": "^0.15.2",
+    "glass-easel-miniprogram-adapter": "^0.15.2",
+    "glass-easel-miniprogram-template": "^0.15.2",
+    "glass-easel-miniprogram-typescript": "^0.15.2",
+    "glass-easel-template-compiler": "^0.15.2",
     "prettier": "^3.6.2",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
