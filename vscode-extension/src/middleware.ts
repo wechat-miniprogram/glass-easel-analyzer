@@ -167,7 +167,7 @@ export const middleware: Middleware = {
     if (path.extname(uri.fsPath) === '.wxml') {
       const service = await TsService.find(uri.fsPath)
       if (service) {
-        const diags = service.getDiagnostics(uri.fsPath)
+        const diags = await service.getDiagnostics(uri.fsPath)
         diagnostics.push(...diags)
       }
     }
@@ -210,7 +210,7 @@ export const middleware: Middleware = {
     if (path.extname(document.uri.fsPath) === '.wxml') {
       const service = await TsService.find(document.uri.fsPath)
       if (service) {
-        const info = service.getWxmlHoverContent(document.uri.fsPath, position)
+        const info = await service.getWxmlHoverContent(document.uri.fsPath, position)
         if (info) {
           const text = new vscode.MarkdownString()
           text.appendCodeblock(info, 'typescript')
@@ -247,7 +247,7 @@ export const middleware: Middleware = {
     if (path.extname(document.uri.fsPath) === '.wxml') {
       const service = await TsService.find(document.uri.fsPath)
       if (service) {
-        const info = service.getWxmlCompletion(document.uri.fsPath, position)
+        const info = await service.getWxmlCompletion(document.uri.fsPath, position)
         if (info) {
           const items = info.items.map((item) => {
             let kind = vscode.CompletionItemKind.Variable
@@ -303,7 +303,7 @@ export const middleware: Middleware = {
     if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
       const service = await TsService.find(document.uri.fsPath)
       if (service) {
-        const info = service.getWxmlDefinition(document.uri.fsPath, position)
+        const info = await service.getWxmlDefinition(document.uri.fsPath, position)
         ret = info
       }
     }
@@ -363,7 +363,7 @@ export const middleware: Middleware = {
     if (!hasResult && path.extname(document.uri.fsPath) === '.wxml') {
       const service = await TsService.find(document.uri.fsPath)
       if (service) {
-        const info = service.getWxmlReferences(document.uri.fsPath, position)
+        const info = await service.getWxmlReferences(document.uri.fsPath, position)
         ret = info
       }
     }

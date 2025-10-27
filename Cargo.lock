@@ -664,9 +664,9 @@ dependencies = [
 
 [[package]]
 name = "glass-easel-template-compiler"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f0d4133adcb61218c56d93133c6b30874c460f6a79c94ae0ceb21910293a14a"
+checksum = "d88d1d4cf37557ec9f0aea6fde0dd32bcd2fd20805d3ee583ca3e51c98754cbe"
 dependencies = [
  "cbindgen",
  "clap 2.34.0",

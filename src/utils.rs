@@ -97,7 +97,7 @@ pub(crate) fn location_to_lsp_range(loc: &Location) -> lsp_types::Range {
     }
 }
 
-pub(crate) fn _lsp_range_to_location(loc: &lsp_types::Range) -> Location {
+pub(crate) fn lsp_range_to_location(loc: &lsp_types::Range) -> Location {
     let start = Position {
         line: loc.start.line,
         utf16_col: loc.start.character,

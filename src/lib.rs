@@ -15,6 +15,7 @@ mod reference;
 mod semantic;
 mod symbol;
 mod utils;
+mod wxml_ts;
 mod wxml_utils;
 mod wxs;
 mod wxss;
@@ -100,6 +101,7 @@ async fn handle_request(
         ($name:expr, $f:path) => {
             if method.as_str() == $name {
                 let params = serde_json::from_value(params).map_err(|err| {
+                    log::error!("Invalid params: {:?}", err);
                     anyhow::Error::from(err).context(format!("Invalid params on {:?}", method))
                 })?;
                 let ret = $f(ctx, params).await?;
@@ -115,6 +117,10 @@ async fn handle_request(
 
     // handlers for each method
     handler!("shutdown", cleanup);
+    handler!("glassEaselAnalyzer/tmplConvertedExprRelease", wxml_ts::tmpl_converted_expr_release);
+    handler!("glassEaselAnalyzer/tmplConvertedExprCode", wxml_ts::tmpl_converted_expr_code);
+    handler!("glassEaselAnalyzer/tmplConvertedExprGetSourceLocation", wxml_ts::tmpl_converted_expr_get_source_location);
+    handler!("glassEaselAnalyzer/tmplConvertedExprGetTokenAtSourcePosition", wxml_ts::tmpl_converted_expr_get_token_at_source_position);
     handler!("textDocument/foldingRange", folding::folding_range);
     handler!("textDocument/semanticTokens/full", semantic::tokens_full);
     handler!("textDocument/semanticTokens/range", semantic::tokens_range);

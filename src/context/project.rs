@@ -6,14 +6,13 @@ use std::{
 
 use futures::StreamExt;
 use glass_easel_template_compiler::{
-    parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template},
-    TmplGroup,
+    parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplConvertedExpr, TmplGroup
 };
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
 
 use super::{FileLang, ServerContextOptions};
-use crate::wxss::{self, StyleSheet};
+use crate::wxss::{self, Location, StyleSheet};
 
 #[derive(Debug)]
 pub(crate) struct FileContentMetadata {
@@ -110,6 +109,7 @@ pub(crate) struct Project {
     file_contents: HashMap<PathBuf, FileContentMetadata>,
     json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
+    cached_wxml_converted_expr: HashMap<String, TmplConvertedExpr>,
     style_sheet_map: HashMap<PathBuf, StyleSheet>,
     enable_other_ss: bool,
 }
@@ -121,6 +121,7 @@ impl Default for Project {
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
+            cached_wxml_converted_expr: HashMap::new(),
             style_sheet_map: HashMap::new(),
             enable_other_ss: false,
         }
@@ -186,6 +187,7 @@ impl Project {
             file_contents: HashMap::new(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
+            cached_wxml_converted_expr: HashMap::new(),
             style_sheet_map: HashMap::new(),
             enable_other_ss: options.enable_other_ss,
         }
@@ -521,6 +523,7 @@ impl Project {
     fn cleanup_wxml(&mut self, abs_path: &Path) -> anyhow::Result<()> {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         self.template_group.remove_tmpl(&tmpl_path);
+        self.cached_wxml_converted_expr.remove(&tmpl_path);
         self.file_contents.remove(abs_path);
         Ok(())
     }
@@ -555,6 +558,37 @@ impl Project {
 
     pub(crate) fn list_wxml_trees(&self) -> impl Iterator<Item = (&str, &Template)> {
         self.template_group.list_template_trees()
+    }
+
+    pub(crate) fn wxml_converted_expr_release(&mut self, abs_path: &Path) -> bool {
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
+        self.cached_wxml_converted_expr.remove(&tmpl_path).is_some()
+    }
+
+    pub(crate) fn wxml_converted_expr_code(&mut self, abs_path: &Path, ts_env: &str) -> anyhow::Result<String> {
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
+        let expr = self.template_group.get_tmpl_converted_expr(&tmpl_path, ts_env)?;
+        let code = expr.code().to_string();
+        self.cached_wxml_converted_expr.insert(tmpl_path, expr);
+        Ok(code)
+    }
+
+    pub(crate) fn wxml_converted_expr_get_source_location(&self, abs_path: &Path, loc: Location) -> Option<Location> {
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
+        self.cached_wxml_converted_expr
+            .get(&tmpl_path)
+            .and_then(|x| x.get_source_location(loc))
+    }
+
+    pub(crate) fn wxml_converted_expr_get_token_at_source_position(
+        &self,
+        abs_path: &Path,
+        pos: crate::wxss::Position,
+    ) -> Option<(Location, crate::wxss::Position)> {
+        let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
+        self.cached_wxml_converted_expr
+            .get(&tmpl_path)
+            .and_then(|x| x.get_token_at_source_position(pos))
     }
 
     pub(crate) fn for_each_json_config(&self, mut f: impl FnMut(&Path, &JsonConfig)) {

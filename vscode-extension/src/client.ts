@@ -48,6 +48,11 @@ export class Client {
       : (vscode.workspace.workspaceFolders?.[0]?.uri ?? vscode.Uri.file(process.cwd()))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+  async customRequest<Req, Resp>(method: string, params: Req): Promise<Resp | undefined> {
+    return this.client?.sendRequest(`glassEaselAnalyzer/${method}`, params)
+  }
+
   async start() {
     let backendConfig = ''
     const homeUri = this.getHomeUri()
@@ -124,7 +129,7 @@ export class Client {
     this.client.onNotification('glassEaselAnalyzer/inlineWxsScripts', (msg) => {
       updateInlineWxsScripts(msg)
     })
-    this.tsServerHost = new TsServiceHost(homeUri, this.options)
+    this.tsServerHost = new TsServiceHost(homeUri, this, this.options)
     this.client.onNotification('glassEaselAnalyzer/discoveredProject', (msg: { path: string }) => {
       this.tsServerHost?.initTsService(msg.path)
     })

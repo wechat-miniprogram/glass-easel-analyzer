@@ -4,6 +4,7 @@ import * as vscode from 'vscode'
 import type * as ts from 'typescript'
 import { server } from 'glass-easel-miniprogram-typescript'
 import { resolveRelativePath } from './utils'
+import type { Client } from './client'
 
 declare const __non_webpack_require__: NodeRequire
 
@@ -16,8 +17,10 @@ export type TsServiceOptions = {
 
 export class TsServiceHost {
   private tsc?: typeof ts
+  private client: Client
 
-  constructor(homeUri: vscode.Uri, options: TsServiceOptions) {
+  constructor(homeUri: vscode.Uri, client: Client, options: TsServiceOptions) {
+    this.client = client
     if (options.preferredTypescriptVersion === 'disabled') {
       this.tsc = undefined
       return
@@ -56,7 +59,7 @@ export class TsServiceHost {
 
   initTsService(path: string) {
     if (!this.tsc) return
-    const service = new TsService(this.tsc, path)
+    const service = new TsService(this.tsc, this.client, path)
     serviceList.push(service)
     vscode.window.visibleTextEditors.forEach((editor) => {
       const uri = editor.document.uri
@@ -67,16 +70,107 @@ export class TsServiceHost {
   }
 }
 
+class TmplGroupProxyWithPath implements server.TmplConvertedExpr {
+  private tsService: TsService
+  private fullPath: string
+  private _code: string
+
+  constructor(tsService: TsService, fullPath: string, code: string) {
+    this.tsService = tsService
+    this.fullPath = fullPath
+    this._code = code
+  }
+
+  free() {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.tsService.client.customRequest('tmplConvertedExprRelease', {
+      textDocumentUri: vscode.Uri.file(this.fullPath).toString(),
+    })
+  }
+
+  code() {
+    return this._code
+  }
+
+  async getSourceLocation(
+    startLine: number,
+    startCol: number,
+    endLine: number,
+    endCol: number,
+  ): Promise<[number, number, number, number] | undefined> {
+    const resp = await this.tsService.client.customRequest<any, { src: vscode.Range }>(
+      'tmplConvertedExprGetSourceLocation',
+      {
+        textDocumentUri: vscode.Uri.file(this.fullPath).toString(),
+        loc: new vscode.Range(startLine, startCol, endLine, endCol),
+      },
+    )
+    return resp
+      ? [resp.src.start.line, resp.src.start.character, resp.src.end.line, resp.src.end.character]
+      : undefined
+  }
+
+  async getTokenAtSourcePosition(
+    line: number,
+    col: number,
+  ): Promise<[number, number, number, number, number, number] | undefined> {
+    const resp = await this.tsService.client.customRequest<
+      any,
+      { src: vscode.Range; dest: vscode.Position }
+    >('tmplConvertedExprGetTokenAtSourcePosition', {
+      textDocumentUri: vscode.Uri.file(this.fullPath).toString(),
+      pos: new vscode.Position(line, col),
+    })
+    return resp
+      ? [
+          resp.src.start.line,
+          resp.src.start.character,
+          resp.src.end.line,
+          resp.src.end.character,
+          resp.dest.line,
+          resp.dest.character,
+        ]
+      : undefined
+  }
+}
+
+class TmplGroupProxy implements server.TmplGroup {
+  private tsService: TsService
+
+  constructor(tsService: TsService) {
+    this.tsService = tsService
+  }
+
+  free() {}
+
+  addTmpl(_path: string, _tmpl_str: string) {}
+
+  async getTmplConvertedExpr(relPath: string, tsEnv: string): Promise<TmplGroupProxyWithPath> {
+    const fullPath = path.join(this.tsService.root, ...relPath.split('/'))
+    const resp = await this.tsService.client.customRequest<any, { code: string }>(
+      'tmplConvertedExprCode',
+      {
+        textDocumentUri: vscode.Uri.file(fullPath).toString(),
+        tsEnv,
+      },
+    )
+    return new TmplGroupProxyWithPath(this.tsService, fullPath, resp?.code ?? '')
+  }
+}
+
 export class TsService {
-  private root: string
+  readonly client: Client
+  readonly root: string
   private services: server.Server
   private waitInit: (() => void)[] | null = []
 
-  constructor(tsc: typeof ts, root: string) {
+  constructor(tsc: typeof ts, client: Client, root: string) {
     this.root = root
+    this.client = client
     this.services = new server.Server({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       typescriptNodeModule: tsc as any,
+      tmplGroup: new TmplGroupProxy(this),
       projectPath: '.',
       workingDirectory: root,
       verboseMessages: false,
@@ -122,8 +216,9 @@ export class TsService {
     this.services.closeFile(fullPath)
   }
 
-  getDiagnostics(fullPath: string): vscode.Diagnostic[] {
-    return this.services.analyzeWxmlFile(fullPath).map((diag) => {
+  async getDiagnostics(fullPath: string): Promise<vscode.Diagnostic[]> {
+    const diags = await this.services.analyzeWxmlFile(fullPath)
+    return diags.map((diag) => {
       const start = new vscode.Position(diag.start.line, diag.start.character)
       const end = new vscode.Position(diag.end.line, diag.end.character)
       let level = vscode.DiagnosticSeverity.Hint
@@ -141,12 +236,15 @@ export class TsService {
     })
   }
 
-  getWxmlHoverContent(fullPath: string, position: vscode.Position): string | null {
+  async getWxmlHoverContent(fullPath: string, position: vscode.Position): Promise<string | null> {
     return this.services.getWxmlHoverContent(fullPath, position)
   }
 
-  getWxmlDefinition(fullPath: string, position: vscode.Position): vscode.LocationLink[] | null {
-    const ret = this.services.getWxmlDefinition(fullPath, position)
+  async getWxmlDefinition(
+    fullPath: string,
+    position: vscode.Position,
+  ): Promise<vscode.LocationLink[] | null> {
+    const ret = await this.services.getWxmlDefinition(fullPath, position)
     if (!ret) return null
     return ret.map((link) => {
       const targetUri = vscode.Uri.file(link.targetUri)
@@ -171,8 +269,11 @@ export class TsService {
     })
   }
 
-  getWxmlReferences(fullPath: string, position: vscode.Position): vscode.Location[] | null {
-    const ret = this.services.getWxmlReferences(fullPath, position)
+  async getWxmlReferences(
+    fullPath: string,
+    position: vscode.Position,
+  ): Promise<vscode.Location[] | null> {
+    const ret = await this.services.getWxmlReferences(fullPath, position)
     if (!ret) return null
     return ret.map((link) => {
       const targetUri = vscode.Uri.file(link.targetUri)
