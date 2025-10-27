@@ -13,6 +13,6 @@ webpack.config.js
 **/eslint.config.mjs
 **/.eslintrc.js
 **/*.map
-**/*.ts
 **/.vscode-test.*
 build/**
+packages/**
