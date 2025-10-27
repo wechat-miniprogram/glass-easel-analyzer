@@ -174,7 +174,7 @@ export class TsService {
       projectPath: '.',
       workingDirectory: root,
       verboseMessages: false,
-      onDiagnosticsNeedUpdate: (_fullPath: string) => {
+      onDiagnosticsNeedUpdate(_fullPath: string) {
         // empty
       },
       onFirstScanDone: () => {
@@ -217,6 +217,7 @@ export class TsService {
   }
 
   async getDiagnostics(fullPath: string): Promise<vscode.Diagnostic[]> {
+    await this.services.waitPendingAsyncTasks()
     const diags = await this.services.analyzeWxmlFile(fullPath)
     return diags.map((diag) => {
       const start = new vscode.Position(diag.start.line, diag.start.character)
