@@ -6,7 +6,8 @@ use std::{
 
 use futures::StreamExt;
 use glass_easel_template_compiler::{
-    parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template}, TmplConvertedExpr, TmplGroup
+    parse::{ParseError, ParseErrorKind, ParseErrorLevel, Template},
+    TmplConvertedExpr, TmplGroup,
 };
 use lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
 use tokio::sync::Mutex as AsyncMutex;
@@ -565,15 +566,25 @@ impl Project {
         self.cached_wxml_converted_expr.remove(&tmpl_path).is_some()
     }
 
-    pub(crate) fn wxml_converted_expr_code(&mut self, abs_path: &Path, ts_env: &str) -> anyhow::Result<String> {
+    pub(crate) fn wxml_converted_expr_code(
+        &mut self,
+        abs_path: &Path,
+        ts_env: &str,
+    ) -> anyhow::Result<String> {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
-        let expr = self.template_group.get_tmpl_converted_expr(&tmpl_path, ts_env)?;
+        let expr = self
+            .template_group
+            .get_tmpl_converted_expr(&tmpl_path, ts_env)?;
         let code = expr.code().to_string();
         self.cached_wxml_converted_expr.insert(tmpl_path, expr);
         Ok(code)
     }
 
-    pub(crate) fn wxml_converted_expr_get_source_location(&self, abs_path: &Path, loc: Location) -> Option<Location> {
+    pub(crate) fn wxml_converted_expr_get_source_location(
+        &self,
+        abs_path: &Path,
+        loc: Location,
+    ) -> Option<Location> {
         let tmpl_path = self.unix_rel_path_or_fallback(&abs_path);
         self.cached_wxml_converted_expr
             .get(&tmpl_path)

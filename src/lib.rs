@@ -117,10 +117,22 @@ async fn handle_request(
 
     // handlers for each method
     handler!("shutdown", cleanup);
-    handler!("glassEaselAnalyzer/tmplConvertedExprRelease", wxml_ts::tmpl_converted_expr_release);
-    handler!("glassEaselAnalyzer/tmplConvertedExprCode", wxml_ts::tmpl_converted_expr_code);
-    handler!("glassEaselAnalyzer/tmplConvertedExprGetSourceLocation", wxml_ts::tmpl_converted_expr_get_source_location);
-    handler!("glassEaselAnalyzer/tmplConvertedExprGetTokenAtSourcePosition", wxml_ts::tmpl_converted_expr_get_token_at_source_position);
+    handler!(
+        "glassEaselAnalyzer/tmplConvertedExprRelease",
+        wxml_ts::tmpl_converted_expr_release
+    );
+    handler!(
+        "glassEaselAnalyzer/tmplConvertedExprCode",
+        wxml_ts::tmpl_converted_expr_code
+    );
+    handler!(
+        "glassEaselAnalyzer/tmplConvertedExprGetSourceLocation",
+        wxml_ts::tmpl_converted_expr_get_source_location
+    );
+    handler!(
+        "glassEaselAnalyzer/tmplConvertedExprGetTokenAtSourcePosition",
+        wxml_ts::tmpl_converted_expr_get_token_at_source_position
+    );
     handler!("textDocument/foldingRange", folding::folding_range);
     handler!("textDocument/semanticTokens/full", semantic::tokens_full);
     handler!("textDocument/semanticTokens/range", semantic::tokens_range);

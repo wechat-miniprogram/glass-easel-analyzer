@@ -2,7 +2,9 @@ use lsp_types::{Position, Range, Url};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    context::FileLang, utils::{location_to_lsp_range, lsp_range_to_location}, ServerContext
+    context::FileLang,
+    utils::{location_to_lsp_range, lsp_range_to_location},
+    ServerContext,
 };
 
 #[derive(Debug, Clone, Deserialize)]
@@ -22,9 +24,7 @@ pub(crate) async fn tmpl_converted_expr_release(
             move |project, abs_path, file_lang| -> anyhow::Result<bool> {
                 let success = if let Some(_) = project.cached_file_content(&abs_path) {
                     match file_lang {
-                        FileLang::Wxml => {
-                            project.wxml_converted_expr_release(&abs_path)
-                        }
+                        FileLang::Wxml => project.wxml_converted_expr_release(&abs_path),
                         _ => false,
                     }
                 } else {
@@ -62,7 +62,8 @@ pub(crate) async fn tmpl_converted_expr_code(
                 let code = if let Some(_) = project.cached_file_content(&abs_path) {
                     match file_lang {
                         FileLang::Wxml => {
-                            let code = project.wxml_converted_expr_code(&abs_path, &params.ts_env)?;
+                            let code =
+                                project.wxml_converted_expr_code(&abs_path, &params.ts_env)?;
                             Some(TmplConvertedExprCode { code })
                         }
                         _ => None,
@@ -98,7 +99,10 @@ pub(crate) async fn tmpl_converted_expr_get_source_location(
         .clone()
         .project_thread_task(
             &params.text_document_uri,
-            move |project, abs_path, file_lang| -> anyhow::Result<Option<TmplConvertedExprGetSourceLocation>> {
+            move |project,
+                  abs_path,
+                  file_lang|
+                  -> anyhow::Result<Option<TmplConvertedExprGetSourceLocation>> {
                 let src_loc = if let Some(_) = project.cached_file_content(&abs_path) {
                     match file_lang {
                         FileLang::Wxml => {
@@ -129,7 +133,7 @@ pub(crate) struct TmplConvertedExprGetTokenAtSourcePositionParams {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TmplConvertedExprGetTokenAtSourcePosition {
     src: Range,
-    dest: Position
+    dest: Position,
 }
 
 pub(crate) async fn tmpl_converted_expr_get_token_at_source_position(
@@ -140,11 +144,17 @@ pub(crate) async fn tmpl_converted_expr_get_token_at_source_position(
         .clone()
         .project_thread_task(
             &params.text_document_uri,
-            move |project, abs_path, file_lang| -> anyhow::Result<Option<TmplConvertedExprGetTokenAtSourcePosition>> {
+            move |project,
+                  abs_path,
+                  file_lang|
+                  -> anyhow::Result<Option<TmplConvertedExprGetTokenAtSourcePosition>> {
                 let ret = if let Some(_) = project.cached_file_content(&abs_path) {
                     match file_lang {
                         FileLang::Wxml => {
-                            let pos = crate::wxss::Position { line: params.pos.line, utf16_col: params.pos.character };
+                            let pos = crate::wxss::Position {
+                                line: params.pos.line,
+                                utf16_col: params.pos.character,
+                            };
                             project.wxml_converted_expr_get_token_at_source_position(&abs_path, pos)
                         }
                         _ => None,
@@ -152,11 +162,12 @@ pub(crate) async fn tmpl_converted_expr_get_token_at_source_position(
                 } else {
                     None
                 };
-                let ret = ret.map(|(src, dest)| {
-                    TmplConvertedExprGetTokenAtSourcePosition {
-                        src: location_to_lsp_range(&src),
-                        dest: Position { line: dest.line, character: dest.utf16_col },
-                    }
+                let ret = ret.map(|(src, dest)| TmplConvertedExprGetTokenAtSourcePosition {
+                    src: location_to_lsp_range(&src),
+                    dest: Position {
+                        line: dest.line,
+                        character: dest.utf16_col,
+                    },
                 });
                 Ok(ret)
             },
