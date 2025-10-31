@@ -1,11 +1,24 @@
 {
     "compilerOptions": {
-        "strict": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "noUncheckedIndexedAccess": true,
+        "useUnknownInCatchVariables": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
         "module": "es6",
-        "target": "es5",
+        "target": "es6",
         "esModuleInterop": true,
         "moduleResolution": "node",
-        "lib": ["ES6", "ES7", "DOM", "ESNext"]
+        "lib": ["ES6", "ES7", "DOM", "ESNext"],
+        "types": ["node"],
+        "declaration": false,
+        "preserveConstEnums": true,
+        "stripInternal": true
     },
     "include": [
         "**/*.ts",
