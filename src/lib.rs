@@ -118,6 +118,10 @@ async fn handle_request(
     // handlers for each method
     handler!("shutdown", cleanup);
     handler!(
+        "glassEaselAnalyzer/diagnosticsNeedsUpdate",
+        file::request_diagnostics
+    );
+    handler!(
         "glassEaselAnalyzer/tmplConvertedExprRelease",
         wxml_ts::tmpl_converted_expr_release
     );

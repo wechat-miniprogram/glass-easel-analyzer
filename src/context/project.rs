@@ -351,6 +351,11 @@ impl Project {
         self.file_contents.get(abs_path)
     }
 
+    pub(crate) fn cached_file_content_if_opened(&self, abs_path: &Path) -> Option<&FileContentMetadata> {
+        let content = self.file_contents.get(abs_path);
+        content.filter(|x| x.opened)
+    }
+
     fn update_json(&mut self, abs_path: &Path, content: String) -> anyhow::Result<Vec<Diagnostic>> {
         let mut ret = vec![];
         let json_config: Result<JsonConfig, _> = serde_json::from_str(&content);

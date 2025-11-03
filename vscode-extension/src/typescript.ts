@@ -174,8 +174,11 @@ export class TsService {
       projectPath: '.',
       workingDirectory: root,
       verboseMessages: false,
-      onDiagnosticsNeedUpdate(_fullPath: string) {
-        // empty
+      onDiagnosticsNeedUpdate: (fullPath: string) => {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        this.client.customRequest('diagnosticsNeedsUpdate', {
+          textDocumentUri: vscode.Uri.file(fullPath).toString(),
+        })
       },
       onFirstScanDone: () => {
         this.waitInit?.forEach((f) => {

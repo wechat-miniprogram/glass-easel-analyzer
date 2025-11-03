@@ -6,6 +6,7 @@ use lsp_types::{
     DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
     FileChangeType, PublishDiagnosticsParams, TextDocumentContentChangeEvent, Url,
 };
+use serde::Deserialize;
 
 use crate::{
     context::{project::Project, FileLang},
@@ -173,6 +174,55 @@ pub(crate) async fn did_change(
             .await,
     );
     Ok(())
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct RequestDiagnosticsParams {
+    text_document_uri: Url,
+}
+
+pub(crate) async fn request_diagnostics(
+    ctx: ServerContext,
+    params: RequestDiagnosticsParams,
+) -> anyhow::Result<bool> {
+    let uri = params.text_document_uri.clone();
+    ctx
+        .clone()
+        .project_thread_task(
+            &params.text_document_uri,
+            move |project, abs_path, file_lang| {
+                if let Some(content) = project.cached_file_content_if_opened(&abs_path) {
+                    let content = content.content.clone();
+                    let diag = match file_lang {
+                        FileLang::Wxml => project.open_wxml(&abs_path, content),
+                        FileLang::Wxss => project.open_wxss(&abs_path, content),
+                        FileLang::Json => project.open_json(&abs_path, content),
+                        FileLang::OtherSs => project.open_other_ss(&abs_path, content),
+                        _ => return false,
+                    };
+                    match diag {
+                        Ok(diagnostics) => {
+                            log_if_err(ctx.send_notification(
+                                "textDocument/publishDiagnostics",
+                                PublishDiagnosticsParams {
+                                    uri,
+                                    diagnostics,
+                                    version: None,
+                                },
+                            ));
+                        }
+                        Err(err) => {
+                            log::error!("{}", err);
+                        }
+                    }
+                    true
+                } else {
+                    false
+                }
+            },
+        )
+        .await
 }
 
 pub(crate) async fn did_save(
