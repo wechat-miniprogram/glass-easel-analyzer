@@ -229,6 +229,8 @@ impl Project {
             if !content_meta.opened {
                 let _ = self.load_file_from_fs(abs_path);
             }
+        } else {
+            let _ = self.load_file_from_fs(abs_path);
         }
     }
 
