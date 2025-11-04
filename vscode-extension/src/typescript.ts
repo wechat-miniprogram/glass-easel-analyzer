@@ -57,14 +57,16 @@ export class TsServiceHost {
     serviceList.length = 0
   }
 
-  initTsService(path: string) {
+  initTsService(root: string) {
     if (!this.tsc) return
-    const service = new TsService(this.tsc, this.client, path)
+    const service = new TsService(this.tsc, this.client, root)
     serviceList.push(service)
     vscode.window.visibleTextEditors.forEach((editor) => {
       const uri = editor.document.uri
-      if (service.containsPath(uri.fsPath)) {
-        service.openFile(uri.fsPath, editor.document.getText())
+      if (path.extname(uri.fsPath) === '.wxml') {
+        if (service.containsPath(uri.fsPath)) {
+          service.openFile(uri.fsPath, editor.document.getText())
+        }
       }
     })
   }

@@ -26,6 +26,20 @@
     [Object]
       insertText = [Object]
         b = 1
+        value = "global-comp>$0</global-comp>"
+      kind = "Class"
+      label = "global-comp"
+      sortText = "global-comp"
+    [Object]
+      insertText = [Object]
+        b = 1
+        value = "global-comp-rel>$0</global-comp-rel>"
+      kind = "Class"
+      label = "global-comp-rel"
+      sortText = "global-comp-rel"
+    [Object]
+      insertText = [Object]
+        b = 1
         value = "import src=\"$0\" />"
       kind = "Keyword"
       label = "import"

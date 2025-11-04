@@ -73,20 +73,20 @@ importers:
         specifier: ^7.2.1
         version: 7.2.1(eslint@9.38.0)
       glass-easel:
-        specifier: ^0.15.5
-        version: 0.15.5
+        specifier: ^0.16.0
+        version: 0.16.0
       glass-easel-miniprogram-adapter:
-        specifier: ^0.15.5
-        version: 0.15.5(glass-easel@0.15.5)
+        specifier: ^0.16.0
+        version: 0.16.0(glass-easel@0.16.0)
       glass-easel-miniprogram-template:
-        specifier: ^0.15.5
-        version: 0.15.5
+        specifier: ^0.16.0
+        version: 0.16.0
       glass-easel-miniprogram-typescript:
-        specifier: ^0.15.5
-        version: 0.15.5(typescript@5.5.4)
+        specifier: ^0.16.0
+        version: 0.16.0(typescript@5.5.4)
       glass-easel-template-compiler:
-        specifier: ^0.15.5
-        version: 0.15.5
+        specifier: ^0.16.0
+        version: 0.16.0
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -2633,23 +2633,23 @@ packages:
     dev: true
     optional: true
 
-  /glass-easel-miniprogram-adapter@0.15.5(glass-easel@0.15.5):
-    resolution: {integrity: sha512-C0WeQFSBFaLRaEtrVm5GYRZQFKEnO+BtTQ9g5Bz1CJuFNJaxEkJDfNQmg5Zz3MkCDHQP+Xwt4R68MejKZgCtBw==}
+  /glass-easel-miniprogram-adapter@0.16.0(glass-easel@0.16.0):
+    resolution: {integrity: sha512-EBpwFCFlQ5D7/yH3L/2kmR6CQl08sIFtvjUhsnucvJipkawhUyC6C9vuFO2WpuylhnZYqqiW32I5BqybcOiGNQ==}
     peerDependencies:
-      glass-easel: 0.15.5
+      glass-easel: 0.16.0
     dependencies:
-      glass-easel: 0.15.5
+      glass-easel: 0.16.0
     dev: true
 
-  /glass-easel-miniprogram-template@0.15.5:
-    resolution: {integrity: sha512-2m0VdHMOcVts3iyf6RWCbos12xDm67uhYCWwWHD8igheOoGtBTX+0Qsg2Ioh5iRpZ55vuStIFvyI2Gh+nHGgdA==}
+  /glass-easel-miniprogram-template@0.16.0:
+    resolution: {integrity: sha512-hWRkIX21D4WSEbDcc1b+FhRPak45mdhKMxQ6NMmj1ygsyC3vMqvTYsAv3O3PUuXb9+jychy2PIgfBzlLxQ+FPg==}
     dependencies:
-      glass-easel: 0.15.5
-      glass-easel-miniprogram-adapter: 0.15.5(glass-easel@0.15.5)
+      glass-easel: 0.16.0
+      glass-easel-miniprogram-adapter: 0.16.0(glass-easel@0.16.0)
     dev: true
 
-  /glass-easel-miniprogram-typescript@0.15.5(typescript@5.5.4):
-    resolution: {integrity: sha512-spzaT8Cg7EzZX0sMZXEoFes+Gr+Ap958r+POs9iaVINJG2mWHwTYS6k1UkBWQtR/AjhBqdHKMb1QMXRY4ZHZlA==}
+  /glass-easel-miniprogram-typescript@0.16.0(typescript@5.5.4):
+    resolution: {integrity: sha512-OzetABzs+cFjxd0GXof7pH/Xz0VdmUlyzeKdLlW8M0ZLC5Dg8V8FxCtPSqSMzuXa2ZuO9HTReS/9xl3umvfDbA==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
@@ -2657,16 +2657,16 @@ packages:
     dependencies:
       chalk: 4.1.2
       chokidar: 4.0.3
-      glass-easel-template-compiler: 0.15.5
+      glass-easel-template-compiler: 0.16.0
       typescript: 5.5.4
     dev: true
 
-  /glass-easel-template-compiler@0.15.5:
-    resolution: {integrity: sha512-r6dyzGFtcmg9PtgJ986YCALXVF0EXZYfMzhl7/JY6E0AHdQbqPhwTCeWFNVmlediMtvOh+tTEiNHOUAysNBgIA==}
+  /glass-easel-template-compiler@0.16.0:
+    resolution: {integrity: sha512-kzd2LPGaIGlQrZo+9WjyJoFbha6R57uOlz/JzvKZxfDSn2wdvlBYe0QgJMcjTTxuATrZ6LDV0PFKfsjEvbD7YA==}
     dev: true
 
-  /glass-easel@0.15.5:
-    resolution: {integrity: sha512-LRhstCd/f8Sm81XWMdFy6yiw6PBvs2A+zD8nFeS+xWZ9qgx3yEKpSvMfKfL3yLJVwHDeW5o0kZ/cCGjJ1ZNmEg==}
+  /glass-easel@0.16.0:
+    resolution: {integrity: sha512-lcZBkVGnTX0ANKQb9/YGVRyerGekrARM+wFK4P7ERJ90LDrfPjGz6FUdG8r0hd1ccJgdyjQSL+fhDdR+U3j8Og==}
     dev: true
 
   /glob-parent@5.1.2:

@@ -13,6 +13,16 @@
       label = "div"
       sortText = "div"
     [Object]
+      insertText = "global-comp"
+      kind = "Class"
+      label = "global-comp"
+      sortText = "global-comp"
+    [Object]
+      insertText = "global-comp-rel"
+      kind = "Class"
+      label = "global-comp-rel"
+      sortText = "global-comp-rel"
+    [Object]
       insertText = "view"
       kind = "Class"
       label = "view"
@@ -221,6 +231,16 @@
       label = "div"
       sortText = "div"
     [Object]
+      insertText = "global-comp"
+      kind = "Class"
+      label = "global-comp"
+      sortText = "global-comp"
+    [Object]
+      insertText = "global-comp-rel"
+      kind = "Class"
+      label = "global-comp-rel"
+      sortText = "global-comp-rel"
+    [Object]
       insertText = "view"
       kind = "Class"
       label = "view"
@@ -270,6 +290,16 @@
       kind = "Class"
       label = "div"
       sortText = "div"
+    [Object]
+      insertText = "global-comp"
+      kind = "Class"
+      label = "global-comp"
+      sortText = "global-comp"
+    [Object]
+      insertText = "global-comp-rel"
+      kind = "Class"
+      label = "global-comp-rel"
+      sortText = "global-comp-rel"
     [Object]
       insertText = "view"
       kind = "Class"
@@ -647,6 +677,16 @@
       kind = "Class"
       label = "div"
       sortText = "div"
+    [Object]
+      insertText = "global-comp"
+      kind = "Class"
+      label = "global-comp"
+      sortText = "global-comp"
+    [Object]
+      insertText = "global-comp-rel"
+      kind = "Class"
+      label = "global-comp-rel"
+      sortText = "global-comp-rel"
     [Object]
       insertText = "view"
       kind = "Class"

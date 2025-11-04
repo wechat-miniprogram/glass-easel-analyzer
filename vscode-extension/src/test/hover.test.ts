@@ -75,6 +75,10 @@ const defWxmlTsCases = [
     name: 'non-export',
     args: [new vscode.Position(0, 11)],
   },
+  {
+    name: 'global-using',
+    args: [new vscode.Position(0, 1), new vscode.Position(1, 1)],
+  },
 ]
 
 suite('hover', function () {

@@ -554,16 +554,14 @@ fn completion_wxml(
             let s_before = extract_str_before(file_content, loc, pos);
             if s_before.ends_with("<") {
                 let mut items: Vec<CompletionItem> = vec![];
-                if let Some(config) = project.get_json_config(abs_path) {
-                    for key in config.using_components.keys() {
-                        if Ident::is_valid(key) {
-                            items.push(snippet_completion_item(
-                                key,
-                                format!("{key}>$0</{key}>", key = key),
-                                CompletionItemKind::CLASS,
-                                false,
-                            ));
-                        }
+                for key in project.iter_using_components_keys(abs_path) {
+                    if Ident::is_valid(key) {
+                        items.push(snippet_completion_item(
+                            key,
+                            format!("{key}>$0</{key}>", key = key),
+                            CompletionItemKind::CLASS,
+                            false,
+                        ));
                     }
                 }
                 for comp in backend_config.component.iter() {
@@ -645,15 +643,13 @@ fn completion_wxml(
         },
         WxmlToken::TagName(_tag_name) => {
             let mut items: Vec<CompletionItem> = vec![];
-            if let Some(config) = project.get_json_config(abs_path) {
-                for key in config.using_components.keys() {
-                    if Ident::is_valid(key) {
-                        items.push(simple_completion_item(
-                            key,
-                            CompletionItemKind::CLASS,
-                            false,
-                        ));
-                    }
+            for key in project.iter_using_components_keys(abs_path) {
+                if Ident::is_valid(key) {
+                    items.push(simple_completion_item(
+                        key,
+                        CompletionItemKind::CLASS,
+                        false,
+                    ));
                 }
             }
             for comp in backend_config.component.iter() {

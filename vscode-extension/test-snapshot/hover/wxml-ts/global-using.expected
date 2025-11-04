@@ -1,0 +1,28 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 0
+      [Object]
+        character = 12
+        line = 0
+
+// ====== SNAPSHOT 1 ======
+[Array]
+  [Object]
+    contents = [Array]
+      [Object]
+      [Object]
+    range = [Array]
+      [Object]
+        character = 1
+        line = 1
+      [Object]
+        character = 16
+        line = 1
+

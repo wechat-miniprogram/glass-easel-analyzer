@@ -99,15 +99,16 @@ impl FileContentMetadata {
 pub(crate) struct JsonConfig {
     #[serde(default)]
     #[allow(dead_code)]
-    pub(crate) component: bool,
+    component: bool,
     #[serde(default)]
     #[allow(dead_code)]
-    pub(crate) using_components: HashMap<String, String>,
+    using_components: HashMap<String, String>,
 }
 
 pub(crate) struct Project {
     root: Option<PathBuf>,
     file_contents: HashMap<PathBuf, FileContentMetadata>,
+    app_json_config: JsonConfig,
     json_config_map: HashMap<PathBuf, JsonConfig>,
     template_group: TmplGroup,
     cached_wxml_converted_expr: HashMap<String, TmplConvertedExpr>,
@@ -120,6 +121,7 @@ impl Default for Project {
         Self {
             root: None,
             file_contents: HashMap::new(),
+            app_json_config: JsonConfig::default(),
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
             cached_wxml_converted_expr: HashMap::new(),
@@ -147,16 +149,26 @@ impl Project {
             };
             let app_json = p.join("app.json");
             let app_wxss = p.join("app.wxss");
-            let contains = tokio::fs::metadata(&app_json)
+            let has_app_json = tokio::fs::metadata(&app_json)
                 .await
                 .map(|x| x.is_file())
-                .unwrap_or(false)
-                || tokio::fs::metadata(&app_wxss)
-                    .await
-                    .map(|x| x.is_file())
-                    .unwrap_or(false);
+                .unwrap_or(false);
+            let has_app_wxss = tokio::fs::metadata(&app_wxss)
+                .await
+                .map(|x| x.is_file())
+                .unwrap_or(false);
+            let contains = has_app_json || has_app_wxss;
             if contains {
-                ret.lock().await.push(Project::new(p, options));
+                let app_json_config = if has_app_json {
+                    tokio::fs::read_to_string(&app_json)
+                        .await
+                        .ok()
+                        .and_then(|s| serde_json::from_str(&s).ok())
+                        .unwrap_or_default()
+                } else {
+                    Default::default()
+                };
+                ret.lock().await.push(Project::new(p, app_json_config, options));
                 return Ok(());
             }
             let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
@@ -182,10 +194,11 @@ impl Project {
         ret
     }
 
-    pub(crate) fn new(root: &Path, options: &ServerContextOptions) -> Self {
+    pub(crate) fn new(root: &Path, app_json_config: JsonConfig, options: &ServerContextOptions) -> Self {
         Self {
             root: Some(root.to_path_buf()),
             file_contents: HashMap::new(),
+            app_json_config,
             json_config_map: HashMap::new(),
             template_group: TmplGroup::new(),
             cached_wxml_converted_expr: HashMap::new(),
@@ -200,6 +213,10 @@ impl Project {
 
     pub(crate) fn root(&self) -> Option<&Path> {
         self.root.as_ref().map(|x| x.as_path())
+    }
+
+    fn is_app_path(&self, abs_path: &Path) -> bool {
+        self.root().filter(|root| root.join("app.json") == abs_path.with_extension("json")).is_some()
     }
 
     fn unix_rel_path_or_fallback(&self, abs_path: &Path) -> String {
@@ -363,8 +380,12 @@ impl Project {
         let json_config: Result<JsonConfig, _> = serde_json::from_str(&content);
         match json_config {
             Ok(json_config) => {
-                self.json_config_map
-                    .insert(abs_path.to_path_buf(), json_config);
+                if self.is_app_path(abs_path) {
+                    self.app_json_config = json_config;
+                } else {
+                    self.json_config_map
+                        .insert(abs_path.to_path_buf(), json_config);
+                }
             }
             Err(err) => {
                 let pos = Position::new(
@@ -380,8 +401,12 @@ impl Project {
                     severity: Some(DiagnosticSeverity::ERROR),
                     ..Default::default()
                 });
-                self.json_config_map
-                    .insert(abs_path.to_path_buf(), Default::default());
+                if self.is_app_path(abs_path) {
+                    self.app_json_config = Default::default();
+                } else {
+                    self.json_config_map
+                        .insert(abs_path.to_path_buf(), Default::default());
+                }
             }
         }
         self.file_contents.insert(
@@ -615,6 +640,13 @@ impl Project {
         }
     }
 
+    pub(crate) fn iter_using_components_keys(&self, abs_path: &Path) -> impl Iterator<Item = &str> {
+        let json_path = abs_path.with_extension("json");
+        let app_using = self.app_json_config.using_components.keys();
+        let self_using = self.get_json_config(&json_path).map(|x| x.using_components.keys()).unwrap_or_default();
+        self_using.chain(app_using).map(|x| x.as_str())
+    }
+
     pub(crate) fn get_target_component_path(
         &self,
         abs_path: &Path,
@@ -624,10 +656,17 @@ impl Project {
         let Some(json_config) = self.get_json_config(&json_path) else {
             return None;
         };
-        let Some(rel_path) = json_config.using_components.get(tag_name) else {
-            return None;
-        };
-        self.find_rel_path_for_file(&json_path, rel_path)
+        if let Some(rel_path) = json_config.using_components.get(tag_name) {
+            self.find_rel_path_for_file(&json_path, rel_path)
+        } else if let Some(p) = self.app_json_config.using_components.get(tag_name) {
+            if let Some(root) = self.root() {
+                crate::utils::join_unix_rel_path(root, p, root).ok()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     pub(crate) fn search_component_wxml_usages(
@@ -637,13 +676,32 @@ impl Project {
         mut f: impl FnMut(&Path, &Template, &str),
     ) {
         if let Some(expected_target) = self.get_target_component_path(abs_path, &tag_name) {
+            let mut global_expected_tag_names = vec![];
+            if let Some(root) = self.root() {
+                for (expected_tag_name, p) in self.app_json_config.using_components.iter() {
+                    let Some(target) = crate::utils::join_unix_rel_path(root, p, root).ok() else {
+                        continue;
+                    };
+                    if target == expected_target {
+                        global_expected_tag_names.push(expected_tag_name.clone());
+                    }
+                }
+            }
             self.for_each_json_config(|p, json_config| {
+                let source_wxml = p.with_extension("wxml");
+                for global_expected_tag_name in global_expected_tag_names.iter() {
+                    if json_config.using_components.contains_key(global_expected_tag_name) {
+                        continue;
+                    }
+                    if let Ok(template) = self.get_wxml_tree(&source_wxml) {
+                        f(&source_wxml, template, global_expected_tag_name);
+                    }
+                }
                 for (expected_tag_name, rel_path) in json_config.using_components.iter() {
                     let Some(target) = self.find_rel_path_for_file(p, &rel_path) else {
                         continue;
                     };
                     if target == expected_target {
-                        let source_wxml = p.with_extension("wxml");
                         if let Ok(template) = self.get_wxml_tree(&source_wxml) {
                             f(&source_wxml, template, &expected_tag_name);
                         }

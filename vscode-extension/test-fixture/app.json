@@ -1,5 +1,6 @@
 {
   "usingComponents": {
-    "comp2": "/ts/comp"
+    "global-comp": "/ts/comp",
+    "global-comp-rel": "ts/comp"
   }
 }
