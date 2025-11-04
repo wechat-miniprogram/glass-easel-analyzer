@@ -187,8 +187,7 @@ pub(crate) async fn request_diagnostics(
     params: RequestDiagnosticsParams,
 ) -> anyhow::Result<bool> {
     let uri = params.text_document_uri.clone();
-    ctx
-        .clone()
+    ctx.clone()
         .project_thread_task(
             &params.text_document_uri,
             move |project, abs_path, file_lang| {

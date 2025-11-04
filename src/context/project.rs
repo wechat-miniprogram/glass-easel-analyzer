@@ -168,7 +168,9 @@ impl Project {
                 } else {
                     Default::default()
                 };
-                ret.lock().await.push(Project::new(p, app_json_config, options));
+                ret.lock()
+                    .await
+                    .push(Project::new(p, app_json_config, options));
                 return Ok(());
             }
             let dir = tokio_stream::wrappers::ReadDirStream::new(tokio::fs::read_dir(p).await?);
@@ -194,7 +196,11 @@ impl Project {
         ret
     }
 
-    pub(crate) fn new(root: &Path, app_json_config: JsonConfig, options: &ServerContextOptions) -> Self {
+    pub(crate) fn new(
+        root: &Path,
+        app_json_config: JsonConfig,
+        options: &ServerContextOptions,
+    ) -> Self {
         Self {
             root: Some(root.to_path_buf()),
             file_contents: HashMap::new(),
@@ -216,7 +222,9 @@ impl Project {
     }
 
     fn is_app_path(&self, abs_path: &Path) -> bool {
-        self.root().filter(|root| root.join("app.json") == abs_path.with_extension("json")).is_some()
+        self.root()
+            .filter(|root| root.join("app.json") == abs_path.with_extension("json"))
+            .is_some()
     }
 
     fn unix_rel_path_or_fallback(&self, abs_path: &Path) -> String {
@@ -370,7 +378,10 @@ impl Project {
         self.file_contents.get(abs_path)
     }
 
-    pub(crate) fn cached_file_content_if_opened(&self, abs_path: &Path) -> Option<&FileContentMetadata> {
+    pub(crate) fn cached_file_content_if_opened(
+        &self,
+        abs_path: &Path,
+    ) -> Option<&FileContentMetadata> {
         let content = self.file_contents.get(abs_path);
         content.filter(|x| x.opened)
     }
@@ -643,7 +654,10 @@ impl Project {
     pub(crate) fn iter_using_components_keys(&self, abs_path: &Path) -> impl Iterator<Item = &str> {
         let json_path = abs_path.with_extension("json");
         let app_using = self.app_json_config.using_components.keys();
-        let self_using = self.get_json_config(&json_path).map(|x| x.using_components.keys()).unwrap_or_default();
+        let self_using = self
+            .get_json_config(&json_path)
+            .map(|x| x.using_components.keys())
+            .unwrap_or_default();
         self_using.chain(app_using).map(|x| x.as_str())
     }
 
@@ -690,7 +704,10 @@ impl Project {
             self.for_each_json_config(|p, json_config| {
                 let source_wxml = p.with_extension("wxml");
                 for global_expected_tag_name in global_expected_tag_names.iter() {
-                    if json_config.using_components.contains_key(global_expected_tag_name) {
+                    if json_config
+                        .using_components
+                        .contains_key(global_expected_tag_name)
+                    {
                         continue;
                     }
                     if let Ok(template) = self.get_wxml_tree(&source_wxml) {
