@@ -179,6 +179,13 @@ fs.writeSync(
   '# See the license in [LICENSE](https://github.com/mdn/content/blob/main/LICENSE.md).\n',
 )
 fs.writeSync(outFile, '\n')
+fs.writeSync(outFile, `[glass-easel-backend-config]
+name = "web"
+description = "Backend configuration for web environment."
+build-timestamp = ${Math.floor(Date.now() / 1000)}
+major-version = 1
+minor-version = 0
+`)
 
 // enumerate global attributes
 fs.writeSync(outFile, `\n`)

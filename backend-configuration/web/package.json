@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@types/node": "~22.9.0",
+    "ts-node": "^10.9.2"
+  },
+  "scripts": {
+    "init-dev": "git submodule update --init mdn",
+    "update-mdn": "git submodule update --remote --init mdn",
+    "build": "ts-node extract.ts"
+  }
+}

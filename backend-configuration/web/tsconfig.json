@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "CommonJS",
+    "target": "es2020",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "lib": ["ES6", "ES7", "DOM", "ESNext"],
+    "types": ["node"],
+    "preserveConstEnums": true,
+    "stripInternal": true
+  },
+  "include": [
+      "**/*.ts"
+  ]
+}

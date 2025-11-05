@@ -4,6 +4,8 @@ use lsp_types::Url;
 #[serde(rename_all = "kebab-case")]
 pub(crate) struct BackendConfig {
     #[serde(default)]
+    pub(crate) glass_easel_backend_config: GlassEaselBackendConfig,
+    #[serde(default)]
     pub(crate) element: Vec<ElementConfig>,
     #[serde(default)]
     pub(crate) component: Vec<ComponentConfig>,
@@ -21,6 +23,21 @@ pub(crate) struct BackendConfig {
     pub(crate) pseudo_element: Vec<PseudoElementConfig>,
     #[serde(default)]
     pub(crate) style_property: Vec<StylePropertyConfig>,
+}
+
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) struct GlassEaselBackendConfig {
+    #[serde(default)]
+    pub(crate) name: String,
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub(crate) description: String,
+    #[serde(default)]
+    pub(crate) major_version: u32,
+    #[serde(default)]
+    #[allow(dead_code)]
+    pub(crate) minor_version: u32,
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -108,6 +125,18 @@ pub(crate) struct EventConfig {
 }
 
 impl BackendConfig {
+    pub(crate) fn parse_str(s: &str) -> anyhow::Result<Self> {
+        let config: Self = toml::from_str(s)?;
+        let major_version = config.glass_easel_backend_config.major_version;
+        if major_version < 1 {
+            log::warn!("This backend configuration may be problematic. Please check the updates of it.");
+        } else if major_version > 1 {
+            Err(anyhow::Error::msg("The backend configuration is designed for a later version of glass-easel-analyzer."))?;
+        }
+        log::info!("Loaded backend configuration: {}", config.glass_easel_backend_config.name);
+        Ok(config)
+    }
+
     pub(crate) fn search_element(&self, tag_name: &str) -> Option<&ElementConfig> {
         self.element.iter().find(|x| x.tag_name == tag_name)
     }

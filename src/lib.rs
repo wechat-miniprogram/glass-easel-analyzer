@@ -400,32 +400,6 @@ async fn serve() -> anyhow::Result<()> {
     };
     connection.initialize_finish(initialize_id, serde_json::to_value(initialize_result)?)?;
 
-    // parse backend configuration
-    let mut backend_config_failure = None;
-    let has_backend_config = !initialize_params
-        .initialization_options
-        .backend_config
-        .is_empty();
-    let backend_config = if !has_backend_config {
-        Default::default()
-    } else {
-        match toml::from_str(&initialize_params.initialization_options.backend_config) {
-            Ok(x) => x,
-            Err(err) => {
-                backend_config_failure = Some(err);
-                Default::default()
-            }
-        }
-    };
-    tokio::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-        if !has_backend_config {
-            log::warn!("Missing glass-easel backend configuration");
-        } else if let Some(err) = backend_config_failure {
-            log::error!("Failed to parse glass-easel backend configuration: {}", err);
-        }
-    });
-
     // register capabilities
     let registrations = lsp_types::RegistrationParams {
         registrations: vec![lsp_types::Registration {
@@ -462,6 +436,24 @@ async fn serve() -> anyhow::Result<()> {
         }
     }
 
+    // parse backend configuration
+    let has_backend_config = !initialize_params
+        .initialization_options
+        .backend_config
+        .is_empty();
+    let backend_config = if !has_backend_config {
+        log::warn!("Missing glass-easel backend configuration");
+        Default::default()
+    } else {
+        match BackendConfig::parse_str(&initialize_params.initialization_options.backend_config) {
+            Ok(x) => x,
+            Err(err) => {
+                log::error!("Failed to parse glass-easel backend configuration: {}", err);
+                Default::default()
+            }
+        }
+    };
+
     // generate a `ServerContext`
     let Connection {
         sender: lsp_sender,
@@ -483,6 +475,8 @@ async fn serve() -> anyhow::Result<()> {
         );
         (server_context, sender)
     };
+
+    // from this on the log can be shown in the lsp client
     logger::set_trace(
         server_context.clone(),
         lsp_types::SetTraceParams {

@@ -1,3 +1,4 @@
 packages:
   - 'vscode-extension'
   - 'ts-server-bundled'
+  - 'backend-configuration/web'

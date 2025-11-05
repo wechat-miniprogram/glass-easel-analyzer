@@ -2,6 +2,12 @@
 # The content is published under [CC-BY-SA 2.5](https://creativecommons.org/licenses/by-sa/2.5/).
 # See the license in [LICENSE](https://github.com/mdn/content/blob/main/LICENSE.md).
 
+[glass-easel-backend-config]
+name = "web"
+description = "Backend configuration for web environment."
+build-timestamp = 1762329893
+major-version = 1
+minor-version = 0
 
 [[global-attribute]]
 name = "accesskey"
