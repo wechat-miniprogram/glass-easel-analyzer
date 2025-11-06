@@ -183,7 +183,7 @@ fn hover_wxml(
                 } else if let Some(prop) =
                     backend_config.search_property(&tag_name.name, &attr_name.name)
                 {
-                    let PropertyConfig {
+                    let AttributeConfig {
                         name,
                         ty,
                         description,
@@ -207,13 +207,20 @@ fn hover_wxml(
                 {
                     let AttributeConfig {
                         name,
+                        ty,
                         description,
                         reference,
                         ..
                     } = attr;
+                    let ty_args = if ty.len() > 0 {
+                        format!(": {}", ty)
+                    } else {
+                        format!("")
+                    };
                     md_str_hover_contents(format!(
-                        "**{}** *attribute*\n\n{}{}",
+                        "**{}**{} *attribute*\n\n{}{}",
                         name,
+                        ty_args,
                         description,
                         reference_args_str(reference)
                     ))

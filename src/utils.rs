@@ -14,6 +14,22 @@ pub(crate) fn log_if_err<T>(r: anyhow::Result<T>) {
     }
 }
 
+pub(crate) fn dash_to_camel(s: &str) -> String {
+    let mut camel_name = String::new();
+    let mut next_upper = false;
+    for c in s.chars() {
+        if c == '-' {
+            next_upper = true;
+        } else if next_upper {
+            next_upper = false;
+            camel_name.push(c.to_ascii_uppercase());
+        } else {
+            camel_name.push(c);
+        }
+    }
+    camel_name
+}
+
 pub(crate) fn generate_non_fs_fake_path(uri: &Url) -> PathBuf {
     let mut p = PathBuf::from("/");
     p.push(uri.scheme());

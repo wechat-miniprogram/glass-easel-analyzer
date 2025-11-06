@@ -1,0 +1,43 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    message = "Property 'propB' does not exist on type 'PropertyValues<Empty & Record<\"propA\", component_params_PropertyOption<NumberConstructor, number>>>'. Did you mean 'propA'?"
+    range = [Array]
+      [Object]
+        character = 6
+        line = 0
+      [Object]
+        character = 12
+        line = 0
+    severity = "Error"
+  [Object]
+    message = "Property 'def' does not exist on type 'AllData<Empty & { abc: number; }, Empty>'."
+    range = [Array]
+      [Object]
+        character = 20
+        line = 0
+      [Object]
+        character = 23
+        line = 0
+    severity = "Error"
+  [Object]
+    message = "Type 'string' is not assignable to type 'number'."
+    range = [Array]
+      [Object]
+        character = 6
+        line = 1
+      [Object]
+        character = 14
+        line = 1
+    severity = "Error"
+  [Object]
+    message = "Type 'number' is not assignable to type 'string'."
+    range = [Array]
+      [Object]
+        character = 5
+        line = 2
+      [Object]
+        character = 17
+        line = 2
+    severity = "Error"
+

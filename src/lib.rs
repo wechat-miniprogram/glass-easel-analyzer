@@ -242,6 +242,12 @@ struct InitializationOptions {
 
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
+struct TemplateBackendConfigInfo {
+    content: String,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ProjectInfo<'a> {
     path: &'a str,
 }
@@ -423,19 +429,6 @@ async fn serve() -> anyhow::Result<()> {
         params: serde_json::to_value(registrations)?,
     }))?;
 
-    // send initialized projects
-    for project in projects.iter() {
-        if let Some(path) = project.root().and_then(|x| x.to_str()) {
-            connection
-                .sender
-                .send(generate_notification(
-                    "glassEaselAnalyzer/discoveredProject",
-                    ProjectInfo { path },
-                ))
-                .unwrap();
-        }
-    }
-
     // parse backend configuration
     let has_backend_config = !initialize_params
         .initialization_options
@@ -453,6 +446,27 @@ async fn serve() -> anyhow::Result<()> {
             }
         }
     };
+
+    // send initialized projects
+    let template_backend_config = backend_config.generate_template_backend_config();
+    connection
+        .sender
+        .send(generate_notification(
+            "glassEaselAnalyzer/templateBackendConfig",
+            TemplateBackendConfigInfo { content: template_backend_config },
+        ))
+        .unwrap();
+    for project in projects.iter() {
+        if let Some(path) = project.root().and_then(|x| x.to_str()) {
+            connection
+                .sender
+                .send(generate_notification(
+                    "glassEaselAnalyzer/discoveredProject",
+                    ProjectInfo { path },
+                ))
+                .unwrap();
+        }
+    }
 
     // generate a `ServerContext`
     let Connection {

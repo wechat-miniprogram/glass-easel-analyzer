@@ -22,6 +22,7 @@ export class Client {
   private options: ClientOptions
   private client: LanguageClient | null = null
   private tsServerHost: TsServiceHost | null = null
+  templateBackendConfig = ''
 
   constructor(options: ClientOptions) {
     this.options = options
@@ -38,8 +39,16 @@ export class Client {
     return this.options.serverPath
   }
 
-  private getBackendConfigPath(): string {
+  getBackendConfigPath(): string {
     return this.options.backendConfigPath
+  }
+
+  getBackendConfigUrl(): vscode.Uri {
+    const homeUri = this.getHomeUri()
+    const backendConfigPath = this.getBackendConfigPath()
+    return backendConfigPath
+      ? resolveRelativePath(homeUri, backendConfigPath)
+      : vscode.Uri.file(`${__dirname}/web.toml`)
   }
 
   private getHomeUri(): vscode.Uri {
@@ -56,10 +65,7 @@ export class Client {
   async start() {
     let backendConfig = ''
     const homeUri = this.getHomeUri()
-    const backendConfigPath = this.getBackendConfigPath()
-    const backendConfigUrl = backendConfigPath
-      ? resolveRelativePath(homeUri, backendConfigPath)
-      : vscode.Uri.file(`${__dirname}/web.toml`)
+    const backendConfigUrl = this.getBackendConfigUrl()
     try {
       backendConfig = new TextDecoder().decode(await vscode.workspace.fs.readFile(backendConfigUrl))
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -130,9 +136,18 @@ export class Client {
       updateInlineWxsScripts(msg)
     })
     this.tsServerHost = new TsServiceHost(homeUri, this, this.options)
-    this.client.onNotification('glassEaselAnalyzer/discoveredProject', (msg: { path: string }) => {
-      this.tsServerHost?.initTsService(msg.path)
-    })
+    this.client.onNotification(
+      'glassEaselAnalyzer/templateBackendConfig',
+      (msg: { content: string }) => {
+        this.templateBackendConfig = msg.content
+      },
+    )
+    this.client.onNotification(
+      'glassEaselAnalyzer/discoveredProject',
+      (msg: { path: string; templateBackendConfig: string }) => {
+        this.tsServerHost?.initTsService(msg.path)
+      },
+    )
     await this.client.start()
   }
 

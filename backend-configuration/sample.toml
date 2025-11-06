@@ -7,6 +7,7 @@ minor-version = 0
 
 [[global-attribute]]
 name = "tabindex"
+ty = "number"
 description = "The tab-index of the element."
 
 
@@ -27,6 +28,7 @@ reference = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/div"
 
 [[element.attribute]]
 name = "aria-checked"
+ty = "string"
 reference = "https://example.com/attribute/aria-checked"
 
 [[element.attribute.value-option]]

@@ -175,6 +175,8 @@ export class TsService {
       tmplGroup: new TmplGroupProxy(this),
       projectPath: '.',
       workingDirectory: root,
+      templateBackendConfigPath: client.getBackendConfigUrl().fsPath + '.d.ts',
+      templateBackendConfig: client.templateBackendConfig,
       verboseMessages: false,
       onDiagnosticsNeedUpdate: (fullPath: string) => {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises

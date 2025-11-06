@@ -20,6 +20,7 @@ const wxmlCases = [
   'template',
   'wxs',
   'wxs-inline',
+  'special',
 ]
 
 const wxssCases = [

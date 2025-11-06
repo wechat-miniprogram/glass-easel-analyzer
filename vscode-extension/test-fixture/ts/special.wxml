@@ -1,1 +1,3 @@
 <comp prop-b="a">{{ def }}</comp>
+<view tabindex="{{ 'abc' }}" />
+<div aria-checked="{{ 123 }}" />

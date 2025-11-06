@@ -1,4 +1,8 @@
+use std::fmt::Write;
+
 use lsp_types::Url;
+
+use crate::utils::dash_to_camel;
 
 #[derive(Debug, Clone, Default, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -61,6 +65,8 @@ pub(crate) struct ElementConfig {
 pub(crate) struct AttributeConfig {
     pub(crate) name: String,
     #[serde(default)]
+    pub(crate) ty: String,
+    #[serde(default)]
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,
@@ -79,25 +85,9 @@ pub(crate) struct ComponentConfig {
     #[serde(default)]
     pub(crate) reference: Option<Url>,
     #[serde(default)]
-    pub(crate) property: Vec<PropertyConfig>,
+    pub(crate) property: Vec<AttributeConfig>,
     #[serde(default)]
     pub(crate) event: Vec<EventConfig>,
-    #[serde(default)]
-    pub(crate) deprecated: bool,
-}
-
-#[derive(Debug, Clone, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub(crate) struct PropertyConfig {
-    pub(crate) name: String,
-    #[serde(default)]
-    pub(crate) ty: String,
-    #[serde(default)]
-    pub(crate) description: String,
-    #[serde(default)]
-    pub(crate) reference: Option<Url>,
-    #[serde(default)]
-    pub(crate) value_option: Vec<ValueOption>,
     #[serde(default)]
     pub(crate) deprecated: bool,
 }
@@ -161,9 +151,12 @@ impl BackendConfig {
         &self,
         tag_name: &str,
         attr_name: &str,
-    ) -> Option<&PropertyConfig> {
+    ) -> Option<&AttributeConfig> {
         let comp = self.search_component(tag_name)?;
-        comp.property.iter().find(|x| x.name == attr_name)
+        comp.property
+            .iter()
+            .chain(self.global_attribute.iter())
+            .find(|x| x.name == attr_name)
     }
 
     pub(crate) fn list_attributes(
@@ -177,9 +170,9 @@ impl BackendConfig {
     pub(crate) fn list_properties(
         &self,
         tag_name: &str,
-    ) -> Option<impl Iterator<Item = &PropertyConfig>> {
+    ) -> Option<impl Iterator<Item = &AttributeConfig>> {
         let comp = self.search_component(tag_name)?;
-        Some(comp.property.iter())
+        Some(comp.property.iter().chain(self.global_attribute.iter()))
     }
 
     pub(crate) fn search_global_event(&self, event_name: &str) -> Option<&EventConfig> {
@@ -300,4 +293,65 @@ pub(crate) struct StylePropertyConfig {
     pub(crate) description: String,
     #[serde(default)]
     pub(crate) reference: Option<Url>,
+}
+
+impl BackendConfig {
+    pub(crate) fn extract_template_backend_config(&self, mut w: impl Write) -> std::fmt::Result {
+        let config = self;
+
+        // write header
+        writeln!(
+            w,
+            r#"export type GlassEaselTemplateBackendConfig = {{
+    name: {:?}
+    description: {:?}
+    majorVersion: {}
+    minorVersion: {}
+}}
+"#,
+            config.glass_easel_backend_config.name,
+            config.glass_easel_backend_config.description,
+            config.glass_easel_backend_config.major_version,
+            config.glass_easel_backend_config.minor_version,
+        )?;
+
+        // write global attributes
+        writeln!(w, r#"type GlobalAttributes = {{"#)?;
+        for attr in &config.global_attribute {
+            let ty = if attr.ty.is_empty() { "any" } else { &attr.ty };
+            writeln!(w, r#"{:?}: {}"#, dash_to_camel(&attr.name), ty)?;
+        }
+        writeln!(w, r#"}}"#)?;
+
+        // write properties per component
+        writeln!(w, r#"export type ComponentProperties = {{"#)?;
+        for elem in &config.element {
+            writeln!(w, r#"{:?}: GlobalAttributes & {{"#, elem.tag_name)?;
+            for attr in &elem.attribute {
+                let ty = if attr.ty.is_empty() { "any" } else { &attr.ty };
+                writeln!(w, r#"{:?}: {}"#, dash_to_camel(&attr.name), ty)?;
+            }
+            writeln!(w, r#"}}"#)?;
+        }
+        for comp in &config.component {
+            writeln!(w, r#"{:?}: GlobalAttributes & {{"#, comp.tag_name)?;
+            for prop in &comp.property {
+                let ty = if prop.ty.is_empty() { "any" } else { &prop.ty };
+                writeln!(w, r#"{:?}: {}"#, dash_to_camel(&prop.name), ty)?;
+            }
+            writeln!(w, r#"}}"#)?;
+        }
+        writeln!(w, r#"}}"#)?;
+        Ok(())
+    }
+
+    pub(crate) fn generate_template_backend_config(&self) -> String {
+        let mut template_backend_config = String::new();
+        self.extract_template_backend_config(&mut template_backend_config)
+            .unwrap_or_else(|err| {
+                template_backend_config = String::new();
+                log::error!("Failed to extract template backend configuration: {}", err);
+            });
+        template_backend_config
+    }
 }

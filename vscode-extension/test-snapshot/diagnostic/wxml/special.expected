@@ -1,0 +1,25 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    code = 65567
+    message = "invalid end tag"
+    range = [Array]
+      [Object]
+        character = 2
+        line = 3
+      [Object]
+        character = 4
+        line = 3
+    severity = "Warning"
+  [Object]
+    code = 65537
+    message = "unexpected character"
+    range = [Array]
+      [Object]
+        character = 0
+        line = 4
+      [Object]
+        character = 6
+        line = 4
+    severity = "Error"
+

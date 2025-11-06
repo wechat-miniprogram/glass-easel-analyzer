@@ -1,0 +1,15 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    code = "fontFaceProperties"
+    message = "@font-face rule must define 'src' and 'font-family' properties"
+    range = [Object]
+      end = [Object]
+        character = 1
+        line = 2
+      start = [Object]
+        character = 0
+        line = 0
+    severity = 2
+    source = "wxss"
+

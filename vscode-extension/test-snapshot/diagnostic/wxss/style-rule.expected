@@ -1,0 +1,27 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    code = "emptyRules"
+    message = "Do not use empty rulesets"
+    range = [Object]
+      end = [Object]
+        character = 3
+        line = 9
+      start = [Object]
+        character = 0
+        line = 9
+    severity = 2
+    source = "wxss"
+  [Object]
+    code = "emptyRules"
+    message = "Do not use empty rulesets"
+    range = [Object]
+      end = [Object]
+        character = 2
+        line = 11
+      start = [Object]
+        character = 0
+        line = 11
+    severity = 2
+    source = "wxss"
+

@@ -70,6 +70,13 @@
     [Object]
       insertText = [Object]
         b = 1
+        value = "change:${1|tabindex|}=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "change:"
+      sortText = "change:"
+    [Object]
+      insertText = [Object]
+        b = 1
         value = "class=\"$0\""
       kind = "Keyword"
       label = "class"
@@ -119,6 +126,13 @@
     [Object]
       insertText = [Object]
         b = 1
+        value = "model:${1|tabindex|}=\"{{ $0 }}\""
+      kind = "Keyword"
+      label = "model:"
+      sortText = "model:"
+    [Object]
+      insertText = [Object]
+        b = 1
         value = "mut-bind:${1|hoverend,canceltap|}=\"$0\""
       kind = "Keyword"
       label = "mut-bind:"
@@ -151,6 +165,13 @@
       kind = "Keyword"
       label = "style:"
       sortText = "style:"
+    [Object]
+      insertText = [Object]
+        b = 1
+        value = "tabindex=\"$0\""
+      kind = "Variable"
+      label = "tabindex"
+      sortText = "tabindex"
     [Object]
       insertText = [Object]
         b = 1

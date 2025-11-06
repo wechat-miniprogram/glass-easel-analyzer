@@ -1,0 +1,27 @@
+// ====== SNAPSHOT 0 ======
+[Array]
+  [Object]
+    code = "css-lcurlyexpected"
+    message = "{ expected"
+    range = [Object]
+      end = [Object]
+        character = 21
+        line = 8
+      start = [Object]
+        character = 19
+        line = 8
+    severity = 1
+    source = "wxss"
+  [Object]
+    code = "css-lcurlyexpected"
+    message = "{ expected"
+    range = [Object]
+      end = [Object]
+        character = 13
+        line = 12
+      start = [Object]
+        character = 11
+        line = 12
+    severity = 1
+    source = "wxss"
+
