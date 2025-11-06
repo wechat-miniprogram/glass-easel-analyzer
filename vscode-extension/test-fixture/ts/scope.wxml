@@ -1,0 +1,11 @@
+<wxs module="modA">
+  exports.func = function() {
+    return 'abc'
+  }
+</wxs>
+
+<view wx:for="{{ modA.func() }}" wx:for-item="v"></view>
+
+<view wx:for="{{ arr }}">{{ item }}</view>
+
+<view let:s="{{ abc }}">{{ s }}</view>

@@ -1,1 +1,1 @@
-<view>{{ def }}</view>
+<view>a {{ abc > 50 ? 'b' : 'c' }}</view>

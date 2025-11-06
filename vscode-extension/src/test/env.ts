@@ -34,7 +34,7 @@ const wxssCases = [
   'unknown-at-rule',
 ]
 
-const wxmlTsCases = ['basic', 'special', 'non-export', 'global-using']
+const wxmlTsCases = ['basic', 'special', 'non-export', 'global-using', 'scope']
 
 const EXTENSION_DIR = path.resolve(__dirname, '..', '..')
 const TEST_FIXTURE_DIR = path.resolve(EXTENSION_DIR, 'test-fixture')
