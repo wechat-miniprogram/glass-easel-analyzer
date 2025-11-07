@@ -10,6 +10,10 @@ fn main() -> anyhow::Result<()> {
         .enable_all()
         .build()
         .unwrap();
-    runtime.block_on(async { glass_easel_analyzer::run().await })?;
-    Ok(())
+    if let Err(err) = runtime.block_on(async { glass_easel_analyzer::run().await }) {
+        eprintln!("{}", err);
+        std::process::exit(1);
+    } else {
+        std::process::exit(0);
+    }
 }

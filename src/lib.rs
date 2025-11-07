@@ -527,6 +527,9 @@ async fn serve() -> anyhow::Result<()> {
                         // log::warn!("Missing LSP response handler for {:?}", id);
                     }
                     Message::Notification(note) => {
+                        if note.method == "exit" {
+                            break;
+                        }
                         if let Err(err) = handle_notification(ctx, note).await {
                             log::error!("{}", err);
                         }
@@ -536,7 +539,13 @@ async fn serve() -> anyhow::Result<()> {
         });
         tokio::task::spawn_blocking(move || {
             while let Ok(msg) = lsp_receiver.recv() {
+                let need_exit = if let Message::Notification(note) = &msg {
+                    note.method == "exit"
+                } else {
+                    false
+                };
                 sender.send(msg).unwrap();
+                if need_exit { break; }
             }
         })
     };

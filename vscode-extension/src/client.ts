@@ -83,11 +83,7 @@ export class Client {
     const run: Executable = {
       command,
       args,
-      options: {
-        env: {
-          RUST_BACKTRACE: '1',
-        },
-      },
+      options: {},
     }
     const debug: Executable = {
       command,
@@ -155,5 +151,6 @@ export class Client {
     this.tsServerHost?.destroy()
     this.tsServerHost = null
     await this.client?.stop()
+    await this.client?.dispose()
   }
 }
