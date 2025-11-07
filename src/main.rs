@@ -4,7 +4,7 @@ use clap::Parser;
 #[clap(version, about)]
 struct Args {}
 
-fn main() -> anyhow::Result<()> {
+fn main() {
     let _args = Args::parse();
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
