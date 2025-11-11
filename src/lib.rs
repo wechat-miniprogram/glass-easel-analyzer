@@ -453,7 +453,9 @@ async fn serve() -> anyhow::Result<()> {
         .sender
         .send(generate_notification(
             "glassEaselAnalyzer/templateBackendConfig",
-            TemplateBackendConfigInfo { content: template_backend_config },
+            TemplateBackendConfigInfo {
+                content: template_backend_config,
+            },
         ))
         .unwrap();
     for project in projects.iter() {
@@ -545,7 +547,9 @@ async fn serve() -> anyhow::Result<()> {
                     false
                 };
                 sender.send(msg).unwrap();
-                if need_exit { break; }
+                if need_exit {
+                    break;
+                }
             }
         })
     };

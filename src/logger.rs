@@ -1,4 +1,4 @@
-use std::sync::{LazyLock, RwLock, Mutex};
+use std::sync::{LazyLock, Mutex, RwLock};
 
 use log::Log;
 use lsp_types::{LogMessageParams, MessageType, SetTraceParams, ShowMessageParams, TraceValue};
@@ -27,7 +27,9 @@ impl GlobalLspLogger {
         let old = std::mem::replace(&mut *inner, LspLoggerKind::Normal(logger));
         match old {
             LspLoggerKind::Cache(cache) => {
-                let LspLoggerKind::Normal(inner) = &*inner else { unreachable!() };
+                let LspLoggerKind::Normal(inner) = &*inner else {
+                    unreachable!()
+                };
                 for log_message in cache.lock().unwrap().drain(..) {
                     inner.log(log_message);
                 }

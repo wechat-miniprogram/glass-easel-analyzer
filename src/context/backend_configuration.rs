@@ -119,11 +119,16 @@ impl BackendConfig {
         let config: Self = toml::from_str(s)?;
         let major_version = config.glass_easel_backend_config.major_version;
         if major_version < 1 {
-            log::warn!("This backend configuration may be problematic. Please check the updates of it.");
+            log::warn!(
+                "This backend configuration may be problematic. Please check the updates of it."
+            );
         } else if major_version > 1 {
             Err(anyhow::Error::msg("The backend configuration is designed for a later version of glass-easel-analyzer."))?;
         }
-        log::info!("Loaded backend configuration: {}", config.glass_easel_backend_config.name);
+        log::info!(
+            "Loaded backend configuration: {}",
+            config.glass_easel_backend_config.name
+        );
         Ok(config)
     }
 
