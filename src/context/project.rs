@@ -149,6 +149,7 @@ impl Project {
             };
             let app_json = p.join("app.json");
             let app_wxss = p.join("app.wxss");
+            let plugin_json = p.join("plugin.json");
             let has_app_json = tokio::fs::metadata(&app_json)
                 .await
                 .map(|x| x.is_file())
@@ -157,13 +158,30 @@ impl Project {
                 .await
                 .map(|x| x.is_file())
                 .unwrap_or(false);
-            let contains = has_app_json || has_app_wxss;
+            let has_plugin_json = tokio::fs::metadata(&plugin_json)
+                .await
+                .map(|x| x.is_file())
+                .unwrap_or(false);
+            let contains = has_app_json || has_app_wxss || has_plugin_json;
             if contains {
                 let app_json_config = if has_app_json {
                     tokio::fs::read_to_string(&app_json)
                         .await
                         .ok()
                         .and_then(|s| serde_json::from_str(&s).ok())
+                        .unwrap_or_default()
+                } else if has_plugin_json {
+                    tokio::fs::read_to_string(&plugin_json)
+                        .await
+                        .ok()
+                        .and_then(|s| {
+                            let map: HashMap<String, serde_json::Value> = serde_json::from_str(&s).ok()?;
+                            if map.contains_key("publicComponents") || map.contains_key("pages") || map.contains_key("main") {
+                                serde_json::from_str(&s).ok()
+                            } else {
+                                None
+                            }
+                        })
                         .unwrap_or_default()
                 } else {
                     Default::default()
@@ -223,7 +241,10 @@ impl Project {
 
     fn is_app_path(&self, abs_path: &Path) -> bool {
         self.root()
-            .filter(|root| root.join("app.json") == abs_path.with_extension("json"))
+            .filter(|root| {
+                let p = abs_path.with_extension("json");
+                root.join("app.json") == p || root.join("plugin.json") == p
+            })
             .is_some()
     }
 
