@@ -82,14 +82,14 @@ importers:
         specifier: ^7.2.1
         version: 7.2.1(eslint@9.38.0)
       glass-easel:
-        specifier: ^0.16.2
-        version: 0.16.2
+        specifier: ^0.17.1
+        version: 0.17.1
       glass-easel-miniprogram-adapter:
-        specifier: ^0.16.2
-        version: 0.16.2(glass-easel@0.16.2)
+        specifier: ^0.17.1
+        version: 0.17.1(glass-easel@0.17.1)
       glass-easel-miniprogram-typescript:
-        specifier: ^0.16.2
-        version: 0.16.2(typescript@5.5.4)
+        specifier: ^0.17.1
+        version: 0.17.1(typescript@5.5.4)
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -2633,16 +2633,16 @@ packages:
     dev: true
     optional: true
 
-  /glass-easel-miniprogram-adapter@0.16.2(glass-easel@0.16.2):
-    resolution: {integrity: sha512-UUBUZkyMaNA0/nErWE3ftbk4qKb3R3+3zXPd8TCvrMIbWjIq3DbsrRGSU3sB36r+sGu8pBbNq0ZjoQEuu7PL1Q==}
+  /glass-easel-miniprogram-adapter@0.17.1(glass-easel@0.17.1):
+    resolution: {integrity: sha512-MOGAbV0QdFB5GIdCmuMMayKS9ZneCtW4yBdhVlXauLt0BrHsgAIjs6c2b1XCBwKfBVdq4S45WsJ5hbTt8D2//g==}
     peerDependencies:
-      glass-easel: 0.16.2
+      glass-easel: 0.17.1
     dependencies:
-      glass-easel: 0.16.2
+      glass-easel: 0.17.1
     dev: true
 
-  /glass-easel-miniprogram-typescript@0.16.2(typescript@5.5.4):
-    resolution: {integrity: sha512-PrEbupqz36kvMvqXog/FIKuxsP7raSWqvAc90IzywW4kpmf++tgrJJrLTL3poXy1KvJpWHW/OJgau8HhgmdI/Q==}
+  /glass-easel-miniprogram-typescript@0.17.1(typescript@5.5.4):
+    resolution: {integrity: sha512-pbJobZfbds8wV5ZOpSSI6x9Y+EqXMEDCUxvtPFQFZbcBoJM6U+ykN+Nk22wRIjiJYctkQk99lL1IwH68O/trpw==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
@@ -2650,16 +2650,16 @@ packages:
     dependencies:
       chalk: 4.1.2
       chokidar: 4.0.3
-      glass-easel-template-compiler: 0.16.2
+      glass-easel-template-compiler: 0.17.1
       typescript: 5.5.4
     dev: true
 
-  /glass-easel-template-compiler@0.16.2:
-    resolution: {integrity: sha512-pPcZsjx5ldCUDa7rEv4anT/o1xVoXzoDiJCqZT/61cyLuFO0kPtgR4v5aPkPOVV1b6xw0k3nTW3+JS5pf8VocQ==}
+  /glass-easel-template-compiler@0.17.1:
+    resolution: {integrity: sha512-PXVCeqN4QA4Lv1nYzcC0jb/mGifE5xhGVoXpW3HblJDIIRXegCchq3b1YlnWoFMtQHi7aheNM4hUfVysfT+QLg==}
     dev: true
 
-  /glass-easel@0.16.2:
-    resolution: {integrity: sha512-8eQbriV5P/scx+j0hkpCfNcsuLju37GjRiPy6RJmCG9jkPFjDYssDC9ibzui5B4SgRTYxk9c++faN3VaFIePCA==}
+  /glass-easel@0.17.1:
+    resolution: {integrity: sha512-fq2iXQ/223KH2YA29yK+aJ5B/3KlPg9tlRwPnCTu0uX3f4+BFnd5uBtRq9MbhLqaI2uigz+sYT8zZm3Yr9+TJg==}
     dev: true
 
   /glob-parent@5.1.2:
