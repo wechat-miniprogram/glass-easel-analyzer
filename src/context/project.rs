@@ -175,8 +175,12 @@ impl Project {
                         .await
                         .ok()
                         .and_then(|s| {
-                            let map: HashMap<String, serde_json::Value> = serde_json::from_str(&s).ok()?;
-                            if map.contains_key("publicComponents") || map.contains_key("pages") || map.contains_key("main") {
+                            let map: HashMap<String, serde_json::Value> =
+                                serde_json::from_str(&s).ok()?;
+                            if map.contains_key("publicComponents")
+                                || map.contains_key("pages")
+                                || map.contains_key("main")
+                            {
                                 serde_json::from_str(&s).ok()
                             } else {
                                 None
