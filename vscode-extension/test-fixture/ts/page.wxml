@@ -1,0 +1,1 @@
+<comp prop-a="a" bind:tap="methodA">{{ obj.fieldA }}</comp>

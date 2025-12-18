@@ -72,6 +72,15 @@ const defWxmlTsCases = [
     ],
   },
   {
+    name: 'page',
+    args: [
+      new vscode.Position(0, 8),
+      new vscode.Position(0, 29),
+      new vscode.Position(0, 41),
+      new vscode.Position(0, 45),
+    ],
+  },
+  {
     name: 'non-export',
     args: [new vscode.Position(0, 11)],
   },
