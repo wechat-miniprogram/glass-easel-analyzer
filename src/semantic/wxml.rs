@@ -400,7 +400,7 @@ pub(super) fn find_wxml_semantic_tokens(
                             let mut t: WxmlToken = value.into();
                             t.ty = TokenType::Variable;
                             t.modifier = TokenModifier::Definition as u32;
-                            tokens.push(value.into());
+                            tokens.push(t.into());
                         }
                         collect_in_nodes(tokens, children);
                     }
